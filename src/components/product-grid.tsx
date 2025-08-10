@@ -1,0 +1,186 @@
+import { useState } from "react"
+import { Star, ShoppingCart, Eye } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Container } from "./ui/container"
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  originalPrice?: number
+  rating: number
+  reviews: number
+  image: string
+  category: string
+  hasAR?: boolean
+  vendor: string
+}
+
+const mockProducts: Product[] = [
+  {
+    id: "1",
+    name: "iPhone 15 Pro Max",
+    price: 89999,
+    originalPrice: 94999,
+    rating: 4.8,
+    reviews: 256,
+    image: "/api/placeholder/300/300",
+    category: "Smartphones",
+    vendor: "TechStore ET"
+  },
+  {
+    id: "2",
+    name: "Ray-Ban Aviator Sunglasses",
+    price: 2499,
+    rating: 4.6,
+    reviews: 128,
+    image: "/api/placeholder/300/300",
+    category: "Fashion",
+    hasAR: true,
+    vendor: "Fashion Hub"
+  },
+  {
+    id: "3",
+    name: "Samsung Galaxy Buds Pro",
+    price: 3299,
+    originalPrice: 3799,
+    rating: 4.7,
+    reviews: 342,
+    image: "/api/placeholder/300/300",
+    category: "Audio",
+    vendor: "Audio World"
+  },
+  {
+    id: "4",
+    name: "Nike Baseball Cap",
+    price: 899,
+    rating: 4.5,
+    reviews: 89,
+    image: "/api/placeholder/300/300",
+    category: "Fashion",
+    hasAR: true,
+    vendor: "Sports Zone"
+  }
+]
+
+export function ProductGrid() {
+  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
+
+  return (
+    <section className="py-16 bg-background">
+      <Container>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Discover the latest electronics and trending items from verified vendors across Ethiopia
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {mockProducts.map((product) => (
+            <div
+              key={product.id}
+              className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105"
+              onMouseEnter={() => setHoveredProduct(product.id)}
+              onMouseLeave={() => setHoveredProduct(null)}
+            >
+              <div className="relative overflow-hidden rounded-t-lg">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
+                />
+                
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex gap-2">
+                  {product.hasAR && (
+                    <Badge className="bg-primary text-primary-foreground">
+                      AR Try-On
+                    </Badge>
+                  )}
+                  {product.originalPrice && (
+                    <Badge variant="destructive">
+                      Sale
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Hover actions */}
+                {hoveredProduct === product.id && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
+                    <Button size="icon" variant="secondary">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" className="bg-primary hover:bg-primary/90">
+                      <ShoppingCart className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4">
+                <div className="mb-2">
+                  <Badge variant="outline" className="text-xs">
+                    {product.category}
+                  </Badge>
+                </div>
+                
+                <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2">
+                  {product.name}
+                </h3>
+                
+                <div className="flex items-center gap-1 mb-2">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3 w-3 ${
+                          i < Math.floor(product.rating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    ({product.reviews})
+                  </span>
+                </div>
+
+                <div className="mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-primary">
+                      {product.price.toLocaleString()} ETB
+                    </span>
+                    {product.originalPrice && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        {product.originalPrice.toLocaleString()} ETB
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    by {product.vendor}
+                  </p>
+                </div>
+
+                <Button 
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  size="sm"
+                >
+                  Add to Cart
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Button variant="outline" size="lg">
+            View All Products
+          </Button>
+        </div>
+      </Container>
+    </section>
+  )
+}
