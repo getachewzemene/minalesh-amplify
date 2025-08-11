@@ -8,6 +8,7 @@ export interface ShopItem {
   category?: string;
   vendor?: string;
   hasAR?: boolean;
+  quantity?: number; // Add quantity field
 }
 
 interface ShopContextValue {
@@ -15,6 +16,7 @@ interface ShopContextValue {
   wishlist: ShopItem[];
   addToCart: (item: ShopItem) => void;
   removeFromCart: (id: string) => void;
+  updateCartQuantity: (id: string, quantity: number) => void; // Add function to update quantity
   addToWishlist: (item: ShopItem) => void;
   removeFromWishlist: (id: string) => void;
 }
@@ -43,11 +45,33 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   }, [wishlist]);
 
   const addToCart = (item: ShopItem) => {
-    setCart((prev) => (prev.find((i) => i.id === item.id) ? prev : [...prev, item]));
+    setCart((prev) => {
+      const existingItem = prev.find((i) => i.id === item.id);
+      if (existingItem) {
+        // If item already exists, increase quantity
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: (i.quantity || 1) + 1 } : i
+        );
+      } else {
+        // If item doesn't exist, add it with quantity 1
+        return [...prev, { ...item, quantity: 1 }];
+      }
+    });
   };
 
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const updateCartQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    
+    setCart((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, quantity } : i))
+    );
   };
 
   const addToWishlist = (item: ShopItem) => {
@@ -59,7 +83,7 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const value = useMemo(
-    () => ({ cart, wishlist, addToCart, removeFromCart, addToWishlist, removeFromWishlist }),
+    () => ({ cart, wishlist, addToCart, removeFromCart, updateCartQuantity, addToWishlist, removeFromWishlist }),
     [cart, wishlist]
   );
 

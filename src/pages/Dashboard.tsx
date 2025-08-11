@@ -7,7 +7,11 @@ import {
   Eye, 
   ShoppingCart,
   BarChart3,
-  Calendar
+  Calendar,
+  ArrowDown,
+  ArrowUp,
+  Minus,
+  PieChart
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +19,21 @@ import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
+import {
+  ResponsiveContainer,
+  LineChart as RLineChart,
+  Line,
+  BarChart as RBarChart,
+  Bar,
+  PieChart as RPieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 const mockMetrics = {
   totalSales: 125430,
@@ -28,15 +47,37 @@ const mockMetrics = {
     { id: "1004", product: "Nike Cap", amount: 899, status: "completed", date: "2024-01-08" }
   ],
   topProducts: [
-    { name: "iPhone 15 Pro Max", sales: 45, revenue: 4049550 },
-    { name: "Ray-Ban Aviator", sales: 32, revenue: 79968 },
-    { name: "Samsung Galaxy Buds", sales: 28, revenue: 92372 },
-    { name: "Nike Baseball Cap", sales: 24, revenue: 21576 }
+    { name: "iPhone 15 Pro Max", sales: 45, revenue: 4049550, trend: "up" },
+    { name: "Ray-Ban Aviator", sales: 32, revenue: 79968, trend: "up" },
+    { name: "Samsung Galaxy Buds", sales: 28, revenue: 92372, trend: "down" },
+    { name: "Nike Baseball Cap", sales: 24, revenue: 21576, trend: "same" }
+  ],
+  productPerformance: [
+    { name: "iPhone 15 Pro Max", sales: 45, revenue: 4049550, views: 1200, conversion: 3.75 },
+    { name: "Ray-Ban Aviator", sales: 32, revenue: 79968, views: 800, conversion: 4.0 },
+    { name: "Samsung Galaxy Buds", sales: 28, revenue: 92372, views: 1100, conversion: 2.55 },
+    { name: "Nike Baseball Cap", sales: 24, revenue: 21576, views: 600, conversion: 4.0 },
+    { name: "Adidas Running Shoes", sales: 18, revenue: 27000, views: 900, conversion: 2.0 },
+    { name: "Levi's Jeans", sales: 15, revenue: 7500, views: 500, conversion: 3.0 },
+    { name: "MacBook Pro", sales: 12, revenue: 192000, views: 400, conversion: 3.0 },
+    { name: "Sony Headphones", sales: 9, revenue: 13500, views: 300, conversion: 3.0 }
+  ],
+  salesData: [
+    { date: "Jan 1", sales: 4000 },
+    { date: "Jan 2", sales: 3000 },
+    { date: "Jan 3", sales: 2000 },
+    { date: "Jan 4", sales: 2780 },
+    { date: "Jan 5", sales: 1890 },
+    { date: "Jan 6", sales: 2390 },
+    { date: "Jan 7", sales: 3490 },
   ]
 }
 
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview')
+  const [timeRange, setTimeRange] = useState('7d')
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -44,6 +85,15 @@ export default function Dashboard() {
       case 'pending': return 'bg-yellow-500'
       case 'shipped': return 'bg-blue-500'
       default: return 'bg-gray-500'
+    }
+  }
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up': return <ArrowUp className="h-4 w-4 text-green-500" />
+      case 'down': return <ArrowDown className="h-4 w-4 text-red-500" />
+      case 'same': return <Minus className="h-4 w-4 text-gray-500" />
+      default: return null
     }
   }
 
@@ -177,7 +227,6 @@ export default function Dashboard() {
                           <p className="font-medium">{order.amount.toLocaleString()} ETB</p>
                           <Badge 
                             className={`${getStatusColor(order.status)} text-white border-0`}
-                            variant="secondary"
                           >
                             {order.status}
                           </Badge>
@@ -206,7 +255,9 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <p className="font-medium">{product.name}</p>
-                            <p className="text-sm text-muted-foreground">{product.sales} sales</p>
+                            <p className="text-sm text-muted-foreground flex items-center">
+                              {product.sales} sales {getTrendIcon(product.trend)}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -221,27 +272,84 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'analytics' && (
-            <Card className="bg-gradient-card shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Analytics Dashboard
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <BarChart3 className="h-16 w-16 mx-auto mb-4 text-primary" />
-                  <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Get detailed insights into your sales performance, customer behavior, and market trends.
-                  </p>
-                  <Button className="bg-primary hover:bg-primary/90">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    View Full Analytics
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Sales Chart */}
+              <Card className="bg-gradient-card shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Sales Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent style={{height: 300}}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RLineChart data={mockMetrics.salesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Sales (ETB)" />
+                    </RLineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Product Performance */}
+              <Card className="bg-gradient-card shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Product Performance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent style={{height: 300}}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RBarChart data={mockMetrics.productPerformance} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="sales" fill="hsl(var(--primary))" name="Units Sold" />
+                    </RBarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Conversion Rates */}
+              <Card className="bg-gradient-card shadow-card lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5" />
+                    Conversion Rates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent style={{height: 300}}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RPieChart>
+                      <Pie
+                        data={mockMetrics.productPerformance}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="conversion"
+                        nameKey="name"
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {mockMetrics.productPerformance.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `${value}%`} />
+                      <Legend />
+                    </RPieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {activeTab === 'products' && (
@@ -253,20 +361,37 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <Package className="h-16 w-16 mx-auto mb-4 text-primary" />
-                  <h3 className="text-lg font-semibold mb-2">Manage Your Products</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Add new products, update existing listings, manage inventory, and optimize your catalog.
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <Button className="bg-primary hover:bg-primary/90">
-                      Add New Product
-                    </Button>
-                    <Button variant="outline">
-                      View All Products
-                    </Button>
-                  </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2">Product</th>
+                        <th className="text-right py-2">Sales</th>
+                        <th className="text-right py-2">Revenue</th>
+                        <th className="text-right py-2">Views</th>
+                        <th className="text-right py-2">Conversion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mockMetrics.productPerformance.map((product) => (
+                        <tr key={product.name} className="border-b">
+                          <td className="py-3">{product.name}</td>
+                          <td className="text-right py-3">{product.sales}</td>
+                          <td className="text-right py-3">{product.revenue.toLocaleString()} ETB</td>
+                          <td className="text-right py-3">{product.views}</td>
+                          <td className="text-right py-3">{product.conversion}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex gap-3 justify-center mt-6">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    Add New Product
+                  </Button>
+                  <Button variant="outline">
+                    View All Products
+                  </Button>
                 </div>
               </CardContent>
             </Card>

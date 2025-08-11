@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Container } from "./ui/container"
 import { useNavigate } from "react-router-dom"
 import { useShop } from "@/context/shop-context"
+import { useAuth } from "@/context/auth-context"
+import { toast } from "sonner"
 
 interface Product {
   id: string
@@ -69,10 +71,30 @@ const mockProducts: Product[] = [
 export function ProductGrid() {
   const navigate = useNavigate()
   const { addToCart, addToWishlist } = useShop()
+  const { user } = useAuth()
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [category, setCategory] = useState<string>("All")
   const categories = ["All", ...Array.from(new Set(mockProducts.map(p => p.category)))]
   const products = category === "All" ? mockProducts : mockProducts.filter(p => p.category === category)
+
+  const handleAddToCart = (product: Product) => {
+    if (!user) {
+      toast.error("Please login to add items to cart")
+      navigate("/auth/login")
+      return
+    }
+    
+    addToCart({ 
+      id: product.id, 
+      name: product.name, 
+      price: product.price, 
+      image: product.image, 
+      category: product.category, 
+      vendor: product.vendor, 
+      hasAR: product.hasAR 
+    })
+    toast.success("Item added to cart")
+  }
 
   return (
     <section id="products" className="py-16 bg-background">
@@ -133,7 +155,15 @@ export function ProductGrid() {
                       <Button size="icon" variant="secondary" onClick={() => navigate(`/product/${product.id}`)} aria-label="View product">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" className="bg-primary hover:bg-primary/90" onClick={() => addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, category: product.category, vendor: product.vendor, hasAR: product.hasAR })} aria-label="Add to cart">
+                      <Button 
+                        size="icon" 
+                        className="bg-primary hover:bg-primary/90" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product);
+                        }}
+                        aria-label="Add to cart"
+                      >
                         <ShoppingCart className="h-4 w-4" />
                       </Button>
                     </div>
@@ -189,14 +219,34 @@ export function ProductGrid() {
                   <Button 
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                     size="sm"
-                    onClick={() => addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, category: product.category, vendor: product.vendor, hasAR: product.hasAR })}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleAddToCart(product);
+                    }}
                   >
                     Add to Cart
                   </Button>
                   <Button 
                     variant="outline"
                     size="sm"
-                    onClick={() => addToWishlist({ id: product.id, name: product.name, price: product.price, image: product.image, category: product.category, vendor: product.vendor, hasAR: product.hasAR })}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!user) {
+                        toast.error("Please login to add items to wishlist")
+                        navigate("/auth/login")
+                        return
+                      }
+                      addToWishlist({ 
+                        id: product.id, 
+                        name: product.name, 
+                        price: product.price, 
+                        image: product.image, 
+                        category: product.category, 
+                        vendor: product.vendor, 
+                        hasAR: product.hasAR 
+                      })
+                      toast.success("Item added to wishlist")
+                    }}
                     aria-label="Add to wishlist"
                   >
                     <Heart className="h-4 w-4 mr-1" /> Wishlist
@@ -208,7 +258,10 @@ export function ProductGrid() {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="lg" onClick={(e) => {
+            e.preventDefault();
+            navigate("/products")
+          }}>
             View All Products
           </Button>
         </div>
