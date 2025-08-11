@@ -6,6 +6,8 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
 import { ARViewer } from "@/components/ar-viewer"
+import { useShop } from "@/context/shop-context"
+
 
 const mockProduct = {
   id: "1",
@@ -50,6 +52,7 @@ const mockProduct = {
 export default function Product() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const { addToCart, addToWishlist } = useShop()
 
   return (
     <div className="min-h-screen bg-background">
@@ -194,11 +197,12 @@ export default function Product() {
                   <Button 
                     className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
                     size="lg"
+                    onClick={() => addToCart({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0], category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
                     Add to Cart
                   </Button>
-                  <Button variant="outline" size="lg">
+                  <Button variant="outline" size="lg" aria-label="Add to wishlist" onClick={() => addToWishlist({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0], category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}>
                     <Heart className="h-5 w-5" />
                   </Button>
                   <Button variant="outline" size="lg">

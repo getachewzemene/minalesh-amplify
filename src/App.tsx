@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Product from "./pages/Product";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthLogin from "./pages/AuthLogin";
+import AuthRegister from "./pages/AuthRegister";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import { AuthProvider } from "./context/auth-context";
@@ -28,8 +30,10 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/product/:id" element={<Product />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute roles={["vendor"]}><Dashboard /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
               <Route path="/auth/login" element={<AuthLogin />} />
+              <Route path="/auth/register" element={<AuthRegister />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/wishlist" element={<Wishlist />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
