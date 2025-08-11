@@ -68,7 +68,7 @@ export default function AuthRegister() {
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)} 
                 required 
-                placeholder="+251 912 345 678"
+                placeholder="+251 911 123456"
               />
             </div>
             <div>

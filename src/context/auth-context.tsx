@@ -6,6 +6,7 @@ export type User = {
   name?: string;
   phone?: string;
   role?: "user" | "vendor" | "admin";
+  isVerified?: boolean; // Add verification status for vendors
 };
 
 interface AuthContextValue {
@@ -13,6 +14,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, name?: string, phone?: string) => Promise<boolean>;
   logout: () => void;
+  verifyVendor: () => void; // Add function to verify vendors
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -50,12 +52,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         ? "vendor"
         : "user";
       
+      // Check if vendor is verified
+      const isVerified = role === "vendor" ? (localStorage.getItem(`vendor_verified_${foundUser.id}`) === "true") : undefined;
+      
       const loggedInUser = { 
         id: foundUser.id, 
         email: foundUser.email, 
         name: foundUser.name,
         phone: foundUser.phone,
-        role 
+        role,
+        isVerified
       };
       
       setUser(loggedInUser);
@@ -108,8 +114,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => setUser(null);
+  
+  const verifyVendor = () => {
+    if (user && user.role === "vendor") {
+      const updatedUser = { ...user, isVerified: true };
+      setUser(updatedUser);
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      localStorage.setItem(`vendor_verified_${user.id}`, "true");
+    }
+  };
 
-  const value = useMemo(() => ({ user, login, register, logout }), [user]);
+  const value = useMemo(() => ({ user, login, register, logout, verifyVendor }), [user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

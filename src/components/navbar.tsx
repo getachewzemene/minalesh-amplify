@@ -27,6 +27,9 @@ export function Navbar() {
     else navigate('/')
   }
 
+  // Only show wishlist and cart for regular users
+  const showWishlistAndCart = user?.role === 'user' || !user;
+
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <Container>
@@ -60,18 +63,22 @@ export function Navbar() {
             
             {/* Desktop actions */}
             <div className="hidden md:flex items-center space-x-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/wishlist')} className="relative">
-                <Heart className="h-5 w-5" />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{wishlist.length}</span>
-                )}
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{cart.length}</span>
-                )}
-              </Button>
+              {showWishlistAndCart && (
+                <>
+                  <Button variant="ghost" size="icon" onClick={() => navigate('/wishlist')} className="relative">
+                    <Heart className="h-5 w-5" />
+                    {wishlist.length > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{wishlist.length}</span>
+                    )}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
+                    <ShoppingCart className="h-5 w-5" />
+                    {cart.length > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{cart.length}</span>
+                    )}
+                  </Button>
+                </>
+              )}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -81,8 +88,12 @@ export function Navbar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/wishlist')}>Wishlist</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/cart')}>Cart</DropdownMenuItem>
+                    {showWishlistAndCart && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate('/wishlist')}>Wishlist</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/cart')}>Cart</DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuItem onClick={() => { logout(); navigate('/auth/login'); }}>Logout</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -117,20 +128,24 @@ export function Navbar() {
               />
             </div>
             <div className="flex justify-around">
-              <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => navigate('/wishlist')}>
-                <Heart className="h-5 w-5 mb-1" />
-                {wishlist.length > 0 && (
-                  <span className="absolute top-0 right-4 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{wishlist.length}</span>
-                )}
-                <span className="text-xs">Wishlist</span>
-              </Button>
-              <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => navigate('/cart')}>
-                <ShoppingCart className="h-5 w-5 mb-1" />
-                {cart.length > 0 && (
-                  <span className="absolute top-0 right-4 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{cart.length}</span>
-                )}
-                <span className="text-xs">Cart</span>
-              </Button>
+              {showWishlistAndCart ? (
+                <>
+                  <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => navigate('/wishlist')}>
+                    <Heart className="h-5 w-5 mb-1" />
+                    {wishlist.length > 0 && (
+                      <span className="absolute top-0 right-4 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{wishlist.length}</span>
+                    )}
+                    <span className="text-xs">Wishlist</span>
+                  </Button>
+                  <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => navigate('/cart')}>
+                    <ShoppingCart className="h-5 w-5 mb-1" />
+                    {cart.length > 0 && (
+                      <span className="absolute top-0 right-4 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{cart.length}</span>
+                    )}
+                    <span className="text-xs">Cart</span>
+                  </Button>
+                </>
+              ) : null}
               {user ? (
                 <Button variant="ghost" className="flex flex-col items-center p-2" onClick={goDashboard}>
                   <User className="h-5 w-5 mb-1" />

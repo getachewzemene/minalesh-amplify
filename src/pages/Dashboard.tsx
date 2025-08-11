@@ -11,7 +11,9 @@ import {
   ArrowDown,
   ArrowUp,
   Minus,
-  PieChart
+  PieChart,
+  Plus,
+  Upload
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +21,11 @@ import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/context/auth-context"
 import {
   ResponsiveContainer,
   LineChart as RLineChart,
@@ -78,6 +85,16 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('7d')
+  const [showAddProductForm, setShowAddProductForm] = useState(false)
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    price: "",
+    description: "",
+    category: "",
+    image: ""
+  })
+  const { toast } = useToast()
+  const { user, verifyVendor } = useAuth()
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -97,6 +114,43 @@ export default function Dashboard() {
     }
   }
 
+  const handleAddProduct = () => {
+    // Check if vendor is verified
+    if (!user?.isVerified) {
+      toast({
+        title: "Vendor Verification Required",
+        description: "Please complete vendor verification before adding products.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // In a real app, this would send data to a backend
+    toast({
+      title: "Product Added",
+      description: "Your product has been successfully added to the marketplace."
+    });
+    
+    // Reset form
+    setNewProduct({
+      name: "",
+      price: "",
+      description: "",
+      category: "",
+      image: ""
+    });
+    setShowAddProductForm(false);
+  };
+
+  const handleVerifyVendor = () => {
+    // In a real app, this would send verification documents to a backend
+    verifyVendor();
+    toast({
+      title: "Verification Submitted",
+      description: "Your verification request has been submitted. You'll be notified once approved."
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -110,6 +164,25 @@ export default function Dashboard() {
               <p className="text-white/90 text-lg">
                 **Minalesh (ምናለሽ)** — Manage your store, track sales, and grow your business on Ethiopia's leading marketplace
               </p>
+              
+              {/* Vendor Verification Status */}
+              <div className="mt-4">
+                {user?.isVerified ? (
+                  <Badge className="bg-green-500">Verified Vendor</Badge>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive">Not Verified</Badge>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={handleVerifyVendor}
+                      className="ml-2"
+                    >
+                      Verify Account
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -353,48 +426,133 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'products' && (
-            <Card className="bg-gradient-card shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Product Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2">Product</th>
-                        <th className="text-right py-2">Sales</th>
-                        <th className="text-right py-2">Revenue</th>
-                        <th className="text-right py-2">Views</th>
-                        <th className="text-right py-2">Conversion</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mockMetrics.productPerformance.map((product) => (
-                        <tr key={product.name} className="border-b">
-                          <td className="py-3">{product.name}</td>
-                          <td className="text-right py-3">{product.sales}</td>
-                          <td className="text-right py-3">{product.revenue.toLocaleString()} ETB</td>
-                          <td className="text-right py-3">{product.views}</td>
-                          <td className="text-right py-3">{product.conversion}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex gap-3 justify-center mt-6">
-                  <Button className="bg-primary hover:bg-primary/90">
-                    Add New Product
-                  </Button>
-                  <Button variant="outline">
-                    View All Products
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Add Product Form */}
+              {showAddProductForm ? (
+                <Card className="bg-gradient-card shadow-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Add New Product
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="productName">Product Name</Label>
+                          <Input 
+                            id="productName" 
+                            value={newProduct.name} 
+                            onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} 
+                            placeholder="Enter product name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productPrice">Price (ETB)</Label>
+                          <Input 
+                            id="productPrice" 
+                            type="number" 
+                            value={newProduct.price} 
+                            onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} 
+                            placeholder="Enter price"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productCategory">Category</Label>
+                          <Input 
+                            id="productCategory" 
+                            value={newProduct.category} 
+                            onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} 
+                            placeholder="Enter category"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="productImage">Product Image</Label>
+                          <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                            <p className="mt-2 text-sm text-gray-600">Upload product image</p>
+                            <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <Label htmlFor="productDescription">Description</Label>
+                      <Textarea 
+                        id="productDescription" 
+                        value={newProduct.description} 
+                        onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} 
+                        placeholder="Enter product description"
+                        rows={4}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <Button 
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={handleAddProduct}
+                      >
+                        Add Product
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setShowAddProductForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="bg-gradient-card shadow-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Product Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2">Product</th>
+                            <th className="text-right py-2">Sales</th>
+                            <th className="text-right py-2">Revenue</th>
+                            <th className="text-right py-2">Views</th>
+                            <th className="text-right py-2">Conversion</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mockMetrics.productPerformance.map((product) => (
+                            <tr key={product.name} className="border-b">
+                              <td className="py-3">{product.name}</td>
+                              <td className="text-right py-3">{product.sales}</td>
+                              <td className="text-right py-3">{product.revenue.toLocaleString()} ETB</td>
+                              <td className="text-right py-3">{product.views}</td>
+                              <td className="text-right py-3">{product.conversion}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex gap-3 justify-center mt-6">
+                      <Button 
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={() => setShowAddProductForm(true)}
+                      >
+                        Add New Product
+                      </Button>
+                      <Button variant="outline">
+                        View All Products
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </Container>
       </main>
