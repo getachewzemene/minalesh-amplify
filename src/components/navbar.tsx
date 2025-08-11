@@ -5,9 +5,11 @@ import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
 import { Container } from "./ui/container"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -41,14 +43,14 @@ export function Navbar() {
             <LanguageSelector />
             
             {/* Desktop navigation */}
-            <div className="hidden md:flex items-center space-x-2">
-              <Button variant="ghost" size="icon">
-                <ShoppingCart className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </div>
+              <div className="hidden md:flex items-center space-x-2">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/cart')}>
+                  <ShoppingCart className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => navigate('/auth/login')}>
+                  <User className="h-5 w-5" />
+                </Button>
+              </div>
 
             {/* Mobile menu button */}
             <Button
@@ -74,11 +76,11 @@ export function Navbar() {
               />
             </div>
             <div className="flex justify-around">
-              <Button variant="ghost" className="flex flex-col items-center p-2">
+              <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => navigate('/cart')}>
                 <ShoppingCart className="h-5 w-5 mb-1" />
                 <span className="text-xs">Cart</span>
               </Button>
-              <Button variant="ghost" className="flex flex-col items-center p-2">
+              <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => navigate('/auth/login')}>
                 <User className="h-5 w-5 mb-1" />
                 <span className="text-xs">Account</span>
               </Button>

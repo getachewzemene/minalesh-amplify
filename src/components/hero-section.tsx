@@ -2,8 +2,10 @@ import { ArrowRight, Smartphone, Headphones, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Container } from "./ui/container"
 import heroImage from "@/assets/hero-marketplace.jpg"
+import { useNavigate } from "react-router-dom"
 
 export function HeroSection() {
+  const navigate = useNavigate()
   return (
     <section className="relative overflow-hidden bg-gradient-hero min-h-[80vh] flex items-center">
       {/* Background image */}
@@ -34,6 +36,7 @@ export function HeroSection() {
               <Button 
                 size="lg" 
                 className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
+                onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Start Shopping
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -42,6 +45,7 @@ export function HeroSection() {
                 variant="outline" 
                 size="lg"
                 className="border-white/30 text-white hover:bg-white/10"
+                onClick={() => navigate('/auth/login')}
               >
                 Become a Vendor
               </Button>
