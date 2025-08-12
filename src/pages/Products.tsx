@@ -9,6 +9,14 @@ import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import phoneImg from "@/assets/products/phone.jpg"
+import sunglassesImg from "@/assets/products/sunglasses.jpg"
+import earbudsImg from "@/assets/products/earbuds.jpg"
+import capImg from "@/assets/products/cap.jpg"
+import laptopImg from "@/assets/products/laptop.jpg"
+import headphonesImg from "@/assets/products/headphones.jpg"
+import shoesImg from "@/assets/products/shoes.jpg"
+import jeansImg from "@/assets/products/jeans.jpg"
 
 interface Product {
   id: string
@@ -32,7 +40,7 @@ const mockProducts: Product[] = [
     originalPrice: 94999,
     rating: 4.8,
     reviews: 256,
-    image: "/api/placeholder/300/300",
+    image: phoneImg,
     category: "Smartphones",
     vendor: "TechStore ET",
     isVerifiedVendor: true
@@ -43,7 +51,7 @@ const mockProducts: Product[] = [
     price: 2499,
     rating: 4.6,
     reviews: 128,
-    image: "/api/placeholder/300/300",
+    image: sunglassesImg,
     category: "Fashion",
     hasAR: true,
     vendor: "Fashion Hub",
@@ -56,7 +64,7 @@ const mockProducts: Product[] = [
     originalPrice: 3799,
     rating: 4.7,
     reviews: 342,
-    image: "/api/placeholder/300/300",
+    image: earbudsImg,
     category: "Audio",
     vendor: "Audio World",
     isVerifiedVendor: true
@@ -67,7 +75,7 @@ const mockProducts: Product[] = [
     price: 899,
     rating: 4.5,
     reviews: 89,
-    image: "/api/placeholder/300/300",
+    image: capImg,
     category: "Fashion",
     hasAR: true,
     vendor: "Sports Zone",
@@ -80,7 +88,7 @@ const mockProducts: Product[] = [
     originalPrice: 139999,
     rating: 4.9,
     reviews: 421,
-    image: "/api/placeholder/300/300",
+    image: laptopImg,
     category: "Computers",
     vendor: "Apple Store ET",
     isVerifiedVendor: true
@@ -91,7 +99,7 @@ const mockProducts: Product[] = [
     price: 4999,
     rating: 4.7,
     reviews: 187,
-    image: "/api/placeholder/300/300",
+    image: headphonesImg,
     category: "Audio",
     hasAR: true,
     vendor: "Audio World",
@@ -104,7 +112,7 @@ const mockProducts: Product[] = [
     originalPrice: 2999,
     rating: 4.6,
     reviews: 94,
-    image: "/api/placeholder/300/300",
+    image: shoesImg,
     category: "Footwear",
     vendor: "Sports Zone",
     isVerifiedVendor: false
@@ -115,7 +123,7 @@ const mockProducts: Product[] = [
     price: 1299,
     rating: 4.4,
     reviews: 76,
-    image: "/api/placeholder/300/300",
+    image: jeansImg,
     category: "Fashion",
     vendor: "Fashion Hub",
     isVerifiedVendor: false

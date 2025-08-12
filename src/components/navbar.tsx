@@ -18,9 +18,15 @@ import { toast } from "sonner"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [query, setQuery] = useState("")
   const navigate = useNavigate()
   const { cart, wishlist } = useShop()
   const { user, logout } = useAuth()
+
+  const handleSearch = () => {
+    const q = query.trim()
+    if (q) navigate(`/products?search=${encodeURIComponent(q)}`)
+  }
 
   const goDashboard = () => {
     if (user?.role === 'admin') navigate('/admin')
@@ -53,6 +59,9 @@ export function Navbar() {
                 type="search"
                 placeholder="Search for electronics, fashion, and more..."
                 className="pl-10 pr-4 w-full"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
           </div>
@@ -127,6 +136,9 @@ export function Navbar() {
                 type="search"
                 placeholder="Search products..."
                 className="pl-10 pr-4 w-full"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (setIsMenuOpen(false), handleSearch())}
               />
             </div>
             <div className="flex justify-around">

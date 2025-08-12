@@ -8,6 +8,7 @@ import { useAuth } from "@/context/auth-context"
 export function HeroSection() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  return (
     <section className="relative overflow-hidden bg-gradient-hero min-h-[80vh] flex items-center">
       {/* Background image */}
       <div 
@@ -29,7 +30,7 @@ export function HeroSection() {
             </h1>
             
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto lg:mx-0">
-              **Minalesh (ምናለሽ)** — Your trusted destination for electronics and general goods. 
+              Minalesh (ምናለሽ) — Your trusted destination for electronics and general goods.
               Experience AR try-on technology, connect with verified vendors, and shop with confidence.
             </p>
 

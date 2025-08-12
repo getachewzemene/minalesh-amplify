@@ -7,6 +7,10 @@ import { useNavigate } from "react-router-dom"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
+import phoneImg from "@/assets/products/phone.jpg"
+import sunglassesImg from "@/assets/products/sunglasses.jpg"
+import earbudsImg from "@/assets/products/earbuds.jpg"
+import capImg from "@/assets/products/cap.jpg"
 
 interface Product {
   id: string
@@ -30,7 +34,7 @@ const mockProducts: Product[] = [
     originalPrice: 94999,
     rating: 4.8,
     reviews: 256,
-    image: "/api/placeholder/300/300",
+    image: phoneImg,
     category: "Smartphones",
     vendor: "TechStore ET",
     vendorVerified: true
@@ -41,7 +45,7 @@ const mockProducts: Product[] = [
     price: 2499,
     rating: 4.6,
     reviews: 128,
-    image: "/api/placeholder/300/300",
+    image: sunglassesImg,
     category: "Fashion",
     hasAR: true,
     vendor: "Fashion Hub",
@@ -54,7 +58,7 @@ const mockProducts: Product[] = [
     originalPrice: 3799,
     rating: 4.7,
     reviews: 342,
-    image: "/api/placeholder/300/300",
+    image: earbudsImg,
     category: "Audio",
     vendor: "Audio World",
     vendorVerified: true
@@ -65,7 +69,7 @@ const mockProducts: Product[] = [
     price: 899,
     rating: 4.5,
     reviews: 89,
-    image: "/api/placeholder/300/300",
+    image: capImg,
     category: "Fashion",
     hasAR: true,
     vendor: "Sports Zone",

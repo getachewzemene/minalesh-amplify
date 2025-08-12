@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
 import { ARViewer } from "@/components/ar-viewer"
 import { useShop } from "@/context/shop-context"
+import sunglassesImg from "@/assets/products/sunglasses.jpg"
 
 
 const mockProduct = {
@@ -17,10 +18,10 @@ const mockProduct = {
   rating: 4.6,
   reviews: 128,
   images: [
-    "/api/placeholder/600/600",
-    "/api/placeholder/600/600",
-    "/api/placeholder/600/600",
-    "/api/placeholder/600/600"
+    sunglassesImg,
+    sunglassesImg,
+    sunglassesImg,
+    sunglassesImg
   ],
   category: "Fashion",
   productType: "sunglasses" as const,

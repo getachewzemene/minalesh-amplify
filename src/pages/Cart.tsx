@@ -25,7 +25,7 @@ export default function Cart() {
       return;
     }
     
-    // In a real application, this would integrate with a payment system
+    // TODO: Stripe Checkout integration with Supabase Edge Function
     toast.success("Order placed successfully!");
     // Clear cart after purchase
     cart.forEach(item => removeFromCart(item.id));
