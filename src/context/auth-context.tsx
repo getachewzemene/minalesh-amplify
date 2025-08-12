@@ -18,6 +18,7 @@ interface AuthContextValue {
   logout: () => void;
   verifyVendor: (tradeLicense: string, tinNumber: string) => void; // Add function to verify vendors
   requestVendorVerification: (tradeLicense: string, tinNumber: string) => void; // Add function to request verification
+  approveVendorVerification: (vendorId: string) => void; // Admin approves vendor by ID
   updateProfile: (data: Partial<User>) => void; // Add function to update profile
 }
 
@@ -139,6 +140,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   
+  // Admin-only: approve a vendor by their vendor user ID
+  const approveVendorVerification = (vendorId: string) => {
+    // Persist verification flag for this vendor
+    localStorage.setItem(`vendor_verified_${vendorId}`, "true");
+    // If the currently logged-in user is this vendor, mark verified in session too
+    if (user && user.id === vendorId) {
+      const updatedUser = { ...user, isVerified: true };
+      setUser(updatedUser);
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+    }
+  };
   const updateProfile = (data: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...data };
@@ -155,7 +167,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const value = useMemo(() => ({ user, login, register, logout, verifyVendor, requestVendorVerification, updateProfile }), [user]);
+  const value = useMemo(() => ({ user, login, register, logout, verifyVendor, requestVendorVerification, approveVendorVerification, updateProfile }), [user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

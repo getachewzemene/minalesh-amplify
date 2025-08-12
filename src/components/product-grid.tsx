@@ -136,9 +136,10 @@ export function ProductGrid() {
           {products.map((product) => (
             <div
               key={product.id}
-              className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105"
+              className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}
+              onClick={() => navigate(`/product/${product.id}`)}
             >
               <div className="relative overflow-hidden rounded-t-lg">
                 <img
@@ -164,7 +165,7 @@ export function ProductGrid() {
                 {/* Hover actions */}
                   {hoveredProduct === product.id && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
-                      <Button size="icon" variant="secondary" onClick={() => navigate(`/product/${product.id}`)} aria-label="View product">
+                      <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`) }} aria-label="View product">
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -172,6 +173,7 @@ export function ProductGrid() {
                         className="bg-primary hover:bg-primary/90" 
                         onClick={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           handleAddToCart(product);
                         }}
                         aria-label="Add to cart"
@@ -250,6 +252,7 @@ export function ProductGrid() {
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       handleAddToWishlist(product);
                     }}
                     aria-label="Add to wishlist"

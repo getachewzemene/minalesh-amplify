@@ -191,9 +191,10 @@ const location = useLocation()
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105"
+                className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
+                onClick={() => navigate(`/product/${product.id}`)}
               >
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img
@@ -219,20 +220,21 @@ const location = useLocation()
                   {/* Hover actions */}
                   {hoveredProduct === product.id && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
-                      <Button size="icon" variant="secondary" onClick={() => navigate(`/product/${product.id}`)} aria-label="View product">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        className="bg-primary hover:bg-primary/90" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(product);
-                        }}
-                        aria-label="Add to cart"
-                      >
-                        <ShoppingCart className="h-4 w-4" />
-                      </Button>
+                    <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`) }} aria-label="View product">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      className="bg-primary hover:bg-primary/90" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddToCart(product);
+                      }}
+                      aria-label="Add to cart"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                    </Button>
                     </div>
                   )}
                 </div>
@@ -296,19 +298,20 @@ const location = useLocation()
                     <Button 
                       variant="outline"
                       size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        addToWishlist({
-                          id: product.id,
-                          name: product.name,
-                          price: product.price,
-                          image: product.image,
-                          category: product.category,
-                          vendor: product.vendor,
-                          hasAR: product.hasAR
-                        })
-                        toast.success("Item added to wishlist")
-                      }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addToWishlist({
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.image,
+                        category: product.category,
+                        vendor: product.vendor,
+                        hasAR: product.hasAR
+                      })
+                      toast.success("Item added to wishlist")
+                    }}
                       aria-label="Add to wishlist"
                     >
                       <Heart className="h-4 w-4 mr-1" /> Wishlist

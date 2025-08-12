@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button"
 import { Container } from "./ui/container"
 import heroImage from "@/assets/hero-marketplace.jpg"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/context/auth-context"
 
 export function HeroSection() {
   const navigate = useNavigate()
-  return (
+  const { user } = useAuth()
     <section className="relative overflow-hidden bg-gradient-hero min-h-[80vh] flex items-center">
       {/* Background image */}
       <div 
@@ -32,24 +33,26 @@ export function HeroSection() {
               Experience AR try-on technology, connect with verified vendors, and shop with confidence.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
-                onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Start Shopping
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-white/30 text-white hover:bg-white/10"
-                onClick={() => navigate('/auth/login')}
-              >
-                Become a Vendor
-              </Button>
-            </div>
+            {!user && (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
+                  onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Start Shopping
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-white/30 text-white hover:bg-white/10"
+                  onClick={() => navigate('/auth/login')}
+                >
+                  Become a Vendor
+                </Button>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="mt-12 grid grid-cols-3 gap-4 text-center lg:text-left">

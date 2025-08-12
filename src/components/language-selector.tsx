@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -7,8 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Globe } from "lucide-react"
-
-type Language = 'en' | 'am'
+import { useLanguage, type Language } from "@/context/language-context"
 
 interface LanguageOption {
   code: Language
@@ -22,22 +20,13 @@ const languages: LanguageOption[] = [
 ]
 
 export function LanguageSelector() {
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('en')
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem('language') as Language | null
-    if (savedLang && languages.find(lang => lang.code === savedLang)) {
-      setSelectedLanguage(savedLang)
-    }
-  }, [])
+  const { language, setLanguage } = useLanguage()
 
   const handleLanguageChange = (langCode: Language) => {
-    setSelectedLanguage(langCode)
-    localStorage.setItem('language', langCode)
-    // In a real app, this would trigger i18n changes
+    setLanguage(langCode)
   }
 
-  const currentLanguage = languages.find(lang => lang.code === selectedLanguage)
+  const currentLanguage = languages.find(lang => lang.code === language)
 
   return (
     <DropdownMenu>
