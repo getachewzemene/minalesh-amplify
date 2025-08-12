@@ -4,6 +4,7 @@ import { Footer } from "@/components/footer";
 import { Container } from "@/components/ui/container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Store, LineChart, BarChart3, Calendar, Download } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 import {
   ResponsiveContainer,
   LineChart as RLineChart,
@@ -46,6 +47,7 @@ const mock = {
 export default function AdminDashboard() {
   const [period, setPeriod] = useState<"weekly" | "monthly" | "yearly">("weekly");
   const data = mock[period];
+  const { approveVendorVerification } = useAuth();
 
   useEffect(() => {
     document.title = "Admin Dashboard — Minalesh";
@@ -86,6 +88,61 @@ export default function AdminDashboard() {
             <Card className="bg-gradient-card shadow-card">
               <CardHeader className="pb-2"><CardTitle className="text-sm">Revenue (ETB)</CardTitle></CardHeader>
               <CardContent className="flex items-center justify-between"><div className="text-2xl font-bold text-primary">{mock.totals.revenue.toLocaleString()}</div><LineChart className="h-5 w-5 text-primary"/></CardContent>
+            </Card>
+          </div>
+
+          {/* Vendor Verification Requests */}
+          <div className="mb-8">
+            <Card className="bg-gradient-card shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Store className="h-5 w-5" />
+                  Vendor Verification Requests
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Review and approve vendor verification requests
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                    <div>
+                      <p className="font-medium">Fashion Hub Ethiopia</p>
+                      <p className="text-sm text-muted-foreground">Trade License: TL-123456</p>
+                      <p className="text-sm text-muted-foreground">TIN: 1234567890</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-1 bg-green-500 text-white rounded text-sm"
+                        onClick={() => approveVendorVerification("vendor1")}
+                      >
+                        Approve
+                      </button>
+                      <button className="px-3 py-1 bg-red-500 text-white rounded text-sm">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                    <div>
+                      <p className="font-medium">TechStore ET</p>
+                      <p className="text-sm text-muted-foreground">Trade License: TL-789012</p>
+                      <p className="text-sm text-muted-foreground">TIN: 0987654321</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-1 bg-green-500 text-white rounded text-sm"
+                        onClick={() => approveVendorVerification("vendor2")}
+                      >
+                        Approve
+                      </button>
+                      <button className="px-3 py-1 bg-red-500 text-white rounded text-sm">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </div>
 

@@ -13,7 +13,9 @@ import {
   Minus,
   PieChart,
   Plus,
-  Upload
+  Upload,
+  ShieldCheck,
+  AlertCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -94,7 +96,7 @@ export default function Dashboard() {
     image: ""
   })
   const { toast } = useToast()
-  const { user, verifyVendor } = useAuth()
+  const { user, requestVendorVerification } = useAuth()
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -144,11 +146,19 @@ export default function Dashboard() {
 
   const handleVerifyVendor = () => {
     // In a real app, this would send verification documents to a backend
-    verifyVendor();
-    toast({
-      title: "Verification Submitted",
-      description: "Your verification request has been submitted. You'll be notified once approved."
-    });
+    if (user?.tradeLicense && user?.tinNumber) {
+      requestVendorVerification(user.tradeLicense, user.tinNumber);
+      toast({
+        title: "Verification Submitted",
+        description: "Your verification request has been submitted. You'll be notified once approved."
+      });
+    } else {
+      toast({
+        title: "Verification Information Required",
+        description: "Please provide your Trade License and TIN Number in your profile.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -168,10 +178,18 @@ export default function Dashboard() {
               {/* Vendor Verification Status */}
               <div className="mt-4">
                 {user?.isVerified ? (
-                  <Badge className="bg-green-500">Verified Vendor</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-500">
+                      <ShieldCheck className="h-4 w-4 mr-1" />
+                      Verified Vendor
+                    </Badge>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Badge variant="destructive">Not Verified</Badge>
+                    <Badge variant="destructive">
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      Not Verified
+                    </Badge>
                     <Button 
                       variant="secondary" 
                       size="sm" 

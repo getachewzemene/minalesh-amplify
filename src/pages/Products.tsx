@@ -3,7 +3,7 @@ import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
@@ -21,6 +21,7 @@ interface Product {
   category: string
   hasAR?: boolean
   vendor: string
+  isVerifiedVendor?: boolean
 }
 
 const mockProducts: Product[] = [
@@ -33,7 +34,8 @@ const mockProducts: Product[] = [
     reviews: 256,
     image: "/api/placeholder/300/300",
     category: "Smartphones",
-    vendor: "TechStore ET"
+    vendor: "TechStore ET",
+    isVerifiedVendor: true
   },
   {
     id: "2",
@@ -44,7 +46,8 @@ const mockProducts: Product[] = [
     image: "/api/placeholder/300/300",
     category: "Fashion",
     hasAR: true,
-    vendor: "Fashion Hub"
+    vendor: "Fashion Hub",
+    isVerifiedVendor: false
   },
   {
     id: "3",
@@ -55,7 +58,8 @@ const mockProducts: Product[] = [
     reviews: 342,
     image: "/api/placeholder/300/300",
     category: "Audio",
-    vendor: "Audio World"
+    vendor: "Audio World",
+    isVerifiedVendor: true
   },
   {
     id: "4",
@@ -66,7 +70,8 @@ const mockProducts: Product[] = [
     image: "/api/placeholder/300/300",
     category: "Fashion",
     hasAR: true,
-    vendor: "Sports Zone"
+    vendor: "Sports Zone",
+    isVerifiedVendor: false
   },
   {
     id: "5",
@@ -77,7 +82,8 @@ const mockProducts: Product[] = [
     reviews: 421,
     image: "/api/placeholder/300/300",
     category: "Computers",
-    vendor: "Apple Store ET"
+    vendor: "Apple Store ET",
+    isVerifiedVendor: true
   },
   {
     id: "6",
@@ -88,7 +94,8 @@ const mockProducts: Product[] = [
     image: "/api/placeholder/300/300",
     category: "Audio",
     hasAR: true,
-    vendor: "Audio World"
+    vendor: "Audio World",
+    isVerifiedVendor: true
   },
   {
     id: "7",
@@ -99,7 +106,8 @@ const mockProducts: Product[] = [
     reviews: 94,
     image: "/api/placeholder/300/300",
     category: "Footwear",
-    vendor: "Sports Zone"
+    vendor: "Sports Zone",
+    isVerifiedVendor: false
   },
   {
     id: "8",
@@ -109,34 +117,42 @@ const mockProducts: Product[] = [
     reviews: 76,
     image: "/api/placeholder/300/300",
     category: "Fashion",
-    vendor: "Fashion Hub"
+    vendor: "Fashion Hub",
+    isVerifiedVendor: false
   }
 ]
 
 export default function Products() {
   const navigate = useNavigate()
+const location = useLocation()
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
+// Get search query from URL
+  const searchParams = new URLSearchParams(location.search)
+  const searchQuery = searchParams.get('search') || ''
+  
+  // Filter categories based on search query
+  const filteredProducts = searchQuery 
+    ? mockProducts.filter(product => 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.vendor.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : mockProducts
   const [category, setCategory] = useState<string>("All")
-  const categories = ["All", ...Array.from(new Set(mockProducts.map(p => p.category)))]
-  const products = category === "All" ? mockProducts : mockProducts.filter(p => p.category === category)
+  const categories = ["All", ...Array.from(new Set(filteredProducts.map(p => p.category)))]
+  const products = category === "All" ? filteredProducts : filteredProducts.filter(p => p.category === category)
 
   const handleAddToCart = (product: Product) => {
-    if (!user) {
-      toast.error("Please login to add items to cart")
-      navigate("/auth/login")
-      return
-    }
-    
-    addToCart({ 
-      id: product.id, 
-      name: product.name, 
-      price: product.price, 
-      image: product.image, 
-      category: product.category, 
-      vendor: product.vendor, 
-      hasAR: product.hasAR 
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+      vendor: product.vendor,
+      hasAR: product.hasAR
     })
     toast.success("Item added to cart")
   }
@@ -147,9 +163,13 @@ export default function Products() {
       <main className="py-16">
         <Container>
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4">All Products</h1>
+            <h1 className="text-3xl font-bold mb-4">
+              {searchQuery ? `Search Results for "${searchQuery}"` : "All Products"}
+            </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Browse our complete collection of electronics and trending items from verified vendors across Ethiopia
+              {searchQuery
+                ? `Found ${products.length} product(s) matching your search`
+                : "Browse our complete collection of electronics and trending items from verified vendors across Ethiopia"}
             </p>
             <div className="mt-6 flex items-center justify-center">
               <label htmlFor="category" className="sr-only">Filter by category</label>
@@ -278,19 +298,14 @@ export default function Products() {
                       size="sm"
                       onClick={(e) => {
                         e.preventDefault();
-                        if (!user) {
-                          toast.error("Please login to add items to wishlist")
-                          navigate("/auth/login")
-                          return
-                        }
-                        addToWishlist({ 
-                          id: product.id, 
-                          name: product.name, 
-                          price: product.price, 
-                          image: product.image, 
-                          category: product.category, 
-                          vendor: product.vendor, 
-                          hasAR: product.hasAR 
+                        addToWishlist({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.image,
+                          category: product.category,
+                          vendor: product.vendor,
+                          hasAR: product.hasAR
                         })
                         toast.success("Item added to wishlist")
                       }}

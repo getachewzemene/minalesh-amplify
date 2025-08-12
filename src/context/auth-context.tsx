@@ -7,6 +7,8 @@ export type User = {
   phone?: string;
   role?: "user" | "vendor" | "admin";
   isVerified?: boolean; // Add verification status for vendors
+  tradeLicense?: string;
+  tinNumber?: string;
 };
 
 interface AuthContextValue {
@@ -14,7 +16,9 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, name?: string, phone?: string) => Promise<boolean>;
   logout: () => void;
-  verifyVendor: () => void; // Add function to verify vendors
+  verifyVendor: (tradeLicense: string, tinNumber: string) => void; // Add function to verify vendors
+  requestVendorVerification: (tradeLicense: string, tinNumber: string) => void; // Add function to request verification
+  updateProfile: (data: Partial<User>) => void; // Add function to update profile
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -61,7 +65,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         name: foundUser.name,
         phone: foundUser.phone,
         role,
-        isVerified
+        isVerified,
+        tradeLicense: foundUser.tradeLicense,
+        tinNumber: foundUser.tinNumber
       };
       
       setUser(loggedInUser);
@@ -115,16 +121,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => setUser(null);
   
-  const verifyVendor = () => {
+  const verifyVendor = (tradeLicense: string, tinNumber: string) => {
     if (user && user.role === "vendor") {
-      const updatedUser = { ...user, isVerified: true };
+      const updatedUser = { ...user, isVerified: true, tradeLicense, tinNumber };
       setUser(updatedUser);
       localStorage.setItem("auth_user", JSON.stringify(updatedUser));
       localStorage.setItem(`vendor_verified_${user.id}`, "true");
     }
   };
+  
+  const requestVendorVerification = (tradeLicense: string, tinNumber: string) => {
+    if (user && user.role === "vendor") {
+      const updatedUser = { ...user, tradeLicense, tinNumber };
+      setUser(updatedUser);
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      // In a real app, this would send a request to admin for verification
+    }
+  };
+  
+  const updateProfile = (data: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      
+      // Update in users list as well
+      const usersRaw = localStorage.getItem("users");
+      const users = usersRaw ? JSON.parse(usersRaw) : [];
+      const updatedUsers = users.map((u: any) => 
+        u.id === user.id ? { ...u, ...data } : u
+      );
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    }
+  };
 
-  const value = useMemo(() => ({ user, login, register, logout, verifyVendor }), [user]);
+  const value = useMemo(() => ({ user, login, register, logout, verifyVendor, requestVendorVerification, updateProfile }), [user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

@@ -14,6 +14,7 @@ import AuthRegister from "./pages/AuthRegister";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Products from "./pages/Products";
+import Profile from "./pages/Profile";
 import { AuthProvider } from "./context/auth-context";
 import { ShopProvider } from "./context/shop-context";
 import { AIHelper } from "./components/ai-helper";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/products" element={<Products />} />
               <Route path="/product/:id" element={<Product />} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute roles={["vendor"]}><Dashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
               <Route path="/auth/login" element={<AuthLogin />} />

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { FormEvent } from "react";
+import { Input } from "@/components/ui/input";
+import { Minus, Plus, X } from "lucide-react";
 
 export default function Cart() {
-  const { cart, removeFromCart } = useShop();
+  const { cart, removeFromCart, updateCartQuantity } = useShop();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -46,10 +48,39 @@ export default function Cart() {
                     <div>
                       <p className="font-medium">{item.name}</p>
                       <p className="text-sm text-muted-foreground">{item.price.toLocaleString()} ETB</p>
-                      <p className="text-sm">Quantity: {item.quantity || 1}</p>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={() => removeFromCart(item.id)}>Remove</Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => updateCartQuantity(item.id, (item.quantity || 1) - 1)}
+                      disabled={(item.quantity || 1) <= 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Input 
+                      type="number" 
+                      value={item.quantity || 1} 
+                      onChange={(e) => updateCartQuantity(item.id, parseInt(e.target.value) || 1)}
+                      className="w-16 text-center"
+                      min="1"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => updateCartQuantity(item.id, (item.quantity || 1) + 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
               <div className="flex items-center justify-between pt-4 border-t">

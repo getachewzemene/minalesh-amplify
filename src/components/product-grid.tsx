@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
+import { Star, ShoppingCart, Eye, Heart, ShieldCheck, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "./ui/container"
@@ -19,6 +19,7 @@ interface Product {
   category: string
   hasAR?: boolean
   vendor: string
+  vendorVerified: boolean
 }
 
 const mockProducts: Product[] = [
@@ -31,7 +32,8 @@ const mockProducts: Product[] = [
     reviews: 256,
     image: "/api/placeholder/300/300",
     category: "Smartphones",
-    vendor: "TechStore ET"
+    vendor: "TechStore ET",
+    vendorVerified: true
   },
   {
     id: "2",
@@ -42,7 +44,8 @@ const mockProducts: Product[] = [
     image: "/api/placeholder/300/300",
     category: "Fashion",
     hasAR: true,
-    vendor: "Fashion Hub"
+    vendor: "Fashion Hub",
+    vendorVerified: false
   },
   {
     id: "3",
@@ -53,7 +56,8 @@ const mockProducts: Product[] = [
     reviews: 342,
     image: "/api/placeholder/300/300",
     category: "Audio",
-    vendor: "Audio World"
+    vendor: "Audio World",
+    vendorVerified: true
   },
   {
     id: "4",
@@ -64,7 +68,8 @@ const mockProducts: Product[] = [
     image: "/api/placeholder/300/300",
     category: "Fashion",
     hasAR: true,
-    vendor: "Sports Zone"
+    vendor: "Sports Zone",
+    vendorVerified: false
   }
 ]
 
@@ -78,12 +83,6 @@ export function ProductGrid() {
   const products = category === "All" ? mockProducts : mockProducts.filter(p => p.category === category)
 
   const handleAddToCart = (product: Product) => {
-    if (!user) {
-      toast.error("Please login to add items to cart")
-      navigate("/auth/login")
-      return
-    }
-    
     addToCart({ 
       id: product.id, 
       name: product.name, 
@@ -94,6 +93,19 @@ export function ProductGrid() {
       hasAR: product.hasAR 
     })
     toast.success("Item added to cart")
+  }
+
+  const handleAddToWishlist = (product: Product) => {
+    addToWishlist({ 
+      id: product.id, 
+      name: product.name, 
+      price: product.price, 
+      image: product.image, 
+      category: product.category, 
+      vendor: product.vendor, 
+      hasAR: product.hasAR 
+    })
+    toast.success("Item added to wishlist")
   }
 
   return (
@@ -210,9 +222,16 @@ export function ProductGrid() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    by {product.vendor}
-                  </p>
+                  <div className="flex items-center mt-1">
+                    <span className="text-xs text-muted-foreground">
+                      by {product.vendor}
+                    </span>
+                    {product.vendorVerified ? (
+                      <ShieldCheck className="h-3 w-3 text-green-500 ml-1" />
+                    ) : (
+                      <AlertCircle className="h-3 w-3 text-yellow-500 ml-1" />
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
@@ -231,21 +250,7 @@ export function ProductGrid() {
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault();
-                      if (!user) {
-                        toast.error("Please login to add items to wishlist")
-                        navigate("/auth/login")
-                        return
-                      }
-                      addToWishlist({ 
-                        id: product.id, 
-                        name: product.name, 
-                        price: product.price, 
-                        image: product.image, 
-                        category: product.category, 
-                        vendor: product.vendor, 
-                        hasAR: product.hasAR 
-                      })
-                      toast.success("Item added to wishlist")
+                      handleAddToWishlist(product);
                     }}
                     aria-label="Add to wishlist"
                   >

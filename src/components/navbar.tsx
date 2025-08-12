@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -27,8 +28,8 @@ export function Navbar() {
     else navigate('/')
   }
 
-  // Only show wishlist and cart for regular users
-  const showWishlistAndCart = user?.role === 'user' || !user;
+  // Always show wishlist and cart for all users
+  const showWishlistAndCart = true;
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -87,6 +88,7 @@ export function Navbar() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
                     {showWishlistAndCart && (
                       <>

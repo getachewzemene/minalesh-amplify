@@ -27,7 +27,8 @@ const mockProduct = {
   vendor: {
     name: "Fashion Hub Ethiopia",
     rating: 4.8,
-    totalSales: 1200
+    totalSales: 1200,
+    isVerified: true
   },
   inStock: true,
   stockCount: 15,
@@ -139,7 +140,14 @@ export default function Product() {
               <div className="bg-gradient-card p-4 rounded-lg border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold">{mockProduct.vendor.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{mockProduct.vendor.name}</h3>
+                      {mockProduct.vendor.isVerified && (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          Verified
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                       {mockProduct.vendor.rating} • {mockProduct.vendor.totalSales} sales

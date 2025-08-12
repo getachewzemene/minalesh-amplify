@@ -8,7 +8,7 @@ export interface ShopItem {
   category?: string;
   vendor?: string;
   hasAR?: boolean;
-  quantity?: number; // Add quantity field
+  quantity?: number; // Add quantity property
 }
 
 interface ShopContextValue {
@@ -48,12 +48,12 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     setCart((prev) => {
       const existingItem = prev.find((i) => i.id === item.id);
       if (existingItem) {
-        // If item already exists, increase quantity
+        // If item already exists, increment quantity
         return prev.map((i) =>
           i.id === item.id ? { ...i, quantity: (i.quantity || 1) + 1 } : i
         );
       } else {
-        // If item doesn't exist, add it with quantity 1
+        // If new item, add with quantity 1
         return [...prev, { ...item, quantity: 1 }];
       }
     });
@@ -62,7 +62,7 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((i) => i.id !== id));
   };
-
+  
   const updateCartQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
@@ -70,7 +70,7 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     setCart((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity } : i))
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
   };
 
