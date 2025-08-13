@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
+import { NotificationCenter } from "./notifications/NotificationCenter"
 import { Container } from "./ui/container"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -86,6 +87,7 @@ export function Navbar() {
             
             {/* Desktop actions */}
             <div className="hidden md:flex items-center space-x-2">
+              <NotificationCenter />
               {showWishlistAndCart && (
                 <>
                   <Button variant="ghost" size="icon" onClick={() => navigate('/wishlist')} className="relative">

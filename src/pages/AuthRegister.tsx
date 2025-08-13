@@ -1,90 +1,237 @@
 import { FormEvent, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Container } from "@/components/ui/container";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function AuthRegister() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    acceptTerms: false,
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || "/";
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const success = await register(email, password, name, phone);
+    
+    if (formData.password !== formData.confirmPassword) {
+      return; // Error already shown by validation
+    }
+
+    if (!formData.acceptTerms) {
+      return; // Error already shown by validation
+    }
+
+    setIsLoading(true);
+    
+    const success = await register(formData.email, formData.password, {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      display_name: `${formData.firstName} ${formData.lastName}`.trim(),
+    });
     
     if (success) {
-      const role = email.includes("admin") ? "admin" : email.includes("vendor") ? "vendor" : "user";
-      navigate(role === "admin" ? "/admin" : role === "vendor" ? "/dashboard" : from, { replace: true });
-      toast.success("Account created successfully!");
-    } else {
-      toast.error("An account with this email already exists");
+      navigate("/auth/login");
     }
+    
+    setIsLoading(false);
   };
+
+  const passwordsMatch = formData.password === formData.confirmPassword;
+  const isFormValid = formData.firstName && formData.lastName && formData.email && 
+                     formData.password && formData.confirmPassword && 
+                     passwordsMatch && formData.acceptTerms;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="py-16">
         <Container className="max-w-md">
-          <h1 className="text-2xl font-bold mb-6">Create your account</h1>
-          <form onSubmit={onSubmit} className="space-y-4" aria-label="Register form">
-            <div>
-              <label className="block text-sm mb-1" htmlFor="name">Full Name</label>
-              <Input 
-                id="name" 
-                type="text" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                required 
-                placeholder="John Doe"
-              />
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Create Account</h1>
+            <p className="text-muted-foreground">Join our marketplace today</p>
+          </div>
+          
+          <form onSubmit={onSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="firstName">
+                  First Name
+                </label>
+                <Input 
+                  id="firstName"
+                  type="text" 
+                  value={formData.firstName} 
+                  onChange={(e) => handleInputChange('firstName', e.target.value)} 
+                  required 
+                  placeholder="John"
+                  disabled={isLoading}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="lastName">
+                  Last Name
+                </label>
+                <Input 
+                  id="lastName"
+                  type="text" 
+                  value={formData.lastName} 
+                  onChange={(e) => handleInputChange('lastName', e.target.value)} 
+                  required 
+                  placeholder="Doe"
+                  disabled={isLoading}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm mb-1" htmlFor="email">Email</label>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="email">
+                Email Address
+              </label>
               <Input 
-                id="email" 
+                id="email"
                 type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
+                value={formData.email} 
+                onChange={(e) => handleInputChange('email', e.target.value)} 
                 required 
-                placeholder="your@email.com"
+                placeholder="john@example.com"
+                disabled={isLoading}
               />
             </div>
-            <div>
-              <label className="block text-sm mb-1" htmlFor="phone">Phone Number</label>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="phone">
+                Phone Number (Optional)
+              </label>
               <Input 
-                id="phone" 
+                id="phone"
                 type="tel" 
-                value={phone} 
-                onChange={(e) => setPhone(e.target.value)} 
-                required 
-                placeholder="+251 911 123456"
+                value={formData.phone} 
+                onChange={(e) => handleInputChange('phone', e.target.value)} 
+                placeholder="+1 (555) 123-4567"
+                disabled={isLoading}
               />
             </div>
-            <div>
-              <label className="block text-sm mb-1" htmlFor="password">Password</label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
-                placeholder="••••••••"
-              />
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <Input 
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password} 
+                  onChange={(e) => handleInputChange('password', e.target.value)} 
+                  required 
+                  placeholder="Create a secure password"
+                  className="pr-10"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Create Account</Button>
-            <p className="text-xs text-muted-foreground">Tip: include the word "admin" or "vendor" in the email to preview those roles.</p>
-            <p className="text-sm">Already have an account? <a className="underline" href="/auth/login">Sign in</a></p>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="confirmPassword">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Input 
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword} 
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)} 
+                  required 
+                  placeholder="Confirm your password"
+                  className={`pr-10 ${formData.confirmPassword && !passwordsMatch ? 'border-destructive' : ''}`}
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {formData.confirmPassword && !passwordsMatch && (
+                <p className="text-sm text-destructive">Passwords do not match</p>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="acceptTerms"
+                checked={formData.acceptTerms}
+                onCheckedChange={(checked) => handleInputChange('acceptTerms', checked as boolean)}
+                disabled={isLoading}
+              />
+              <label htmlFor="acceptTerms" className="text-sm">
+                I agree to the{" "}
+                <Link to="/terms" className="text-primary hover:text-primary/80 underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="text-primary hover:text-primary/80 underline">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={!isFormValid || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link 
+                  to="/auth/login" 
+                  className="text-primary hover:text-primary/80 font-medium underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </form>
         </Container>
       </main>

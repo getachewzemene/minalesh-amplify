@@ -1,192 +1,252 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export type User = {
+export interface UserProfile {
   id: string;
-  email: string;
-  name?: string;
+  user_id: string;
+  display_name?: string;
+  first_name?: string;
+  last_name?: string;
   phone?: string;
-  role?: "user" | "vendor" | "admin";
-  isVerified?: boolean; // Add verification status for vendors
-  tradeLicense?: string;
-  tinNumber?: string;
-};
+  address?: string;
+  city?: string;
+  country?: string;
+  postal_code?: string;
+  avatar_url?: string;
+  bio?: string;
+  is_vendor: boolean;
+  vendor_status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  trade_license?: string;
+  tin_number?: string;
+}
 
 interface AuthContextValue {
   user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name?: string, phone?: string) => Promise<boolean>;
-  logout: () => void;
-  verifyVendor: (tradeLicense: string, tinNumber: string) => void; // Add function to verify vendors
-  requestVendorVerification: (tradeLicense: string, tinNumber: string) => void; // Add function to request verification
-  approveVendorVerification: (vendorId: string) => void; // Admin approves vendor by ID
-  updateProfile: (data: Partial<User>) => void; // Add function to update profile
+  register: (email: string, password: string, userData?: Partial<UserProfile>) => Promise<boolean>;
+  logout: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
+  requestVendorVerification: (tradeL: string, tin: string) => Promise<boolean>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem("auth_user");
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {}
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user profile with a slight delay to avoid auth state conflicts
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (user) localStorage.setItem("auth_user", JSON.stringify(user));
-    else localStorage.removeItem("auth_user");
-  }, [user]);
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-  const login = async (email: string, password: string) => {
-    // Get users from localStorage
-    const usersRaw = localStorage.getItem("users");
-    const users = usersRaw ? JSON.parse(usersRaw) : [];
-    
-    // Find user
-    const foundUser = users.find((u: any) => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      // Infer role from email for demo purposes
-      const role: User["role"] = email.includes("admin")
-        ? "admin"
-        : email.includes("vendor")
-        ? "vendor"
-        : "user";
-      
-      // Check if vendor is verified
-      const isVerified = role === "vendor" ? (localStorage.getItem(`vendor_verified_${foundUser.id}`) === "true") : undefined;
-      
-      const loggedInUser = { 
-        id: foundUser.id, 
-        email: foundUser.email, 
-        name: foundUser.name,
-        phone: foundUser.phone,
-        role,
-        isVerified,
-        tradeLicense: foundUser.tradeLicense,
-        tinNumber: foundUser.tinNumber
-      };
-      
-      setUser(loggedInUser);
-      return true;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
     }
-    
-    return false;
   };
 
-  const register = async (email: string, password: string, name?: string, phone?: string) => {
-    // Get existing users
-    const usersRaw = localStorage.getItem("users");
-    const users = usersRaw ? JSON.parse(usersRaw) : [];
-    
-    // Check if user already exists
-    if (users.some((u: any) => u.email === email)) {
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      toast.success("Logged in successfully!");
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error("An error occurred during login");
       return false;
     }
-    
-    // Create new user
-    const newUser = {
-      id: crypto.randomUUID(),
-      email,
-      password, // In a real app, this would be hashed
-      name: name || email.split("@")[0],
-      phone: phone || ""
-    };
-    
-    // Save user
-    const updatedUsers = [...users, newUser];
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    
-    // Infer role from email for demo purposes
-    const role: User["role"] = email.includes("admin")
-      ? "admin"
-      : email.includes("vendor")
-      ? "vendor"
-      : "user";
-    
-    const registeredUser = { 
-      id: newUser.id, 
-      email: newUser.email, 
-      name: newUser.name,
-      phone: newUser.phone,
-      role 
-    };
-    
-    setUser(registeredUser);
-    return true;
   };
 
-  const logout = () => setUser(null);
-  
-  const verifyVendor = (tradeLicense: string, tinNumber: string) => {
-    if (user && user.role === "vendor") {
-      const updatedUser = { ...user, isVerified: true, tradeLicense, tinNumber };
-      setUser(updatedUser);
-      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
-      localStorage.setItem(`vendor_verified_${user.id}`, "true");
-    }
-  };
-  
-  const requestVendorVerification = (tradeLicense: string, tinNumber: string) => {
-    if (user && user.role === "vendor") {
-      const updatedUser = { ...user, tradeLicense, tinNumber };
-      setUser(updatedUser);
-      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
-      // In a real app, this would send a request to admin for verification
-    }
-  };
-  
-  // Admin-only: approve a vendor by their vendor user ID
-  const approveVendorVerification = (vendorId: string) => {
+  const register = async (email: string, password: string, userData?: Partial<UserProfile>): Promise<boolean> => {
     try {
-      // Update users in localStorage
-      const usersRaw = localStorage.getItem("users");
-      const users = usersRaw ? JSON.parse(usersRaw) : [];
-      const updatedUsers = users.map((u: any) => 
-        u.id === vendorId ? { ...u, isVerified: true } : u
-      );
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      const redirectUrl = `${window.location.origin}/`;
       
-      // If the currently logged-in user is this vendor, update current session
-      if (user && user.id === vendorId) {
-        const updatedUser = { ...user, isVerified: true };
-        setUser(updatedUser);
-        localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            display_name: userData?.display_name || email,
+            first_name: userData?.first_name,
+            last_name: userData?.last_name,
+          }
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
       }
-      
-      toast.success("Vendor approved successfully");
+
+      toast.success("Registration successful! Please check your email to verify your account.");
+      return true;
     } catch (error) {
-      console.error("Error approving vendor:", error);
-      toast.error("Error approving vendor");
-    }
-  };
-  const updateProfile = (data: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
-      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
-      
-      // Update in users list as well
-      const usersRaw = localStorage.getItem("users");
-      const users = usersRaw ? JSON.parse(usersRaw) : [];
-      const updatedUsers = users.map((u: any) => 
-        u.id === user.id ? { ...u, ...data } : u
-      );
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      console.error('Registration error:', error);
+      toast.error("An error occurred during registration");
+      return false;
     }
   };
 
-  const value = useMemo(() => ({ user, login, register, logout, verifyVendor, requestVendorVerification, approveVendorVerification, updateProfile }), [user]);
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+  const logout = async (): Promise<void> => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      toast.success("Logged out successfully!");
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error("An error occurred during logout");
+    }
+  };
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
-};
+  const updateProfile = async (updates: Partial<UserProfile>): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      // Update local state
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      toast.success("Profile updated successfully!");
+      return true;
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error("An error occurred while updating profile");
+      return false;
+    }
+  };
+
+  const requestVendorVerification = async (tradeLicense: string, tin: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_vendor: true,
+          vendor_status: 'pending',
+          trade_license: tradeLicense,
+          tin_number: tin,
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      // Update local state
+      setProfile(prev => prev ? {
+        ...prev,
+        is_vendor: true,
+        vendor_status: 'pending',
+        trade_license: tradeLicense,
+        tin_number: tin,
+      } : null);
+
+      toast.success("Vendor verification request submitted!");
+      return true;
+    } catch (error) {
+      console.error('Vendor verification error:', error);
+      toast.error("An error occurred while requesting vendor verification");
+      return false;
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{
+      user,
+      session,
+      profile,
+      login,
+      register,
+      logout,
+      updateProfile,
+      requestVendorVerification,
+      loading,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
