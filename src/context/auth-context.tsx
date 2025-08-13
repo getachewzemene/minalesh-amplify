@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export type User = {
   id: string;
@@ -142,13 +143,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   // Admin-only: approve a vendor by their vendor user ID
   const approveVendorVerification = (vendorId: string) => {
-    // Persist verification flag for this vendor
-    localStorage.setItem(`vendor_verified_${vendorId}`, "true");
-    // If the currently logged-in user is this vendor, mark verified in session too
-    if (user && user.id === vendorId) {
-      const updatedUser = { ...user, isVerified: true };
-      setUser(updatedUser);
-      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+    try {
+      // Update users in localStorage
+      const usersRaw = localStorage.getItem("users");
+      const users = usersRaw ? JSON.parse(usersRaw) : [];
+      const updatedUsers = users.map((u: any) => 
+        u.id === vendorId ? { ...u, isVerified: true } : u
+      );
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      
+      // If the currently logged-in user is this vendor, update current session
+      if (user && user.id === vendorId) {
+        const updatedUser = { ...user, isVerified: true };
+        setUser(updatedUser);
+        localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      }
+      
+      toast.success("Vendor approved successfully");
+    } catch (error) {
+      console.error("Error approving vendor:", error);
+      toast.error("Error approving vendor");
     }
   };
   const updateProfile = (data: Partial<User>) => {

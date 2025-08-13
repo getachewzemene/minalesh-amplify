@@ -25,7 +25,20 @@ export function Navbar() {
 
   const handleSearch = () => {
     const q = query.trim()
-    if (q) navigate(`/products?search=${encodeURIComponent(q)}`)
+    if (q) {
+      navigate(`/products?search=${encodeURIComponent(q)}`)
+    } else {
+      navigate('/products')
+    }
+  }
+
+  const handleSearchChange = (value: string) => {
+    setQuery(value)
+    if (value.trim()) {
+      navigate(`/products?search=${encodeURIComponent(value.trim())}`)
+    } else {
+      navigate('/products')
+    }
   }
 
   const goDashboard = () => {
@@ -60,7 +73,7 @@ export function Navbar() {
                 placeholder="Search for electronics, fashion, and more..."
                 className="pl-10 pr-4 w-full"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
@@ -137,7 +150,7 @@ export function Navbar() {
                 placeholder="Search products..."
                 className="pl-10 pr-4 w-full"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (setIsMenuOpen(false), handleSearch())}
               />
             </div>

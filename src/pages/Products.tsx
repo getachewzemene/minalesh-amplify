@@ -3,7 +3,7 @@ import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
-import { useNavigate, useLocation } from "react-router-dom"
+import { Navigate, useNavigate, useLocation } from "react-router-dom"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
@@ -132,10 +132,19 @@ const mockProducts: Product[] = [
 
 export default function Products() {
   const navigate = useNavigate()
-const location = useLocation()
+  const location = useLocation()
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
+  
+  // Redirect admin/vendor to their dashboards
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin" replace />
+  }
+  
+  if (user?.role === 'vendor') {
+    return <Navigate to="/dashboard" replace />
+  }
 // Get search query from URL
   const searchParams = new URLSearchParams(location.search)
   const searchQuery = searchParams.get('search') || ''
