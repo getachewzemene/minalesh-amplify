@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
 import { ARViewer } from "@/components/ar-viewer"
+import { ReviewsSection } from "@/components/reviews/ReviewsSection"
 import { useShop } from "@/context/shop-context"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 
@@ -277,6 +278,11 @@ export default function Product() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-12">
+            <ReviewsSection productId={mockProduct.id} />
           </div>
         </Container>
       </main>

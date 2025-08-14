@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { AdvancedSearch } from "@/components/search/AdvancedSearch"
 import phoneImg from "@/assets/products/phone.jpg"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 import earbudsImg from "@/assets/products/earbuds.jpg"
@@ -179,6 +180,11 @@ export default function Products() {
       <Navbar />
       <main className="py-16">
         <Container>
+          {/* Advanced Search */}
+          <div className="mb-8">
+            <AdvancedSearch />
+          </div>
+
           <div className="text-center mb-12">
             <h1 className="text-3xl font-bold mb-4">
               {searchQuery ? `Search Results for "${searchQuery}"` : "All Products"}

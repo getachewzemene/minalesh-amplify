@@ -19,6 +19,7 @@ import { AuthProvider } from "./context/auth-context";
 import { LanguageProvider } from "./context/language-context";
 import { ShopProvider } from "./context/shop-context";
 import { AIHelper } from "./components/ai-helper";
+import { LiveChat } from "./components/chat/LiveChat";
 
 const queryClient = new QueryClient();
 
