@@ -13,16 +13,17 @@ import { Upload, User, Mail, Phone, MapPin, FileText } from "lucide-react"
 import { toast } from "sonner"
 
 export default function Profile() {
-  const { user, logout, updateProfile, requestVendorVerification } = useAuth()
+  const { user, profile, logout, updateProfile, requestVendorVerification } = useAuth()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [profileData, setProfileData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    address: "",
-    tradeLicense: user?.tradeLicense || "",
-    tinNumber: user?.tinNumber || ""
+    display_name: profile?.display_name || "",
+    first_name: profile?.first_name || "",
+    last_name: profile?.last_name || "",
+    phone: profile?.phone || "",
+    address: profile?.address || "",
+    trade_license: profile?.trade_license || "",
+    tin_number: profile?.tin_number || ""
   })
 
   const handleSave = () => {
@@ -37,8 +38,8 @@ export default function Profile() {
   }
 
   const handleVerifyVendor = () => {
-    if (profileData.tradeLicense && profileData.tinNumber) {
-      requestVendorVerification(profileData.tradeLicense, profileData.tinNumber)
+    if (profileData.trade_license && profileData.tin_number) {
+      requestVendorVerification(profileData.trade_license, profileData.tin_number)
       toast.info("Verification request sent to admin")
     } else {
       toast.error("Please provide both Trade License and TIN Number")
@@ -65,25 +66,27 @@ export default function Profile() {
                       <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <User className="h-12 w-12 text-primary" />
                       </div>
-                      <h2 className="text-xl font-bold">{user?.name}</h2>
+                      <h2 className="text-xl font-bold">{profile?.display_name || user?.email}</h2>
                       <p className="text-muted-foreground">{user?.email}</p>
                       <div className="mt-4">
-                        <Badge variant={user?.role === "admin" ? "default" : user?.role === "vendor" ? "secondary" : "outline"}>
-                          {user?.role?.toUpperCase()}
+                        <Badge variant={profile?.is_vendor ? "secondary" : "outline"}>
+                          {profile?.is_vendor ? "VENDOR" : "USER"}
                         </Badge>
                       </div>
                       
-                      {user?.role === "vendor" && (
+                      {profile?.is_vendor && (
                         <div className="mt-4 w-full">
                           <div className="flex items-center justify-between">
                             <span className="text-sm">Verification Status:</span>
-                            {user?.isVerified ? (
+                            {profile?.vendor_status === 'approved' ? (
                               <Badge className="bg-green-500">Verified</Badge>
+                            ) : profile?.vendor_status === 'pending' ? (
+                              <Badge className="bg-yellow-500">Pending</Badge>
                             ) : (
                               <Badge variant="destructive">Not Verified</Badge>
                             )}
                           </div>
-                          {!user?.isVerified && (
+                          {profile?.vendor_status !== 'approved' && profile?.vendor_status !== 'pending' && (
                             <Button 
                               className="w-full mt-2 bg-primary hover:bg-primary/90"
                               onClick={handleVerifyVendor}
@@ -117,23 +120,33 @@ export default function Profile() {
                   <CardContent>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="display_name">Display Name</Label>
                         <Input 
-                          id="name" 
-                          value={profileData.name} 
-                          onChange={(e) => setProfileData({...profileData, name: e.target.value})} 
+                          id="display_name" 
+                          value={profileData.display_name} 
+                          onChange={(e) => setProfileData({...profileData, display_name: e.target.value})} 
                           disabled={!editing}
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input 
-                          id="email" 
-                          type="email" 
-                          value={profileData.email} 
-                          onChange={(e) => setProfileData({...profileData, email: e.target.value})} 
-                          disabled={!editing}
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="first_name">First Name</Label>
+                          <Input 
+                            id="first_name" 
+                            value={profileData.first_name} 
+                            onChange={(e) => setProfileData({...profileData, first_name: e.target.value})} 
+                            disabled={!editing}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="last_name">Last Name</Label>
+                          <Input 
+                            id="last_name" 
+                            value={profileData.last_name} 
+                            onChange={(e) => setProfileData({...profileData, last_name: e.target.value})} 
+                            disabled={!editing}
+                          />
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="phone">Phone Number</Label>
@@ -156,24 +169,24 @@ export default function Profile() {
                         />
                       </div>
                       
-                      {user?.role === "vendor" && (
+                      {profile?.is_vendor && (
                         <>
                           <div>
-                            <Label htmlFor="tradeLicense">Trade License Number</Label>
+                            <Label htmlFor="trade_license">Trade License Number</Label>
                             <Input 
-                              id="tradeLicense" 
-                              value={profileData.tradeLicense} 
-                              onChange={(e) => setProfileData({...profileData, tradeLicense: e.target.value})} 
+                              id="trade_license" 
+                              value={profileData.trade_license} 
+                              onChange={(e) => setProfileData({...profileData, trade_license: e.target.value})} 
                               disabled={!editing}
                               placeholder="Enter trade license number"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="tinNumber">TIN Number</Label>
+                            <Label htmlFor="tin_number">TIN Number</Label>
                             <Input 
-                              id="tinNumber" 
-                              value={profileData.tinNumber} 
-                              onChange={(e) => setProfileData({...profileData, tinNumber: e.target.value})} 
+                              id="tin_number" 
+                              value={profileData.tin_number} 
+                              onChange={(e) => setProfileData({...profileData, tin_number: e.target.value})} 
                               disabled={!editing}
                               placeholder="Enter TIN number"
                             />

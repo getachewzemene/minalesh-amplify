@@ -31,6 +31,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
   requestVendorVerification: (tradeL: string, tin: string) => Promise<boolean>;
+  approveVendorVerification: (vendorId: string) => Promise<boolean>;
   loading: boolean;
 }
 
@@ -226,6 +227,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const approveVendorVerification = async (vendorId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          vendor_status: 'approved',
+        })
+        .eq('id', vendorId);
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      toast.success("Vendor verification approved!");
+      return true;
+    } catch (error) {
+      console.error('Vendor approval error:', error);
+      toast.error("An error occurred while approving vendor verification");
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -236,6 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       updateProfile,
       requestVendorVerification,
+      approveVendorVerification,
       loading,
     }}>
       {children}

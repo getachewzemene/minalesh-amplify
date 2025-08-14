@@ -96,7 +96,7 @@ export default function Dashboard() {
     image: ""
   })
   const { toast } = useToast()
-  const { user, requestVendorVerification } = useAuth()
+  const { user, profile, requestVendorVerification } = useAuth()
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -118,7 +118,7 @@ export default function Dashboard() {
 
   const handleAddProduct = () => {
     // Check if vendor is verified
-    if (!user?.isVerified) {
+    if (!profile?.is_vendor || profile?.vendor_status !== 'approved') {
       toast({
         title: "Vendor Verification Required",
         description: "Please complete vendor verification before adding products.",
@@ -146,8 +146,8 @@ export default function Dashboard() {
 
   const handleVerifyVendor = () => {
     // In a real app, this would send verification documents to a backend
-    if (user?.tradeLicense && user?.tinNumber) {
-      requestVendorVerification(user.tradeLicense, user.tinNumber);
+    if (profile?.trade_license && profile?.tin_number) {
+      requestVendorVerification(profile.trade_license, profile.tin_number);
       toast({
         title: "Verification Submitted",
         description: "Your verification request has been submitted. You'll be notified once approved."
@@ -177,7 +177,7 @@ export default function Dashboard() {
               
               {/* Vendor Verification Status */}
               <div className="mt-4">
-                {user?.isVerified ? (
+                {profile?.is_vendor && profile?.vendor_status === 'approved' ? (
                   <div className="flex items-center gap-2">
                     <Badge className="bg-green-500">
                       <ShieldCheck className="h-4 w-4 mr-1" />
@@ -188,16 +188,18 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <Badge variant="destructive">
                       <AlertCircle className="h-4 w-4 mr-1" />
-                      Not Verified
+                      {profile?.vendor_status === 'pending' ? 'Verification Pending' : 'Not Verified'}
                     </Badge>
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      onClick={handleVerifyVendor}
-                      className="ml-2"
-                    >
-                      Verify Account
-                    </Button>
+                    {profile?.vendor_status !== 'pending' && (
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleVerifyVendor}
+                        className="ml-2"
+                      >
+                        Verify Account
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
