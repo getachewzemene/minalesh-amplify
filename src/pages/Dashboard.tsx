@@ -29,6 +29,13 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import {
   ResponsiveContainer,
   LineChart as RLineChart,
   Line,
@@ -37,12 +44,31 @@ import {
   PieChart as RPieChart,
   Pie,
   Cell,
+  AreaChart,
+  Area,
   CartesianGrid,
   XAxis,
   YAxis,
-  Tooltip,
-  Legend,
 } from "recharts";
+
+const chartConfig = {
+  sales: {
+    label: "Sales",
+    color: "hsl(var(--primary))",
+  },
+  orders: {
+    label: "Orders",
+    color: "hsl(var(--muted-foreground))",
+  },
+  revenue: {
+    label: "Revenue",
+    color: "hsl(var(--chart-1))",
+  },
+  conversion: {
+    label: "Conversion",
+    color: "hsl(var(--chart-2))",
+  },
+};
 
 const mockMetrics = {
   totalSales: 125430,
@@ -374,17 +400,32 @@ export default function Dashboard() {
                     Sales Overview
                   </CardTitle>
                 </CardHeader>
-                <CardContent style={{height: 300}}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RLineChart data={mockMetrics.salesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Sales (ETB)" />
-                    </RLineChart>
-                  </ResponsiveContainer>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={mockMetrics.salesData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis dataKey="date" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <ChartTooltip 
+                          content={<ChartTooltipContent 
+                            formatter={(value, name) => [
+                              `${typeof value === 'number' ? value.toLocaleString() : value} ETB`,
+                              name
+                            ]}
+                          />} 
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="sales"
+                          stroke="hsl(var(--primary))"
+                          fill="hsl(var(--primary))"
+                          fillOpacity={0.3}
+                          name="Sales"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 </CardContent>
               </Card>
 
@@ -396,17 +437,19 @@ export default function Dashboard() {
                     Product Performance
                   </CardTitle>
                 </CardHeader>
-                <CardContent style={{height: 300}}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RBarChart data={mockMetrics.productPerformance} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="sales" fill="hsl(var(--primary))" name="Units Sold" />
-                    </RBarChart>
-                  </ResponsiveContainer>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RBarChart data={mockMetrics.productPerformance.slice(0, 6)}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis dataKey="name" className="text-xs" angle={-45} textAnchor="end" height={100} />
+                        <YAxis className="text-xs" />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Bar dataKey="sales" fill="hsl(var(--primary))" name="Units Sold" />
+                      </RBarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 </CardContent>
               </Card>
 
@@ -415,31 +458,35 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="h-5 w-5" />
-                    Conversion Rates
+                    Conversion Rates by Product
                   </CardTitle>
                 </CardHeader>
-                <CardContent style={{height: 300}}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RPieChart>
-                      <Pie
-                        data={mockMetrics.productPerformance}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="conversion"
-                        nameKey="name"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {mockMetrics.productPerformance.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => `${value}%`} />
-                      <Legend />
-                    </RPieChart>
-                  </ResponsiveContainer>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RPieChart>
+                        <Pie
+                          data={mockMetrics.productPerformance.slice(0, 5)}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="conversion"
+                          nameKey="name"
+                          label={({ name, value }) => `${name}: ${value}%`}
+                        >
+                          {mockMetrics.productPerformance.slice(0, 5).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip 
+                          content={<ChartTooltipContent 
+                            formatter={(value, name) => [`${value}%`, `${name} conversion`]}
+                          />} 
+                        />
+                        <ChartLegend content={<ChartLegendContent />} />
+                      </RPieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 </CardContent>
               </Card>
             </div>
