@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from "react";
 import { Search, Filter, Star, MapPin, Sliders, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 
 interface SearchFilters {
   query: string;
@@ -63,15 +65,17 @@ export function AdvancedSearch() {
   const [filters, setFilters] = useState<SearchFilters>(defaultFilters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFiltersCount, setAppliedFiltersCount] = useState(0);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Parse URL parameters on component mount
-    const searchParams = new URLSearchParams(location.search);
-    const query = searchParams.get("search") || "";
-    setFilters(prev => ({ ...prev, query }));
-  }, [location.search]);
+    // Parse URL parameters on component mount (client-side only)
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const query = searchParams.get("search") || "";
+      setFilters(prev => ({ ...prev, query }));
+    }
+  }, []);
 
   useEffect(() => {
     countAppliedFilters();
@@ -110,7 +114,7 @@ export function AdvancedSearch() {
     if (filters.isVerified) searchParams.set("verified", "true");
     if (filters.sortBy !== "relevance") searchParams.set("sort", filters.sortBy);
 
-    navigate(`/products?${searchParams.toString()}`);
+    router.push(`/products?${searchParams.toString()}`);
     setIsFilterOpen(false);
   };
 

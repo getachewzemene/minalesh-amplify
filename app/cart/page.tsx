@@ -1,5 +1,5 @@
 'use client'
 
-import Cart from "@/src/pages/Cart"
+import Cart from "@/pages/Cart"
 
 export default Cart

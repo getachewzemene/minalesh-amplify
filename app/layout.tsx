@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -10,8 +9,6 @@ import { ShopProvider } from "@/context/shop-context"
 import { AIHelper } from "@/components/ai-helper"
 import '@/index.css'
 import Providers from './providers'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Minalesh - Ethiopia\'s Intelligent Marketplace',
@@ -34,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body>
         <Providers>
           <TooltipProvider>
             <LanguageProvider>

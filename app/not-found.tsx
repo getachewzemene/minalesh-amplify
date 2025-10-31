@@ -1,5 +1,5 @@
 'use client'
 
-import NotFound from "@/src/pages/NotFound"
+import NotFound from "@/pages/NotFound"
 
 export default NotFound

@@ -1,5 +1,5 @@
 'use client'
 
-import Wishlist from "@/src/pages/Wishlist"
+import Wishlist from "@/pages/Wishlist"
 
 export default Wishlist

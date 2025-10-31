@@ -1,5 +1,5 @@
 'use client'
 
-import Profile from "@/src/pages/Profile"
+import Profile from "@/pages/Profile"
 
 export default Profile

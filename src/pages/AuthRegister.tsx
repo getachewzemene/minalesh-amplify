@@ -1,5 +1,8 @@
+'use client'
+
 import { FormEvent, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +26,7 @@ export default function AuthRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -49,7 +52,7 @@ export default function AuthRegister() {
     });
     
     if (success) {
-      navigate("/auth/login");
+      router.push("/auth/login");
     }
     
     setIsLoading(false);
@@ -196,11 +199,11 @@ export default function AuthRegister() {
               />
               <label htmlFor="acceptTerms" className="text-sm">
                 I agree to the{" "}
-                <Link to="/terms" className="text-primary hover:text-primary/80 underline">
+                <Link href="/terms" className="text-primary hover:text-primary/80 underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" className="text-primary hover:text-primary/80 underline">
+                <Link href="/privacy" className="text-primary hover:text-primary/80 underline">
                   Privacy Policy
                 </Link>
               </label>
@@ -225,7 +228,7 @@ export default function AuthRegister() {
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 
-                  to="/auth/login" 
+                  href="/auth/login" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
                   Sign in

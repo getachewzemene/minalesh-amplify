@@ -1,5 +1,5 @@
 'use client'
 
-import Product from "@/src/pages/Product"
+import Product from "@/pages/Product"
 
 export default Product
