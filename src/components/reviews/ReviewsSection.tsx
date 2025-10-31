@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/auth-context";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Review {
@@ -20,7 +19,7 @@ interface Review {
   is_verified: boolean;
   created_at: string;
   profiles: {
-    display_name: string;
+    displayName: string;
   } | null;
 }
 
@@ -40,18 +39,26 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
   }, [productId]);
 
   const fetchReviews = async () => {
-    const { data, error } = await supabase
-      .from("reviews")
-      .select(`
-        *,
-        profiles!reviews_user_id_fkey (display_name)
-      `)
-      .eq("product_id", productId)
-      .eq("is_approved", true)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setReviews(data as any);
+    try {
+      const response = await fetch(`/api/reviews?productId=${productId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Transform the data to match the expected format
+        const transformedData = data.map((review: any) => ({
+          ...review,
+          user_id: review.userId,
+          product_id: review.productId,
+          helpful_count: review.helpfulCount,
+          is_verified: review.isVerified,
+          created_at: review.createdAt,
+          profiles: review.user?.profile ? {
+            displayName: review.user.profile.displayName,
+          } : null,
+        }));
+        setReviews(transformedData);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
     }
   };
 
@@ -67,23 +74,37 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
     }
 
     setIsSubmitting(true);
-    const { error } = await supabase.from("reviews").insert({
-      user_id: user.id,
-      product_id: productId,
-      rating: newReview.rating,
-      title: newReview.title,
-      comment: newReview.comment,
-    });
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId,
+          rating: newReview.rating,
+          title: newReview.title,
+          comment: newReview.comment,
+        }),
+      });
 
-    if (error) {
+      if (response.ok) {
+        toast.success("Review submitted successfully!");
+        setNewReview({ rating: 5, title: "", comment: "" });
+        setShowReviewForm(false);
+        fetchReviews();
+      } else {
+        toast.error("Failed to submit review");
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
       toast.error("Failed to submit review");
-    } else {
-      toast.success("Review submitted successfully!");
-      setNewReview({ rating: 5, title: "", comment: "" });
-      setShowReviewForm(false);
-      fetchReviews();
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const averageRating = reviews.length > 0 
@@ -214,13 +235,13 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
                 <div className="flex items-start gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback>
-                      {review.profiles?.display_name?.charAt(0) || "U"}
+                      {review.profiles?.displayName?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-medium">
-                        {review.profiles?.display_name || "Anonymous"}
+                        {review.profiles?.displayName || "Anonymous"}
                       </span>
                       {review.is_verified && (
                         <Badge variant="secondary" className="text-xs">

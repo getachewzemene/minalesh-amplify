@@ -12,11 +12,13 @@ const Index = () => {
   const { user } = useAuth()
   const router = useRouter()
   
+  // Note: Role-based redirects removed - can be implemented using profile.isVendor
+  // if needed in the future
   useEffect(() => {
-    // Redirect admin/vendor to their dashboards
-    if (user?.role === 'admin') {
+    // Optional: Add role-based redirects here if needed
+    if (false) { // Disabled for now
       router.push('/admin')
-    } else if (user?.role === 'vendor') {
+    } else if (false) {
       router.push('/dashboard')
     }
   }, [user, router])

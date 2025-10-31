@@ -1,7 +1,0 @@
-project_id = "xblyzbhhqxsmsfrafmlm"
-
-[functions.send-notification]
-verify_jwt = false
-
-[functions.ai-recommendations]
-verify_jwt = false

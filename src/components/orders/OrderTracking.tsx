@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
-import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
 interface Order {
@@ -40,24 +39,40 @@ export function OrderTracking() {
   const fetchOrders = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("orders")
-      .select(`
-        *,
-        order_items (
-          id,
-          product_name,
-          quantity,
-          price
-        )
-      `)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-    if (!error && data) {
-      setOrders(data);
+      if (response.ok) {
+        const data = await response.json();
+        // Transform the data to match the expected format
+        const transformedData = data.map((order: any) => ({
+          ...order,
+          order_number: order.orderNumber,
+          payment_status: order.paymentStatus,
+          total_amount: order.totalAmount,
+          created_at: order.createdAt,
+          shipped_at: order.shippedAt,
+          delivered_at: order.deliveredAt,
+          shipping_address: order.shippingAddress,
+          order_items: order.orderItems?.map((item: any) => ({
+            id: item.id,
+            product_name: item.productName,
+            quantity: item.quantity,
+            price: item.price,
+          })) || [],
+        }));
+        setOrders(transformedData);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const getStatusIcon = (status: string) => {

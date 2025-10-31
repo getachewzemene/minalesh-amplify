@@ -56,7 +56,7 @@ export function LiveChat() {
       content: inputMessage,
       sender: "user",
       timestamp: new Date(),
-      senderName: profile?.display_name || "You"
+      senderName: profile?.displayName || "You"
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -184,7 +184,7 @@ export function LiveChat() {
                 {message.sender === "user" && (
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="text-xs">
-                      {profile?.display_name?.charAt(0) || "U"}
+                      {profile?.displayName?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                 )}

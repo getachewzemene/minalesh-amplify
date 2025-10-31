@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/auth-context";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Product {
@@ -53,7 +52,7 @@ export function InventoryManagement() {
   const { user, profile } = useAuth();
 
   useEffect(() => {
-    if (profile?.is_vendor) {
+    if (profile?.isVendor) {
       fetchProducts();
     }
   }, [profile]);
@@ -65,15 +64,33 @@ export function InventoryManagement() {
   const fetchProducts = async () => {
     if (!profile) return;
 
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("vendor_id", profile.id)
-      .order("created_at", { ascending: false });
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/products', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-    if (!error && data) {
-      setProducts(data);
-      calculateStats(data);
+      if (response.ok) {
+        const data = await response.json();
+        // Transform the data to match the expected format
+        const transformedData = data.map((product: any) => ({
+          ...product,
+          stock_quantity: product.stockQuantity,
+          low_stock_threshold: product.lowStockThreshold,
+          sale_price: product.salePrice,
+          category_id: product.categoryId,
+          is_active: product.isActive,
+          view_count: product.viewCount,
+          sale_count: product.saleCount,
+          created_at: product.createdAt,
+        }));
+        setProducts(transformedData);
+        calculateStats(transformedData);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
     }
   };
 
@@ -120,49 +137,86 @@ export function InventoryManagement() {
       return;
     }
 
-    const productData = {
-      ...newProduct,
-      vendor_id: profile.id,
-      slug: newProduct.name.toLowerCase().replace(/\s+/g, '-'),
-    };
+    try {
+      const token = localStorage.getItem('auth_token');
+      const productData = {
+        name: newProduct.name,
+        sku: newProduct.sku,
+        stockQuantity: newProduct.stock_quantity,
+        lowStockThreshold: newProduct.low_stock_threshold,
+        price: newProduct.price,
+        description: newProduct.description,
+        slug: newProduct.name.toLowerCase().replace(/\s+/g, '-'),
+      };
 
-    const { error } = await supabase.from("products").insert(productData);
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(productData),
+      });
 
-    if (error) {
+      if (response.ok) {
+        toast.success("Product added successfully!");
+        setIsAddDialogOpen(false);
+        setNewProduct({ name: "", sku: "", stock_quantity: 0, low_stock_threshold: 5, price: 0, description: "" });
+        fetchProducts();
+      } else {
+        toast.error("Failed to add product");
+      }
+    } catch (error) {
+      console.error('Error adding product:', error);
       toast.error("Failed to add product");
-    } else {
-      toast.success("Product added successfully!");
-      setIsAddDialogOpen(false);
-      setNewProduct({ name: "", sku: "", stock_quantity: 0, low_stock_threshold: 5, price: 0, description: "" });
-      fetchProducts();
     }
   };
 
   const updateStock = async (productId: string, newStock: number) => {
-    const { error } = await supabase
-      .from("products")
-      .update({ stock_quantity: newStock })
-      .eq("id", productId);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: productId, stockQuantity: newStock }),
+      });
 
-    if (error) {
+      if (response.ok) {
+        toast.success("Stock updated successfully!");
+        fetchProducts();
+      } else {
+        toast.error("Failed to update stock");
+      }
+    } catch (error) {
+      console.error('Error updating stock:', error);
       toast.error("Failed to update stock");
-    } else {
-      toast.success("Stock updated successfully!");
-      fetchProducts();
     }
   };
 
   const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("products")
-      .update({ is_active: !currentStatus })
-      .eq("id", productId);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: productId, isActive: !currentStatus }),
+      });
 
-    if (error) {
+      if (response.ok) {
+        toast.success(`Product ${!currentStatus ? "activated" : "deactivated"} successfully!`);
+        fetchProducts();
+      } else {
+        toast.error("Failed to update product status");
+      }
+    } catch (error) {
+      console.error('Error updating product status:', error);
       toast.error("Failed to update product status");
-    } else {
-      toast.success(`Product ${!currentStatus ? "activated" : "deactivated"} successfully!`);
-      fetchProducts();
     }
   };
 
@@ -172,7 +226,7 @@ export function InventoryManagement() {
     return { status: "In Stock", color: "bg-green-100 text-green-800" };
   };
 
-  if (!profile?.is_vendor) {
+  if (!profile?.isVendor) {
     return (
       <Card>
         <CardContent className="text-center py-8">
