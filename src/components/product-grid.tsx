@@ -13,6 +13,8 @@ import phoneImg from "@/assets/products/phone.jpg"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 import earbudsImg from "@/assets/products/earbuds.jpg"
 import capImg from "@/assets/products/cap.jpg"
+import cctvImg from "@/assets/products/cctv.jpg"
+import nightlightImg from "@/assets/products/nightlight.jpg"
 
 interface Product {
   id: string
@@ -75,6 +77,30 @@ const mockProducts: Product[] = [
     category: "Fashion",
     hasAR: true,
     vendor: "Sports Zone",
+    vendorVerified: false
+  },
+  {
+    id: "5",
+    name: "4K CCTV Security Camera System",
+    price: 8999,
+    originalPrice: 9999,
+    rating: 4.7,
+    reviews: 142,
+    image: cctvImg,
+    category: "Security & Surveillance",
+    vendor: "SecureTech ET",
+    vendorVerified: true
+  },
+  {
+    id: "6",
+    name: "3D LED Night Light Moon Lamp",
+    price: 599,
+    rating: 4.8,
+    reviews: 215,
+    image: nightlightImg,
+    category: "Gifts & Decor",
+    hasAR: true,
+    vendor: "Gift Haven",
     vendorVerified: false
   }
 ]
