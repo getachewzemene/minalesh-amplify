@@ -1,36 +1,36 @@
-import { FormEvent, useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useAuth } from "@/context/auth-context";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Container } from "@/components/ui/container";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { toast } from "sonner";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+'use client'
+
+import { FormEvent, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { useAuth } from "@/context/auth-context"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Container } from "@/components/ui/container"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 
 export default function AuthLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || "/";
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { login } = useAuth()
+  const router = useRouter()
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
     
-    const success = await login(email, password);
+    const success = await login(email, password)
     
     if (success) {
-      navigate(from, { replace: true });
+      router.push('/')
     }
     
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,7 +104,7 @@ export default function AuthLogin() {
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link 
-                  to="/auth/register" 
+                  href="/auth/register" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
                   Sign up
@@ -123,5 +123,5 @@ export default function AuthLogin() {
       </main>
       <Footer />
     </div>
-  );
+  )
 }

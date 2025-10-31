@@ -1,9 +1,11 @@
+'use client'
+
 import { useState } from "react"
 import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
-import { Navigate, useNavigate, useLocation } from "react-router-dom"
+import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
@@ -26,7 +28,7 @@ interface Product {
   originalPrice?: number
   rating: number
   reviews: number
-  image: string
+  image: any
   category: string
   hasAR?: boolean
   vendor: string
@@ -132,23 +134,13 @@ const mockProducts: Product[] = [
 ]
 
 export default function Products() {
-  const navigate = useNavigate()
-  const location = useLocation()
+  const router = useRouter()
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   
-  // Redirect admin/vendor to their dashboards
-  if (user?.role === 'admin') {
-    return <Navigate to="/admin" replace />
-  }
-  
-  if (user?.role === 'vendor') {
-    return <Navigate to="/dashboard" replace />
-  }
-// Get search query from URL
-  const searchParams = new URLSearchParams(location.search)
-  const searchQuery = searchParams.get('search') || ''
+  // Get search query from URL (client-side only)
+  const searchQuery = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('search') || '' : ''
   
   // Filter categories based on search query
   const filteredProducts = searchQuery 
@@ -217,7 +209,7 @@ export default function Products() {
                 className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
-                onClick={() => navigate(`/product/${product.id}`)}
+                onClick={() => router.push(`/product/${product.id}`)}
               >
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img
@@ -243,7 +235,7 @@ export default function Products() {
                   {/* Hover actions */}
                   {hoveredProduct === product.id && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
-                    <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`) }} aria-label="View product">
+                    <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button 

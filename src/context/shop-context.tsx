@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export interface ShopItem {
@@ -28,20 +30,26 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   const [wishlist, setWishlist] = useState<ShopItem[]>([]);
 
   useEffect(() => {
-    try {
-      const c = localStorage.getItem("shop_cart");
-      const w = localStorage.getItem("shop_wishlist");
-      if (c) setCart(JSON.parse(c));
-      if (w) setWishlist(JSON.parse(w));
-    } catch {}
+    if (typeof window !== 'undefined') {
+      try {
+        const c = localStorage.getItem("shop_cart");
+        const w = localStorage.getItem("shop_wishlist");
+        if (c) setCart(JSON.parse(c));
+        if (w) setWishlist(JSON.parse(w));
+      } catch {}
+    }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("shop_cart", JSON.stringify(cart));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("shop_cart", JSON.stringify(cart));
+    }
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem("shop_wishlist", JSON.stringify(wishlist));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("shop_wishlist", JSON.stringify(wishlist));
+    }
   }, [wishlist]);
 
   const addToCart = (item: ShopItem) => {

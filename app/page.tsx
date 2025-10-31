@@ -1,21 +1,25 @@
-import { Navigate } from "react-router-dom"
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
 import { ProductGrid } from "@/components/product-grid"
 import { Footer } from "@/components/footer"
 import { useAuth } from "@/context/auth-context"
 
-const Index = () => {
+export default function Home() {
   const { user } = useAuth()
+  const router = useRouter()
   
-  // Redirect admin/vendor to their dashboards
-  if (user?.role === 'admin') {
-    return <Navigate to="/admin" replace />
-  }
-  
-  if (user?.role === 'vendor') {
-    return <Navigate to="/dashboard" replace />
-  }
+  useEffect(() => {
+    // Redirect admin/vendor to their dashboards
+    if (user?.role === 'admin') {
+      router.push('/admin')
+    } else if (user?.role === 'vendor') {
+      router.push('/dashboard')
+    }
+  }, [user, router])
   
   return (
     <div className="min-h-screen bg-background">
@@ -26,7 +30,5 @@ const Index = () => {
       </main>
       <Footer />
     </div>
-  );
-};
-
-export default Index;
+  )
+}

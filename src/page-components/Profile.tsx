@@ -1,6 +1,8 @@
+'use client'
+
 import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,7 +16,7 @@ import { toast } from "sonner"
 
 export default function Profile() {
   const { user, profile, logout, updateProfile, requestVendorVerification } = useAuth()
-  const navigate = useNavigate()
+  const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [profileData, setProfileData] = useState({
     display_name: profile?.display_name || "",
@@ -34,7 +36,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     logout()
-    navigate("/auth/login")
+    router.push("/auth/login")
   }
 
   const handleVerifyVendor = () => {

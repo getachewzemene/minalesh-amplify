@@ -1,12 +1,14 @@
+'use client'
+
 import { ArrowRight, Smartphone, Headphones, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Container } from "./ui/container"
 import heroImage from "@/assets/hero-marketplace.jpg"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 
 export function HeroSection() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const { user } = useAuth()
   return (
     <section className="relative overflow-hidden bg-gradient-hero min-h-[80vh] flex items-center">
@@ -48,7 +50,7 @@ export function HeroSection() {
                   variant="outline" 
                   size="lg"
                   className="border-white/30 text-white hover:bg-white/10"
-                  onClick={() => navigate('/auth/login')}
+                  onClick={() => router.push('/auth/login')}
                 >
                   Become a Vendor
                 </Button>

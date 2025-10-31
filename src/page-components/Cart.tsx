@@ -1,3 +1,5 @@
+'use client'
+
 import { Container } from "@/components/ui/container";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -5,7 +7,7 @@ import { useShop } from "@/context/shop-context";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, X } from "lucide-react";
@@ -13,7 +15,7 @@ import { Minus, Plus, X } from "lucide-react";
 export default function Cart() {
   const { cart, removeFromCart, updateCartQuantity } = useShop();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   
   const total = cart.reduce((sum, i) => sum + i.price * (i.quantity || 1), 0);
 
@@ -21,7 +23,7 @@ export default function Cart() {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to purchase items");
-      navigate("/auth/login");
+      router.push("/auth/login");
       return;
     }
     
