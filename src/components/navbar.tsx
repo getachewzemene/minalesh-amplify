@@ -1,3 +1,5 @@
+'use client'
+
 import { Search, ShoppingCart, User, Menu, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,7 +8,7 @@ import { LanguageSelector } from "./language-selector"
 import { NotificationCenter } from "./notifications/NotificationCenter"
 import { Container } from "./ui/container"
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { 
@@ -20,32 +22,32 @@ import { toast } from "sonner"
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const navigate = useNavigate()
+  const router = useRouter()
   const { cart, wishlist } = useShop()
   const { user, logout } = useAuth()
 
   const handleSearch = () => {
     const q = query.trim()
     if (q) {
-      navigate(`/products?search=${encodeURIComponent(q)}`)
+      router.push(`/products?search=${encodeURIComponent(q)}`)
     } else {
-      navigate('/products')
+      router.push('/products')
     }
   }
 
   const handleSearchChange = (value: string) => {
     setQuery(value)
     if (value.trim()) {
-      navigate(`/products?search=${encodeURIComponent(value.trim())}`)
+      router.push(`/products?search=${encodeURIComponent(value.trim())}`)
     } else {
-      navigate('/products')
+      router.push('/products')
     }
   }
 
   const goDashboard = () => {
-    if (user?.role === 'admin') navigate('/admin')
-    else if (user?.role === 'vendor') navigate('/dashboard')
-    else navigate('/')
+    if (user?.role === 'admin') router.push('/admin')
+    else if (user?.role === 'vendor') router.push('/dashboard')
+    else router.push('/')
   }
 
   // Always show wishlist and cart for all users
@@ -56,7 +58,7 @@ export function Navbar() {
       <Container>
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center cursor-pointer" onClick={() => navigate('/') }>
+          <div className="flex items-center cursor-pointer" onClick={() => router.push('/') }>
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Minalesh
             </h1>
@@ -90,13 +92,13 @@ export function Navbar() {
               <NotificationCenter />
               {showWishlistAndCart && (
                 <>
-                  <Button variant="ghost" size="icon" onClick={() => navigate('/wishlist')} className="relative">
+                  <Button variant="ghost" size="icon" onClick={() => router.push('/wishlist')} className="relative">
                     <Heart className="h-5 w-5" />
                     {wishlist.length > 0 && (
                       <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{wishlist.length}</span>
                     )}
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
+                  <Button variant="ghost" size="icon" onClick={() => router.push('/cart')} className="relative">
                     <ShoppingCart className="h-5 w-5" />
                     {cart.length > 0 && (
                       <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{cart.length}</span>
@@ -112,19 +114,19 @@ export function Navbar() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/profile')}>Profile</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
                     {showWishlistAndCart && (
                       <>
-                        <DropdownMenuItem onClick={() => navigate('/wishlist')}>Wishlist</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/cart')}>Cart</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/wishlist')}>Wishlist</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/cart')}>Cart</DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuItem onClick={() => { logout(); navigate('/auth/login'); }}>Logout</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { logout(); router.push('/auth/login'); }}>Logout</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button variant="ghost" size="icon" onClick={() => navigate('/auth/login')}>
+                <Button variant="ghost" size="icon" onClick={() => router.push('/auth/login')}>
                   <User className="h-5 w-5" />
                 </Button>
               )}
@@ -159,14 +161,14 @@ export function Navbar() {
             <div className="flex justify-around">
               {showWishlistAndCart ? (
                 <>
-                  <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => navigate('/wishlist')}>
+                  <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => router.push('/wishlist')}>
                     <Heart className="h-5 w-5 mb-1" />
                     {wishlist.length > 0 && (
                       <span className="absolute top-0 right-4 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{wishlist.length}</span>
                     )}
                     <span className="text-xs">Wishlist</span>
                   </Button>
-                  <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => navigate('/cart')}>
+                  <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => router.push('/cart')}>
                     <ShoppingCart className="h-5 w-5 mb-1" />
                     {cart.length > 0 && (
                       <span className="absolute top-0 right-4 min-w-[1rem] h-4 px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">{cart.length}</span>
@@ -181,7 +183,7 @@ export function Navbar() {
                   <span className="text-xs">Account</span>
                 </Button>
               ) : (
-                <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => navigate('/auth/login')}>
+                <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => router.push('/auth/login')}>
                   <User className="h-5 w-5 mb-1" />
                   <span className="text-xs">Account</span>
                 </Button>
