@@ -1,32 +1,34 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+export interface User {
+  id: string;
+  email: string;
+}
 
 export interface UserProfile {
   id: string;
-  user_id: string;
-  display_name?: string;
-  first_name?: string;
-  last_name?: string;
+  userId: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   address?: string;
   city?: string;
   country?: string;
-  postal_code?: string;
-  avatar_url?: string;
+  postalCode?: string;
+  avatarUrl?: string;
   bio?: string;
-  is_vendor: boolean;
-  vendor_status: 'pending' | 'approved' | 'rejected' | 'suspended';
-  trade_license?: string;
-  tin_number?: string;
+  isVendor: boolean;
+  vendorStatus: 'pending' | 'approved' | 'rejected' | 'suspended';
+  tradeLicense?: string;
+  tinNumber?: string;
 }
 
 interface AuthContextValue {
   user: User | null;
-  session: Session | null;
   profile: UserProfile | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, userData?: Partial<UserProfile>) => Promise<boolean>;
@@ -41,74 +43,66 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user profile with a slight delay to avoid auth state conflicts
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
+    // Check for existing token and fetch user
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      fetchUser(token);
+    } else {
       setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUser = async (token: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        return;
+      if (response.ok) {
+        const data = await response.json();
+        setUser({ id: data.id, email: data.email });
+        setProfile(data.profile);
+      } else {
+        // Invalid token, clear it
+        localStorage.removeItem('auth_token');
       }
-
-      setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error fetching user:', error);
+      localStorage.removeItem('auth_token');
+    } finally {
+      setLoading(false);
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) {
-        toast.error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Login failed');
         return false;
       }
+
+      // Store token
+      localStorage.setItem('auth_token', data.token);
+      
+      // Update state
+      setUser({ id: data.user.id, email: data.user.email });
+      setProfile(data.user.profile);
 
       toast.success("Logged in successfully!");
       return true;
@@ -121,27 +115,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, userData?: Partial<UserProfile>): Promise<boolean> => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            display_name: userData?.display_name || email,
-            first_name: userData?.first_name,
-            last_name: userData?.last_name,
-          }
-        }
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          displayName: userData?.displayName || email,
+          firstName: userData?.firstName,
+          lastName: userData?.lastName,
+        }),
       });
 
-      if (error) {
-        toast.error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Registration failed');
         return false;
       }
 
-      toast.success("Registration successful! Please check your email to verify your account.");
+      // Store token
+      localStorage.setItem('auth_token', data.token);
+      
+      // Update state
+      setUser({ id: data.user.id, email: data.user.email });
+      setProfile(data.user.profile);
+
+      toast.success("Registration successful!");
       return true;
     } catch (error) {
       console.error('Registration error:', error);
@@ -152,14 +154,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async (): Promise<void> => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
+      // Clear token
+      localStorage.removeItem('auth_token');
+      
+      // Clear state
       setUser(null);
-      setSession(null);
       setProfile(null);
+      
       toast.success("Logged out successfully!");
     } catch (error) {
       console.error('Logout error:', error);
@@ -171,13 +172,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', user.id);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
 
-      if (error) {
-        toast.error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Update failed');
         return false;
       }
 
@@ -196,28 +204,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          is_vendor: true,
-          vendor_status: 'pending',
-          trade_license: tradeLicense,
-          tin_number: tin,
-        })
-        .eq('user_id', user.id);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          isVendor: true,
+          vendorStatus: 'pending',
+          tradeLicense,
+          tinNumber: tin,
+        }),
+      });
 
-      if (error) {
-        toast.error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Request failed');
         return false;
       }
 
       // Update local state
       setProfile(prev => prev ? {
         ...prev,
-        is_vendor: true,
-        vendor_status: 'pending',
-        trade_license: tradeLicense,
-        tin_number: tin,
+        isVendor: true,
+        vendorStatus: 'pending',
+        tradeLicense,
+        tinNumber: tin,
       } : null);
 
       toast.success("Vendor verification request submitted!");
@@ -233,15 +248,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          vendor_status: 'approved',
-        })
-        .eq('id', vendorId);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/profile/${vendorId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-      if (error) {
-        toast.error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Approval failed');
         return false;
       }
 
@@ -257,7 +275,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user,
-      session,
       profile,
       login,
       register,
