@@ -17,9 +17,24 @@ export async function POST(
       );
     }
 
-    // TODO: Add admin check here
+    // SECURITY: Admin role check required
+    // TODO: Implement proper admin role verification
+    // For now, this endpoint should not be used in production without admin checks
+    // Example: Check if user has admin role in database
+    // const user = await prisma.user.findUnique({
+    //   where: { id: payload.userId },
+    //   include: { profile: true }
+    // });
+    // if (!user?.profile?.isAdmin) {
+    //   return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    // }
 
-    // Approve vendor
+    return NextResponse.json(
+      { error: 'Not implemented: Admin verification required before this endpoint can be used' },
+      { status: 501 }
+    );
+
+    // Approve vendor (disabled until admin checks are implemented)
     const profile = await prisma.profile.update({
       where: { id: params.vendorId },
       data: { vendorStatus: 'approved' },

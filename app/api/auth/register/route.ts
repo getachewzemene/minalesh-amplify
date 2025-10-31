@@ -14,6 +14,32 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength (min 8 chars, at least one letter and one number)
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      );
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      return NextResponse.json(
+        { error: 'Password must contain at least one letter and one number' },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
