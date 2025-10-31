@@ -12,14 +12,8 @@ export default function Home() {
   const { user } = useAuth()
   const router = useRouter()
   
-  useEffect(() => {
-    // Redirect admin/vendor to their dashboards
-    if (user?.role === 'admin') {
-      router.push('/admin')
-    } else if (user?.role === 'vendor') {
-      router.push('/dashboard')
-    }
-  }, [user, router])
+  // Note: Role-based redirects removed - can be implemented using profile.isVendor
+  // if needed in the future
   
   return (
     <div className="min-h-screen bg-background">

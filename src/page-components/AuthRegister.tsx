@@ -46,9 +46,9 @@ export default function AuthRegister() {
     setIsLoading(true);
     
     const success = await register(formData.email, formData.password, {
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      display_name: `${formData.firstName} ${formData.lastName}`.trim(),
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      displayName: `${formData.firstName} ${formData.lastName}`.trim(),
     });
     
     if (success) {

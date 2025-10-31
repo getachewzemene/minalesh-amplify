@@ -20,6 +20,16 @@ cd minalesh-amplify
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL and JWT secret
+
+# Run database migrations
+npx prisma migrate dev
+
+# Generate Prisma client
+npx prisma generate
+
 # Start the development server
 npm run dev
 ```
@@ -35,8 +45,10 @@ This project is built with:
 - React 18
 - Tailwind CSS
 - shadcn-ui
-- Supabase (Backend)
+- PostgreSQL (Database)
+- Prisma ORM
 - TanStack Query
+- JWT Authentication
 
 ## Available Scripts
 

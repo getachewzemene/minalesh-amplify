@@ -146,7 +146,7 @@ export default function Dashboard() {
 
   const handleAddProduct = () => {
     // Check if vendor is verified
-    if (!profile?.is_vendor || profile?.vendor_status !== 'approved') {
+    if (!profile?.isVendor || profile?.vendorStatus !== 'approved') {
       toast({
         title: "Vendor Verification Required",
         description: "Please complete vendor verification before adding products.",
@@ -174,8 +174,8 @@ export default function Dashboard() {
 
   const handleVerifyVendor = () => {
     // In a real app, this would send verification documents to a backend
-    if (profile?.trade_license && profile?.tin_number) {
-      requestVendorVerification(profile.trade_license, profile.tin_number);
+    if (profile?.tradeLicense && profile?.tinNumber) {
+      requestVendorVerification(profile.tradeLicense, profile.tinNumber);
       toast({
         title: "Verification Submitted",
         description: "Your verification request has been submitted. You'll be notified once approved."
@@ -205,7 +205,7 @@ export default function Dashboard() {
               
               {/* Vendor Verification Status */}
               <div className="mt-4">
-                {profile?.is_vendor && profile?.vendor_status === 'approved' ? (
+                {profile?.isVendor && profile?.vendorStatus === 'approved' ? (
                   <div className="flex items-center gap-2">
                     <Badge className="bg-green-500">
                       <ShieldCheck className="h-4 w-4 mr-1" />
@@ -216,9 +216,9 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <Badge variant="destructive">
                       <AlertCircle className="h-4 w-4 mr-1" />
-                      {profile?.vendor_status === 'pending' ? 'Verification Pending' : 'Not Verified'}
+                      {profile?.vendorStatus === 'pending' ? 'Verification Pending' : 'Not Verified'}
                     </Badge>
-                    {profile?.vendor_status !== 'pending' && (
+                    {profile?.vendorStatus !== 'pending' && (
                       <Button 
                         variant="secondary" 
                         size="sm" 

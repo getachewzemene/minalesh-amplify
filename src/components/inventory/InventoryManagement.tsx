@@ -226,7 +226,7 @@ export function InventoryManagement() {
     return { status: "In Stock", color: "bg-green-100 text-green-800" };
   };
 
-  if (!profile?.is_vendor) {
+  if (!profile?.isVendor) {
     return (
       <Card>
         <CardContent className="text-center py-8">

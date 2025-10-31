@@ -24,7 +24,7 @@ export function Navbar() {
   const [query, setQuery] = useState("")
   const router = useRouter()
   const { cart, wishlist } = useShop()
-  const { user, logout } = useAuth()
+  const { user, profile, logout } = useAuth()
 
   const handleSearch = () => {
     const q = query.trim()
@@ -45,8 +45,8 @@ export function Navbar() {
   }
 
   const goDashboard = () => {
-    if (user?.role === 'admin') router.push('/admin')
-    else if (user?.role === 'vendor') router.push('/dashboard')
+    // Role-based routing using profile
+    if (profile?.isVendor) router.push('/dashboard')
     else router.push('/')
   }
 

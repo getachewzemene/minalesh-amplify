@@ -19,7 +19,7 @@ interface Review {
   is_verified: boolean;
   created_at: string;
   profiles: {
-    display_name: string;
+    displayName: string;
   } | null;
 }
 
@@ -52,7 +52,7 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
           is_verified: review.isVerified,
           created_at: review.createdAt,
           profiles: review.user?.profile ? {
-            display_name: review.user.profile.displayName,
+            displayName: review.user.profile.displayName,
           } : null,
         }));
         setReviews(transformedData);
@@ -235,13 +235,13 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
                 <div className="flex items-start gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback>
-                      {review.profiles?.display_name?.charAt(0) || "U"}
+                      {review.profiles?.displayName?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-medium">
-                        {review.profiles?.display_name || "Anonymous"}
+                        {review.profiles?.displayName || "Anonymous"}
                       </span>
                       {review.is_verified && (
                         <Badge variant="secondary" className="text-xs">

@@ -19,13 +19,13 @@ export default function Profile() {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [profileData, setProfileData] = useState({
-    display_name: profile?.display_name || "",
-    first_name: profile?.first_name || "",
-    last_name: profile?.last_name || "",
+    displayName: profile?.displayName || "",
+    firstName: profile?.firstName || "",
+    lastName: profile?.lastName || "",
     phone: profile?.phone || "",
     address: profile?.address || "",
-    trade_license: profile?.trade_license || "",
-    tin_number: profile?.tin_number || ""
+    tradeLicense: profile?.tradeLicense || "",
+    tinNumber: profile?.tinNumber || ""
   })
 
   const handleSave = () => {
@@ -40,8 +40,8 @@ export default function Profile() {
   }
 
   const handleVerifyVendor = () => {
-    if (profileData.trade_license && profileData.tin_number) {
-      requestVendorVerification(profileData.trade_license, profileData.tin_number)
+    if (profileData.tradeLicense && profileData.tinNumber) {
+      requestVendorVerification(profileData.tradeLicense, profileData.tinNumber)
       toast.info("Verification request sent to admin")
     } else {
       toast.error("Please provide both Trade License and TIN Number")
@@ -68,27 +68,27 @@ export default function Profile() {
                       <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <User className="h-12 w-12 text-primary" />
                       </div>
-                      <h2 className="text-xl font-bold">{profile?.display_name || user?.email}</h2>
+                      <h2 className="text-xl font-bold">{profile?.displayName || user?.email}</h2>
                       <p className="text-muted-foreground">{user?.email}</p>
                       <div className="mt-4">
-                        <Badge variant={profile?.is_vendor ? "secondary" : "outline"}>
-                          {profile?.is_vendor ? "VENDOR" : "USER"}
+                        <Badge variant={profile?.isVendor ? "secondary" : "outline"}>
+                          {profile?.isVendor ? "VENDOR" : "USER"}
                         </Badge>
                       </div>
                       
-                      {profile?.is_vendor && (
+                      {profile?.isVendor && (
                         <div className="mt-4 w-full">
                           <div className="flex items-center justify-between">
                             <span className="text-sm">Verification Status:</span>
-                            {profile?.vendor_status === 'approved' ? (
+                            {profile?.vendorStatus === 'approved' ? (
                               <Badge className="bg-green-500">Verified</Badge>
-                            ) : profile?.vendor_status === 'pending' ? (
+                            ) : profile?.vendorStatus === 'pending' ? (
                               <Badge className="bg-yellow-500">Pending</Badge>
                             ) : (
                               <Badge variant="destructive">Not Verified</Badge>
                             )}
                           </div>
-                          {profile?.vendor_status !== 'approved' && profile?.vendor_status !== 'pending' && (
+                          {profile?.vendorStatus !== 'approved' && profile?.vendorStatus !== 'pending' && (
                             <Button 
                               className="w-full mt-2 bg-primary hover:bg-primary/90"
                               onClick={handleVerifyVendor}
@@ -122,30 +122,30 @@ export default function Profile() {
                   <CardContent>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="display_name">Display Name</Label>
+                        <Label htmlFor="displayName">Display Name</Label>
                         <Input 
-                          id="display_name" 
-                          value={profileData.display_name} 
-                          onChange={(e) => setProfileData({...profileData, display_name: e.target.value})} 
+                          id="displayName" 
+                          value={profileData.displayName} 
+                          onChange={(e) => setProfileData({...profileData, displayName: e.target.value})} 
                           disabled={!editing}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="first_name">First Name</Label>
+                          <Label htmlFor="firstName">First Name</Label>
                           <Input 
-                            id="first_name" 
-                            value={profileData.first_name} 
-                            onChange={(e) => setProfileData({...profileData, first_name: e.target.value})} 
+                            id="firstName" 
+                            value={profileData.firstName} 
+                            onChange={(e) => setProfileData({...profileData, firstName: e.target.value})} 
                             disabled={!editing}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="last_name">Last Name</Label>
+                          <Label htmlFor="lastName">Last Name</Label>
                           <Input 
-                            id="last_name" 
-                            value={profileData.last_name} 
-                            onChange={(e) => setProfileData({...profileData, last_name: e.target.value})} 
+                            id="lastName" 
+                            value={profileData.lastName} 
+                            onChange={(e) => setProfileData({...profileData, lastName: e.target.value})} 
                             disabled={!editing}
                           />
                         </div>
@@ -171,24 +171,24 @@ export default function Profile() {
                         />
                       </div>
                       
-                      {profile?.is_vendor && (
+                      {profile?.isVendor && (
                         <>
                           <div>
-                            <Label htmlFor="trade_license">Trade License Number</Label>
+                            <Label htmlFor="tradeLicense">Trade License Number</Label>
                             <Input 
-                              id="trade_license" 
-                              value={profileData.trade_license} 
-                              onChange={(e) => setProfileData({...profileData, trade_license: e.target.value})} 
+                              id="tradeLicense" 
+                              value={profileData.tradeLicense} 
+                              onChange={(e) => setProfileData({...profileData, tradeLicense: e.target.value})} 
                               disabled={!editing}
                               placeholder="Enter trade license number"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="tin_number">TIN Number</Label>
+                            <Label htmlFor="tinNumber">TIN Number</Label>
                             <Input 
-                              id="tin_number" 
-                              value={profileData.tin_number} 
-                              onChange={(e) => setProfileData({...profileData, tin_number: e.target.value})} 
+                              id="tinNumber" 
+                              value={profileData.tinNumber} 
+                              onChange={(e) => setProfileData({...profileData, tinNumber: e.target.value})} 
                               disabled={!editing}
                               placeholder="Enter TIN number"
                             />
