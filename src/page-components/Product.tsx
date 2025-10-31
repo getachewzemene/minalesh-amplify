@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from "react"
 import { Star, Heart, Share2, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -68,14 +70,14 @@ export default function Product() {
             <div className="space-y-4">
               <div className="aspect-square overflow-hidden rounded-lg bg-muted">
                 <img
-                  src={mockProduct.images[selectedImage]}
+                  src={mockProduct.images[selectedImage].src}
                   alt={mockProduct.name}
                   className="w-full h-full object-cover"
                 />
               </div>
               
               <div className="grid grid-cols-4 gap-2">
-                {mockProduct.images.map((image, index) => (
+                {mockProduct.images.map((image: any, index: number) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -84,7 +86,7 @@ export default function Product() {
                     }`}
                   >
                     <img
-                      src={image}
+                      src={image.src}
                       alt={`${mockProduct.name} view ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -207,12 +209,12 @@ export default function Product() {
                   <Button 
                     className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
                     size="lg"
-                    onClick={() => addToCart({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0], category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}
+                    onClick={() => addToCart({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0].src, category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
                     Add to Cart
                   </Button>
-                  <Button variant="outline" size="lg" aria-label="Add to wishlist" onClick={() => addToWishlist({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0], category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}>
+                  <Button variant="outline" size="lg" aria-label="Add to wishlist" onClick={() => addToWishlist({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0].src, category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}>
                     <Heart className="h-5 w-5" />
                   </Button>
                   <Button variant="outline" size="lg">

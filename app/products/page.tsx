@@ -28,7 +28,7 @@ interface Product {
   originalPrice?: number
   rating: number
   reviews: number
-  image: string
+  image: any
   category: string
   hasAR?: boolean
   vendor: string
@@ -129,7 +129,6 @@ const mockProducts: Product[] = [
 
 export default function Products() {
   const router = useRouter()
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts)
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
 
@@ -158,21 +157,17 @@ export default function Products() {
     toast.success("Added to wishlist!")
   }
 
-  const handleSearch = (results: Product[]) => {
-    setFilteredProducts(results)
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <Container className="py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">All Products</h1>
-          <AdvancedSearch products={mockProducts} onSearch={handleSearch} />
+          <AdvancedSearch />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
+          {mockProducts.map((product) => (
             <div
               key={product.id}
               className="group relative border rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-card"

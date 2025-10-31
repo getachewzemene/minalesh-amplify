@@ -1,5 +1,5 @@
 'use client'
 
-import AdminDashboard from "@/pages/AdminDashboard"
+import AdminDashboard from "@/page-components/AdminDashboard"
 
 export default AdminDashboard

@@ -1,5 +1,5 @@
 'use client'
 
-import AuthRegister from "@/pages/AuthRegister"
+import AuthRegister from "@/page-components/AuthRegister"
 
 export default AuthRegister

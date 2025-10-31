@@ -21,7 +21,7 @@ interface Product {
   originalPrice?: number
   rating: number
   reviews: number
-  image: string
+  image: any
   category: string
   hasAR?: boolean
   vendor: string
