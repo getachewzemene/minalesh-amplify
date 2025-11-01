@@ -20,6 +20,8 @@ import laptopImg from "@/assets/products/laptop.jpg"
 import headphonesImg from "@/assets/products/headphones.jpg"
 import shoesImg from "@/assets/products/shoes.jpg"
 import jeansImg from "@/assets/products/jeans.jpg"
+import cctvImg from "@/assets/products/cctv.jpg"
+import nightlightImg from "@/assets/products/nightlight.jpg"
 
 interface Product {
   id: string
@@ -124,6 +126,54 @@ const mockProducts: Product[] = [
     image: jeansImg,
     category: "Clothing",
     vendor: "Fashion Hub"
+  },
+  {
+    id: "9",
+    name: "4K CCTV Security Camera System",
+    price: 8999,
+    originalPrice: 9999,
+    rating: 4.7,
+    reviews: 142,
+    image: cctvImg,
+    category: "Security & Surveillance",
+    vendor: "SecureTech ET",
+    isVerifiedVendor: true
+  },
+  {
+    id: "10",
+    name: "Wireless Security Camera Set",
+    price: 12499,
+    rating: 4.8,
+    reviews: 98,
+    image: cctvImg,
+    category: "Security & Surveillance",
+    vendor: "SecureTech ET",
+    isVerifiedVendor: true
+  },
+  {
+    id: "11",
+    name: "3D LED Night Light Moon Lamp",
+    price: 599,
+    rating: 4.8,
+    reviews: 215,
+    image: nightlightImg,
+    category: "Gifts & Decor",
+    hasAR: true,
+    vendor: "Gift Haven",
+    isVerifiedVendor: false
+  },
+  {
+    id: "12",
+    name: "3D Galaxy Night Light Projector",
+    price: 899,
+    originalPrice: 1199,
+    rating: 4.6,
+    reviews: 167,
+    image: nightlightImg,
+    category: "Gifts & Decor",
+    hasAR: true,
+    vendor: "Gift Haven",
+    isVerifiedVendor: false
   }
 ]
 
