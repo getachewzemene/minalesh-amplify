@@ -47,3 +47,14 @@ export function getUserFromToken(token: string | null): JWTPayload | null {
   if (!token) return null;
   return verifyToken(token);
 }
+
+/**
+ * Check if user is an admin based on email.
+ * TODO: Replace with proper role-based access control when admin role is added to User model.
+ * For now, checks if email is in ADMIN_EMAILS environment variable (comma-separated).
+ */
+export function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+  return adminEmails.includes(email.toLowerCase());
+}
+

@@ -136,3 +136,63 @@ export async function PATCH(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const token = getTokenFromRequest(request);
+    const payload = getUserFromToken(token);
+
+    if (!payload) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Product ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get user's vendor profile
+    const profile = await prisma.profile.findUnique({
+      where: { userId: payload.userId },
+    });
+
+    if (!profile || !profile.isVendor) {
+      return NextResponse.json(
+        { error: 'Not authorized as vendor' },
+        { status: 403 }
+      );
+    }
+
+    // Verify product ownership
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!existingProduct || existingProduct.vendorId !== profile.id) {
+      return NextResponse.json(
+        { error: 'Product not found or not authorized' },
+        { status: 404 }
+      );
+    }
+
+    await prisma.product.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true, message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return NextResponse.json(
+      { error: 'An error occurred' },
+      { status: 500 }
+    );
+  }
+}
