@@ -675,7 +675,12 @@ export default function AdminProductManagement() {
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
                   placeholder="Add a feature"
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFeature())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddFeature();
+                    }
+                  }}
                 />
                 <Button type="button" onClick={handleAddFeature} size="sm">
                   <Plus className="h-4 w-4" />
