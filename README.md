@@ -1,6 +1,38 @@
 # Minalesh - Ethiopia's Intelligent Marketplace
 
-A full-stack e-commerce application built with Next.js.
+A full-stack e-commerce application built with Next.js, specifically designed for the Ethiopian market.
+
+## Features
+
+### For Customers
+- Browse products with Ethiopian Birr (ETB) pricing
+- Search and filter by Ethiopian-specific categories
+- Traditional and modern product categories
+- AR view for select products
+- Wishlist and cart functionality
+- Product reviews and ratings
+
+### For Vendors
+- Vendor registration with Trade License and TIN verification
+- Product management (Create, Read, Update, Delete)
+- Inventory tracking
+- Sales analytics
+- Order management
+
+### For Administrators
+- **Comprehensive Product Management** - Full CRUD operations for all products
+- Vendor approval system
+- Analytics dashboard
+- Category management
+- Order oversight
+- [View detailed admin documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md)
+
+### Ethiopian-Specific Features
+- 🇪🇹 Ethiopian Birr (ETB) currency support
+- 🏪 Local business verification (Trade License, TIN)
+- ☕ Ethiopian product categories (Coffee, Traditional Clothing, Spices, etc.)
+- 📍 Ethiopian market context and terminology
+- 🎨 Cultural sensitivity in product categorization
 
 ## Getting Started
 
@@ -30,6 +62,9 @@ npx prisma migrate dev
 
 # Generate Prisma client
 npx prisma generate
+
+# (Optional) Seed Ethiopian categories
+npx tsx prisma/seeds/categories.ts
 
 # Start the development server
 npm run dev
@@ -67,6 +102,42 @@ This project is built with:
 - `npm run build` - Build the production application
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint
+
+## Key Routes
+
+- `/` - Homepage with featured products
+- `/products` - Browse all products
+- `/product/[id]` - Product detail page
+- `/admin` - Admin dashboard with product management
+- `/dashboard` - User dashboard
+- `/profile` - User profile and vendor management
+- `/cart` - Shopping cart
+- `/wishlist` - Saved items
+
+## Admin Product Management
+
+The admin panel includes a comprehensive product management system with:
+- Full CRUD operations
+- Search and filtering
+- Pagination
+- Ethiopian category support
+- Vendor information display
+- Stock and pricing management
+
+See [Admin Product Management Documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md) for detailed information.
+
+## Ethiopian Categories
+
+The platform supports culturally relevant categories including:
+- Traditional Clothing (Habesha Kemis, Netela)
+- Coffee & Tea (Ethiopian Coffee, Jebena)
+- Spices & Ingredients (Berbere, Mitmita)
+- Handicrafts & Art
+- Religious Items
+- Agriculture & Farming
+- And more...
+
+Run the seed script to populate these categories in your database.
 
 ## Deployment
 
