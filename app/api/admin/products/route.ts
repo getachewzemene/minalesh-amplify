@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
 
 // Get all products for admin (with pagination and filtering)
 export async function GET(request: Request) {
@@ -15,8 +15,13 @@ export async function GET(request: Request) {
       );
     }
 
-    // TODO: Add admin role check
-    // For now, any authenticated user can access
+    // Verify admin access
+    if (!isAdmin(payload.email)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Admin access required' },
+        { status: 403 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -104,7 +109,13 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // TODO: Add admin role check
+    // Verify admin access
+    if (!isAdmin(payload.email)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Admin access required' },
+        { status: 403 }
+      );
+    }
 
     const { id, ...data } = await request.json();
 
@@ -158,7 +169,13 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // TODO: Add admin role check
+    // Verify admin access
+    if (!isAdmin(payload.email)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Admin access required' },
+        { status: 403 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

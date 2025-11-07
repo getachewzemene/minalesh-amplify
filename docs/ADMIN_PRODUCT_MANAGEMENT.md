@@ -241,7 +241,19 @@ Vendors use the same interface but can only manage their own products. The syste
 ## Technical Notes
 
 ### Authentication
-Currently uses JWT token authentication. Admin role verification is marked with TODO comments for future implementation.
+Uses JWT token authentication with admin access control.
+
+**Admin Access:**
+- Admins are identified by email addresses listed in `ADMIN_EMAILS` environment variable
+- This is a temporary solution; proper role-based access control should be implemented
+- Only users with admin email can access `/api/admin/*` endpoints
+- Regular vendors can only manage their own products via `/api/products`
+
+**Setting Admin Emails:**
+```bash
+# In .env file
+ADMIN_EMAILS="admin@minalesh.et,manager@minalesh.et"
+```
 
 ### Database
 Uses PostgreSQL with Prisma ORM. All product data is stored with proper relationships to vendors and categories.
