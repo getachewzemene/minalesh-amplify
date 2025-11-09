@@ -5,17 +5,20 @@ import { Button } from "@/components/ui/button"
 import { Container } from "./ui/container"
 import heroImage from "@/assets/hero-marketplace.jpg"
 import { useRouter } from "next/navigation"
+import type { StaticImageData } from "next/image"
 import { useAuth } from "@/context/auth-context"
 
 export function HeroSection() {
   const router = useRouter()
   const { user } = useAuth()
+  // Next.js static image imports return an object with a `src` field; ensure we pass the URL string to CSS
+  const bgUrl = typeof heroImage === 'string' ? heroImage : (heroImage as StaticImageData).src
   return (
     <section className="relative overflow-hidden bg-gradient-hero min-h-[80vh] flex items-center">
       {/* Background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-20"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${bgUrl})` }}
       />
       {/* Background pattern */}
       <div className="absolute inset-0 bg-grid-white/10 bg-[size:50px_50px] opacity-10" />
