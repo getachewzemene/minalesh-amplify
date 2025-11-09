@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { AdvancedSearch } from "@/components/search/AdvancedSearch"
+import { formatCurrency } from "@/lib/utils"
 import phoneImg from "@/assets/products/phone.jpg"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 import earbudsImg from "@/assets/products/earbuds.jpg"
@@ -336,11 +337,11 @@ export default function Products() {
                   <div className="mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-primary">
-                        {product.price.toLocaleString()} ETB
+                        {formatCurrency(product.price)}
                       </span>
                       {product.originalPrice && (
                         <span className="text-sm text-muted-foreground line-through">
-                          {product.originalPrice.toLocaleString()} ETB
+                          {formatCurrency(product.originalPrice)}
                         </span>
                       )}
                     </div>

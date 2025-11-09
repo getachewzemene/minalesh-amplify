@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { NullableSelect, ALL } from "@/components/ui/nullable-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useRouter, usePathname } from "next/navigation";
+import { formatCurrency } from "@/lib/utils";
 
 interface SearchFilters {
   query: string;
@@ -214,7 +215,7 @@ export function AdvancedSearch() {
               {/* Price Range */}
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Price Range: {filters.priceRange[0].toLocaleString()} - {filters.priceRange[1].toLocaleString()} ETB
+                  Price Range: {formatCurrency(filters.priceRange[0])} - {formatCurrency(filters.priceRange[1])}
                 </label>
                 <Slider
                   value={filters.priceRange}
@@ -351,7 +352,7 @@ export function AdvancedSearch() {
           )}
           {(filters.priceRange[0] > 0 || filters.priceRange[1] < 200000) && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Price: {filters.priceRange[0].toLocaleString()} - {filters.priceRange[1].toLocaleString()} ETB
+              Price: {formatCurrency(filters.priceRange[0])} - {formatCurrency(filters.priceRange[1])}
               <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter("priceRange")} />
             </Badge>
           )}

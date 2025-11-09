@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { useShop } from "@/context/shop-context";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/utils";
 
 export default function Wishlist() {
   const { wishlist, removeFromWishlist, addToCart } = useShop();
@@ -25,7 +26,7 @@ export default function Wishlist() {
                     <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" loading="lazy" />
                     <div>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.price.toLocaleString()} ETB</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(item.price)}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

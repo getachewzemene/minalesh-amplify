@@ -227,6 +227,46 @@ async function main() {
     }
   }
 
+  // Add Spices & Ingredients subcategories
+  const spicesCategory = await prisma.category.findUnique({
+    where: { slug: 'spices-ingredients' },
+  });
+
+  if (spicesCategory) {
+    const subcategories = [
+      {
+        name: 'Berbere',
+        slug: 'berbere',
+        description: 'Traditional Ethiopian spice blend',
+        parentId: spicesCategory.id,
+        sortOrder: 1,
+      },
+      {
+        name: 'Mitmita',
+        slug: 'mitmita',
+        description: 'Spicy Ethiopian chili powder blend',
+        parentId: spicesCategory.id,
+        sortOrder: 2,
+      },
+      {
+        name: 'Cooking Ingredients',
+        slug: 'cooking-ingredients',
+        description: 'Traditional Ethiopian cooking ingredients',
+        parentId: spicesCategory.id,
+        sortOrder: 3,
+      },
+    ];
+
+    for (const subcat of subcategories) {
+      await prisma.category.upsert({
+        where: { slug: subcat.slug },
+        update: subcat,
+        create: subcat,
+      });
+      console.log(`  ✓ Created subcategory: ${subcat.name}`);
+    }
+  }
+
   console.log('\n✅ Ethiopian marketplace categories seeded successfully!');
 }
 

@@ -27,6 +27,7 @@ import {
   X,
   Save
 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -438,7 +439,7 @@ export default function AdminProductManagement() {
                         <span className="font-medium">SKU:</span> {product.sku || 'N/A'}
                       </div>
                       <div>
-                        <span className="font-medium">Price:</span> ETB {product.price.toLocaleString()}
+                        <span className="font-medium">Price:</span> {formatCurrency(product.price)}
                       </div>
                       <div>
                         <span className="font-medium">Stock:</span> {product.stockQuantity} units

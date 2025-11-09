@@ -52,6 +52,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatCurrency } from "@/lib/utils"
 
 const chartConfig = {
   sales: {
@@ -243,7 +244,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">
-                  {mockMetrics.totalSales.toLocaleString()} ETB
+                  {formatCurrency(mockMetrics.totalSales)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   +12.5% from last month
@@ -345,7 +346,7 @@ export default function Dashboard() {
                           <p className="text-xs text-muted-foreground">{order.date}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">{order.amount.toLocaleString()} ETB</p>
+                          <p className="font-medium">{formatCurrency(order.amount)}</p>
                           <Badge 
                             className={`${getStatusColor(order.status)} text-white border-0`}
                           >
@@ -382,7 +383,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-primary">{product.revenue.toLocaleString()} ETB</p>
+                          <p className="font-medium text-primary">{formatCurrency(product.revenue)}</p>
                         </div>
                       </div>
                     ))}
@@ -412,7 +413,7 @@ export default function Dashboard() {
                         <ChartTooltip 
                           content={<ChartTooltipContent 
                             formatter={(value, name) => [
-                              `${typeof value === 'number' ? value.toLocaleString() : value} ETB`,
+                              formatCurrency(typeof value === 'number' ? value : 0),
                               name
                             ]}
                           />} 
@@ -599,7 +600,7 @@ export default function Dashboard() {
                             <tr key={product.name} className="border-b">
                               <td className="py-3">{product.name}</td>
                               <td className="text-right py-3">{product.sales}</td>
-                              <td className="text-right py-3">{product.revenue.toLocaleString()} ETB</td>
+                              <td className="text-right py-3">{formatCurrency(product.revenue)}</td>
                               <td className="text-right py-3">{product.views}</td>
                               <td className="text-right py-3">{product.conversion}%</td>
                             </tr>

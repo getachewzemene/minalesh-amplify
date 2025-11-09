@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -366,7 +367,7 @@ export function InventoryManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Value</p>
-                <p className="text-2xl font-bold">{stats.totalValue.toLocaleString()} ETB</p>
+                <p className="text-2xl font-bold">{formatCurrency(stats.totalValue)}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
@@ -439,10 +440,10 @@ export function InventoryManagement() {
                       </td>
                       <td className="p-4">
                         <div>
-                          <p className="font-medium">{product.price.toLocaleString()} ETB</p>
+                          <p className="font-medium">{formatCurrency(product.price)}</p>
                           {product.sale_price && (
                             <p className="text-sm text-muted-foreground line-through">
-                              {product.sale_price.toLocaleString()} ETB
+                              {formatCurrency(product.sale_price)}
                             </p>
                           )}
                         </div>
