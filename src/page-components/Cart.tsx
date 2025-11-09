@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, X } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 export default function Cart() {
   const { cart, removeFromCart, updateCartQuantity } = useShop();
@@ -49,7 +50,7 @@ export default function Cart() {
                     <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" loading="lazy" />
                     <div>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.price.toLocaleString()} ETB</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(item.price)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -87,7 +88,7 @@ export default function Cart() {
               ))}
               <div className="flex items-center justify-between pt-4 border-t">
                 <p className="font-semibold">Total</p>
-                <p className="font-bold text-primary">{total.toLocaleString()} ETB</p>
+                <p className="font-bold text-primary">{formatCurrency(total)}</p>
               </div>
               <div className="flex justify-end">
                 <Button className="bg-primary hover:bg-primary/90" onClick={handleBuy}>

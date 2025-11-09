@@ -10,6 +10,7 @@ import { Container } from "@/components/ui/container"
 import { ARViewer } from "@/components/ar-viewer"
 import { ReviewsSection } from "@/components/reviews/ReviewsSection"
 import { useShop } from "@/context/shop-context"
+import { formatCurrency } from "@/lib/utils"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 
 
@@ -125,11 +126,11 @@ export default function Product() {
                 {/* Price */}
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-3xl font-bold text-primary">
-                    {mockProduct.price.toLocaleString()} ETB
+                    {formatCurrency(mockProduct.price)}
                   </span>
                   {mockProduct.originalPrice && (
                     <span className="text-xl text-muted-foreground line-through">
-                      {mockProduct.originalPrice.toLocaleString()} ETB
+                      {formatCurrency(mockProduct.originalPrice)}
                     </span>
                   )}
                   {mockProduct.originalPrice && (
