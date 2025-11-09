@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { format } from "date-fns";
+import { formatCurrency } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -156,7 +157,7 @@ export function OrderTracking() {
                   </div>
                   <div className="flex justify-between">
                     <span>Total Amount:</span>
-                    <span className="font-semibold">{selectedOrder.total_amount.toLocaleString()} ETB</span>
+                    <span className="font-semibold">{formatCurrency(selectedOrder.total_amount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Payment Status:</span>
@@ -237,7 +238,7 @@ export function OrderTracking() {
                     <p className="font-medium">{item.product_name}</p>
                     <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                   </div>
-                  <p className="font-semibold">{(item.price * item.quantity).toLocaleString()} ETB</p>
+                  <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
@@ -279,7 +280,7 @@ export function OrderTracking() {
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </Badge>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {order.total_amount.toLocaleString()} ETB
+                      {formatCurrency(order.total_amount)}
                     </p>
                   </div>
                 </div>
