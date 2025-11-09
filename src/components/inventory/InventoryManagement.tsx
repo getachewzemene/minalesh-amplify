@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Package, AlertTriangle, TrendingUp, TrendingDown, Plus, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
+import { NullableSelect, ALL } from "@/components/ui/nullable-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +39,7 @@ export function InventoryManagement() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<InventoryStats>({ totalProducts: 0, lowStockItems: 0, outOfStockItems: 0, totalValue: 0 });
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({
@@ -51,36 +52,39 @@ export function InventoryManagement() {
   });
   const { user, profile } = useAuth();
 
-  useEffect(() => {
-    if (profile?.isVendor) {
-      fetchProducts();
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    filterProducts();
-  }, [products, searchTerm, filterStatus]);
-
-  const fetchProducts = async () => {
+  const fetchProductsCallback = useCallback(async () => {
     if (!profile) return;
-
     try {
       const token = localStorage.getItem('auth_token');
       const response = await fetch('/api/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-
       if (response.ok) {
         const data = await response.json();
-        // Transform the data to match the expected format
-        const transformedData = data.map((product: any) => ({
-          ...product,
+        type RawProduct = {
+          id: string;
+          name: string;
+          slug?: string;
+          sku?: string;
+          stockQuantity: number;
+          lowStockThreshold: number;
+          price: number;
+          salePrice?: number;
+          categoryId?: string;
+          isActive: boolean;
+          viewCount: number;
+          saleCount: number;
+          createdAt: string;
+        };
+        const transformedData: Product[] = (data as RawProduct[]).map((product) => ({
+          id: product.id,
+          name: product.name,
+          sku: product.sku ?? '',
           stock_quantity: product.stockQuantity,
-          low_stock_threshold: product.lowStockThreshold,
-          sale_price: product.salePrice,
-          category_id: product.categoryId,
+            low_stock_threshold: product.lowStockThreshold,
+          price: product.price,
+          sale_price: product.salePrice ?? undefined,
+          category_id: product.categoryId ?? undefined,
           is_active: product.isActive,
           view_count: product.viewCount,
           sale_count: product.saleCount,
@@ -92,7 +96,38 @@ export function InventoryManagement() {
     } catch (error) {
       console.error('Error fetching products:', error);
     }
-  };
+  }, [profile]);
+
+  useEffect(() => {
+    if (profile?.isVendor) fetchProductsCallback();
+  }, [profile, fetchProductsCallback]);
+
+  const filterProducts = useCallback(() => {
+    let filtered = products;
+    if (searchTerm) {
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (filterStatus === 'low_stock') {
+      filtered = filtered.filter(p => p.stock_quantity <= p.low_stock_threshold && p.stock_quantity > 0);
+    } else if (filterStatus === 'out_of_stock') {
+      filtered = filtered.filter(p => p.stock_quantity === 0);
+    } else if (filterStatus === 'active') {
+      filtered = filtered.filter(p => p.is_active);
+    } else if (filterStatus === 'inactive') {
+      filtered = filtered.filter(p => !p.is_active);
+    }
+    setFilteredProducts(filtered);
+  }, [products, searchTerm, filterStatus]);
+
+  useEffect(() => {
+    filterProducts();
+  }, [filterProducts]);
+
+  // Legacy fetchProducts usages replaced with fetchProductsCallback
+  const fetchProducts = fetchProductsCallback;
 
   const calculateStats = (productList: Product[]) => {
     const totalProducts = productList.length;
@@ -103,33 +138,6 @@ export function InventoryManagement() {
     setStats({ totalProducts, lowStockItems, outOfStockItems, totalValue });
   };
 
-  const filterProducts = () => {
-    let filtered = products;
-
-    if (searchTerm) {
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    switch (filterStatus) {
-      case "low_stock":
-        filtered = filtered.filter(p => p.stock_quantity <= p.low_stock_threshold && p.stock_quantity > 0);
-        break;
-      case "out_of_stock":
-        filtered = filtered.filter(p => p.stock_quantity === 0);
-        break;
-      case "active":
-        filtered = filtered.filter(p => p.is_active);
-        break;
-      case "inactive":
-        filtered = filtered.filter(p => !p.is_active);
-        break;
-    }
-
-    setFilteredProducts(filtered);
-  };
 
   const addProduct = async () => {
     if (!profile || !newProduct.name || !newProduct.sku) {
@@ -162,7 +170,7 @@ export function InventoryManagement() {
         toast.success("Product added successfully!");
         setIsAddDialogOpen(false);
         setNewProduct({ name: "", sku: "", stock_quantity: 0, low_stock_threshold: 5, price: 0, description: "" });
-        fetchProducts();
+  fetchProductsCallback();
       } else {
         toast.error("Failed to add product");
       }
@@ -186,7 +194,7 @@ export function InventoryManagement() {
 
       if (response.ok) {
         toast.success("Stock updated successfully!");
-        fetchProducts();
+  fetchProductsCallback();
       } else {
         toast.error("Failed to update stock");
       }
@@ -210,7 +218,7 @@ export function InventoryManagement() {
 
       if (response.ok) {
         toast.success(`Product ${!currentStatus ? "activated" : "deactivated"} successfully!`);
-        fetchProducts();
+  fetchProductsCallback();
       } else {
         toast.error("Failed to update product status");
       }
@@ -374,18 +382,18 @@ export function InventoryManagement() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Products</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="low_stock">Low Stock</SelectItem>
-            <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-          </SelectContent>
-        </Select>
+        <NullableSelect
+          value={filterStatus}
+          onValueChange={setFilterStatus}
+          placeholder="Filter by status"
+          sentinel={ALL}
+          sentinelLabel="All Products"
+        >
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="inactive">Inactive</SelectItem>
+          <SelectItem value="low_stock">Low Stock</SelectItem>
+          <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+        </NullableSelect>
       </div>
 
       {/* Products Table */}

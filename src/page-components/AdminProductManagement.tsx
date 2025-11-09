@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
+import { NullableSelect, ALL, NONE } from "@/components/ui/nullable-select";
+import type { BooleanStringFilter } from "@/types/filters";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -100,7 +102,7 @@ export default function AdminProductManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<BooleanStringFilter>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -110,31 +112,20 @@ export default function AdminProductManagement() {
   const [newFeature, setNewFeature] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, [currentPage, searchTerm, filterCategory, filterStatus]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('auth_token');
-      
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
       });
-      
       if (searchTerm) params.append('search', searchTerm);
       if (filterCategory) params.append('category', filterCategory);
       if (filterStatus !== '') params.append('isActive', filterStatus);
-
       const response = await fetch(`/api/admin/products?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-
       if (response.ok) {
         const data = await response.json();
         setProducts(data.products);
@@ -148,7 +139,13 @@ export default function AdminProductManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, filterCategory, filterStatus]);
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, [fetchProducts]);
+
 
   const fetchCategories = async () => {
     try {
@@ -205,13 +202,13 @@ export default function AdminProductManagement() {
       .trim();
   };
 
-  const handleInputChange = (field: keyof ProductFormData, value: any) => {
+  const handleInputChange = (field: keyof ProductFormData, value: string | boolean) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
       
       // Auto-generate slug when name changes
       if (field === 'name' && !isEditing) {
-        updated.slug = generateSlug(value);
+        updated.slug = generateSlug(String(value));
       }
       
       return updated;
@@ -362,30 +359,30 @@ export default function AdminProductManagement() {
               />
             </div>
             
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.slug}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <NullableSelect
+              value={filterCategory}
+              onValueChange={setFilterCategory}
+              placeholder="All Categories"
+              sentinel={ALL}
+              sentinelLabel="All Categories"
+            >
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.slug}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </NullableSelect>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
-                <SelectItem value="true">Active</SelectItem>
-                <SelectItem value="false">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
+            <NullableSelect
+              value={filterStatus}
+              onValueChange={(v) => setFilterStatus(v as BooleanStringFilter)}
+              placeholder="All Status"
+              sentinel={ALL}
+              sentinelLabel="All Status"
+            >
+              <SelectItem value="true">Active</SelectItem>
+              <SelectItem value="false">Inactive</SelectItem>
+            </NullableSelect>
 
             <Button 
               variant="outline" 
@@ -620,19 +617,19 @@ export default function AdminProductManagement() {
             {/* Category */}
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={formData.categoryId} onValueChange={(value) => handleInputChange('categoryId', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No Category</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <NullableSelect
+                value={formData.categoryId}
+                onValueChange={(v) => handleInputChange('categoryId', v)}
+                placeholder="Select a category"
+                sentinel={NONE}
+                sentinelLabel="No Category"
+              >
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </NullableSelect>
             </div>
 
             {/* Images */}

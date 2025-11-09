@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Filter, Star, MapPin, Sliders, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { NullableSelect, ALL } from "@/components/ui/nullable-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -77,13 +78,9 @@ export function AdvancedSearch() {
     }
   }, []);
 
-  useEffect(() => {
-    countAppliedFilters();
-  }, [filters]);
-
-  const countAppliedFilters = () => {
+  const countAppliedFilters = useCallback(() => {
     let count = 0;
-    if (filters.category !== "all") count++;
+    if (filters.category !== "all" && filters.category !== "") count++; // legacy + new pattern
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 200000) count++;
     if (filters.rating > 0) count++;
     if (filters.vendor) count++;
@@ -93,10 +90,23 @@ export function AdvancedSearch() {
     if (filters.isVerified) count++;
     if (filters.sortBy !== "relevance") count++;
     setAppliedFiltersCount(count);
-  };
+  }, [filters]);
 
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  useEffect(() => {
+    countAppliedFilters();
+  }, [countAppliedFilters]);
+
+
+  type FilterValue<K extends keyof SearchFilters> =
+    K extends 'query' | 'category' | 'vendor' | 'location' ? string :
+    K extends 'priceRange' ? [number, number] :
+    K extends 'rating' ? number :
+    K extends 'inStock' | 'hasAR' | 'isVerified' ? boolean :
+    K extends 'sortBy' ? SearchFilters['sortBy'] :
+    never;
+
+  const updateFilter = <K extends keyof SearchFilters>(key: K, value: FilterValue<K>) => {
+    setFilters(prev => ({ ...prev, [key]: value } as SearchFilters));
   };
 
   const handleSearch = () => {
@@ -208,7 +218,12 @@ export function AdvancedSearch() {
                 </label>
                 <Slider
                   value={filters.priceRange}
-                  onValueChange={(value) => updateFilter("priceRange", value)}
+                  onValueChange={(value) =>
+                    updateFilter(
+                      "priceRange",
+                      [value[0] ?? 0, value[1] ?? 200000] as [number, number]
+                    )
+                  }
                   max={200000}
                   min={0}
                   step={1000}
@@ -238,18 +253,21 @@ export function AdvancedSearch() {
               {/* Location */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Location</label>
-                <Select value={filters.location} onValueChange={(value) => updateFilter("location", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem key={location} value={location === "All Locations" ? "" : location}>
+                <NullableSelect
+                  value={filters.location}
+                  onValueChange={(value) => updateFilter("location", value)}
+                  placeholder="Select location"
+                  sentinel={ALL}
+                  sentinelLabel="All Locations"
+                >
+                  {locations
+                    .filter((location) => location !== "All Locations")
+                    .map((location) => (
+                      <SelectItem key={location} value={location}>
                         {location}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                </NullableSelect>
               </div>
 
               {/* Vendor Name */}
@@ -268,7 +286,7 @@ export function AdvancedSearch() {
                   <Checkbox
                     id="inStock"
                     checked={filters.inStock}
-                    onCheckedChange={(checked) => updateFilter("inStock", checked)}
+                    onCheckedChange={(checked) => updateFilter("inStock", checked === true)}
                   />
                   <label htmlFor="inStock" className="text-sm">In Stock Only</label>
                 </div>
@@ -276,7 +294,7 @@ export function AdvancedSearch() {
                   <Checkbox
                     id="hasAR"
                     checked={filters.hasAR}
-                    onCheckedChange={(checked) => updateFilter("hasAR", checked)}
+                    onCheckedChange={(checked) => updateFilter("hasAR", checked === true)}
                   />
                   <label htmlFor="hasAR" className="text-sm">AR Try-On Available</label>
                 </div>
@@ -284,7 +302,7 @@ export function AdvancedSearch() {
                   <Checkbox
                     id="isVerified"
                     checked={filters.isVerified}
-                    onCheckedChange={(checked) => updateFilter("isVerified", checked)}
+                    onCheckedChange={(checked) => updateFilter("isVerified", checked === true)}
                   />
                   <label htmlFor="isVerified" className="text-sm">Verified Vendors Only</label>
                 </div>
@@ -293,7 +311,10 @@ export function AdvancedSearch() {
               {/* Sort By */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Sort By</label>
-                <Select value={filters.sortBy} onValueChange={(value) => updateFilter("sortBy", value)}>
+                <Select
+                  value={filters.sortBy}
+                  onValueChange={(value) => updateFilter("sortBy", value as SearchFilters['sortBy'])}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
