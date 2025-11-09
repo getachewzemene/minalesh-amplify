@@ -53,6 +53,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils"
+import heroImage from "@/assets/hero-marketplace.jpg"
 
 const chartConfig = {
   sales: {
@@ -198,39 +199,49 @@ export default function Dashboard() {
         <Container>
           {/* Header */}
           <div className="mb-8">
-            <div className="bg-gradient-hero text-white rounded-lg p-8">
-              <h1 className="text-3xl font-bold mb-2">Vendor Dashboard</h1>
-              <p className="text-white/90 text-lg">
-                **Minalesh (ምናለሽ)** — Manage your store, track sales, and grow your business on Ethiopia's leading marketplace
-              </p>
+            <div className="bg-gradient-hero text-white rounded-lg p-8 relative overflow-hidden">
+              {/* Background image */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center opacity-20"
+                style={{ backgroundImage: `url(${heroImage})` }}
+              />
+              {/* Background pattern */}
+              <div className="absolute inset-0 bg-grid-white/10 bg-[size:50px_50px] opacity-10" />
               
-              {/* Vendor Verification Status */}
-              <div className="mt-4">
-                {profile?.isVendor && profile?.vendorStatus === 'approved' ? (
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-green-500">
-                      <ShieldCheck className="h-4 w-4 mr-1" />
-                      Verified Vendor
-                    </Badge>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      {profile?.vendorStatus === 'pending' ? 'Verification Pending' : 'Not Verified'}
-                    </Badge>
-                    {profile?.vendorStatus !== 'pending' && (
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        onClick={handleVerifyVendor}
-                        className="ml-2"
-                      >
-                        Verify Account
-                      </Button>
-                    )}
-                  </div>
-                )}
+              <div className="relative z-10">
+                <h1 className="text-3xl font-bold mb-2">Vendor Dashboard</h1>
+                <p className="text-white/90 text-lg">
+                  **Minalesh (ምናለሽ)** — Manage your store, track sales, and grow your business on Ethiopia's leading marketplace
+                </p>
+              
+                {/* Vendor Verification Status */}
+                <div className="mt-4">
+                  {profile?.isVendor && profile?.vendorStatus === 'approved' ? (
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-500">
+                        <ShieldCheck className="h-4 w-4 mr-1" />
+                        Verified Vendor
+                      </Badge>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive">
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        {profile?.vendorStatus === 'pending' ? 'Verification Pending' : 'Not Verified'}
+                      </Badge>
+                      {profile?.vendorStatus !== 'pending' && (
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={handleVerifyVendor}
+                          className="ml-2"
+                        >
+                          Verify Account
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
