@@ -1,5 +1,15 @@
 'use client'
 
+/**
+ * Vendor Dashboard Component
+ * 
+ * TODO: Image upload uses URLs only (upload infrastructure not implemented)
+ * The product image upload section currently shows a placeholder UI without
+ * actual file upload functionality. Backend infrastructure with file storage
+ * (e.g., AWS S3, Cloudinary) and API endpoints are needed to support real
+ * image uploads, processing, and storage.
+ */
+
 import { useState } from "react"
 import { 
   Package, 
@@ -552,6 +562,9 @@ export default function Dashboard() {
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="productImage">Product Image</Label>
+                          {/* TODO: Image upload uses URLs only (upload infrastructure not implemented) */}
+                          {/* This is a placeholder UI. Real implementation needs file input, validation, */}
+                          {/* upload to storage service (S3, Cloudinary), and saving URLs to database. */}
                           <div className="border-2 border-dashed rounded-lg p-8 text-center">
                             <Upload className="mx-auto h-12 w-12 text-gray-400" />
                             <p className="mt-2 text-sm text-gray-600">Upload product image</p>

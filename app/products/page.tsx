@@ -1,5 +1,14 @@
 'use client'
 
+/**
+ * Products Page
+ * 
+ * TODO: Search filtering is currently client-side only (backend integration pending)
+ * This page displays static mock products without applying search/filter parameters.
+ * Backend API integration is needed to fetch filtered products based on URL parameters
+ * from the AdvancedSearch component.
+ */
+
 import { useState } from "react"
 import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"

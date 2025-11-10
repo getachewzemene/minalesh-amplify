@@ -1,5 +1,15 @@
 'use client'
 
+/**
+ * AIHelper Component (Live Chat)
+ * 
+ * TODO: Live chat uses mock responses (real-time backend needed)
+ * This component currently provides FAQ-based responses using hardcoded patterns.
+ * A real-time backend with WebSocket/Server-Sent Events integration is needed
+ * to support actual AI-powered chat, live customer support, and dynamic responses
+ * based on context and user history.
+ */
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
