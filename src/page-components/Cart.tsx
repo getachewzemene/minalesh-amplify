@@ -28,7 +28,7 @@ export default function Cart() {
       return;
     }
     
-    // TODO: Stripe Checkout integration with Supabase Edge Function
+  // TODO: Integrate Stripe Checkout via a Next.js API route using Prisma for order persistence
     toast.success("Order placed successfully!");
     // Clear cart after purchase
     cart.forEach(item => removeFromCart(item.id));

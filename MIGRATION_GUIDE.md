@@ -1,30 +1,26 @@
-# Migration Guide: Supabase to PostgreSQL with Prisma ORM
+# Migration Guide (Legacy Reference)
 
-This guide documents the migration from Supabase to PostgreSQL with Prisma ORM.
+Supabase integration has been fully removed. This document is retained only as a historical reference.
 
 ## Overview
 
-The application has been successfully migrated from Supabase to a standard PostgreSQL database using Prisma ORM as the database toolkit and Next.js API routes for the backend.
+The application uses PostgreSQL with Prisma ORM as the database toolkit and Next.js API routes for the backend.
 
 ## What Changed
 
 ### 1. Database Layer
-- **Before**: Supabase (hosted PostgreSQL with built-in auth)
-- **After**: PostgreSQL with Prisma ORM
+PostgreSQL with Prisma ORM
 
 ### 2. Authentication
-- **Before**: Supabase Auth
-- **After**: Custom JWT-based authentication with bcryptjs for password hashing
+Custom JWT-based authentication with bcryptjs for password hashing
 
 ### 3. Data Access
-- **Before**: Direct Supabase client calls from components
-- **After**: Next.js API routes with Prisma client
+Next.js API routes with Prisma client
 
 ### 4. Real-time Features
-- **Before**: Supabase real-time subscriptions
-- **After**: Polling (notifications refresh every 30 seconds)
+Polling (notifications refresh every 30 seconds). Consider WebSockets for true real-time in the future.
 
-## New Architecture
+## Architecture
 
 ```
 Frontend (React Components)
@@ -183,23 +179,18 @@ All database field names changed from `snake_case` to `camelCase`:
 
 ## Migration Checklist for Existing Data
 
-If you have existing data in Supabase:
+If you are importing legacy data:
 
-1. **Export data from Supabase**
-   ```sql
-   pg_dump -h db.xxx.supabase.co -U postgres -d postgres > backup.sql
-   ```
-
-2. **Transform snake_case to camelCase**
+1. **Transform snake_case to camelCase**
    - Update column names in the SQL dump
    - Or use Prisma migrations to rename columns
 
-3. **Import to new PostgreSQL**
+2. **Import to PostgreSQL**
    ```sql
    psql -h localhost -U postgres -d minalesh < backup.sql
    ```
 
-4. **Run Prisma migrations**
+3. **Run Prisma migrations**
    ```bash
    npx prisma migrate dev
    ```
@@ -230,11 +221,7 @@ For issues or questions:
 
 ## Rollback Plan
 
-If you need to rollback to Supabase:
-1. Keep the Supabase project active
-2. The original Supabase schema is preserved in the commit history
-3. Revert to the commit before the migration
-4. Reinstall `@supabase/supabase-js`
+Rollback to Supabase is not supported in the current stack. Reintroducing Supabase would require reversing this migration and reinstalling its client library.
 
 ## Future Enhancements
 
