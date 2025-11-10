@@ -13,8 +13,10 @@ datasource db {
 // Enums
 enum OrderStatus {
   pending
+  paid
   confirmed
   processing
+  fulfilled
   shipped
   delivered
   cancelled
@@ -205,16 +207,37 @@ model Order {
   shippingAddress   Json?         @map("shipping_address")
   billingAddress    Json?         @map("billing_address")
   notes             String?
+  paidAt            DateTime?     @map("paid_at")
+  confirmedAt       DateTime?     @map("confirmed_at")
+  processingAt      DateTime?     @map("processing_at")
+  fulfilledAt       DateTime?     @map("fulfilled_at")
   shippedAt         DateTime?     @map("shipped_at")
   deliveredAt       DateTime?     @map("delivered_at")
+  cancelledAt       DateTime?     @map("cancelled_at")
+  refundedAt        DateTime?     @map("refunded_at")
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
   user              User?         @relation(fields: [userId], references: [id])
   orderItems        OrderItem[]
   reviews           Review[]
+  orderEvents       OrderEvent[]
 
   @@map("orders")
+}
+
+model OrderEvent {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId     String      @map("order_id") @db.Uuid
+  eventType   String      @map("event_type")
+  status      OrderStatus?
+  description String?
+  metadata    Json?
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_events")
 }
 
 model OrderItem {
