@@ -3,11 +3,9 @@
 /**
  * AdvancedSearch Component
  * 
- * TODO: Search filtering is currently client-side only (backend integration pending)
- * This component collects and manages search/filter parameters, but the actual
- * filtering of products is performed client-side. A backend API integration is
- * needed to support server-side search, filtering, and pagination for better
- * performance and scalability.
+ * Manages search/filter parameters and updates URL query string.
+ * The products page listens to URL changes and fetches filtered results
+ * from the backend API at /api/products/search.
  */
 
 import { useState, useEffect, useCallback } from "react";

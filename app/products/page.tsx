@@ -3,13 +3,12 @@
 /**
  * Products Page
  * 
- * TODO: Search filtering is currently client-side only (backend integration pending)
- * This page displays static mock products without applying search/filter parameters.
- * Backend API integration is needed to fetch filtered products based on URL parameters
- * from the AdvancedSearch component.
+ * Implements server-side search and filtering through the /api/products/search endpoint.
+ * Products are fetched dynamically based on URL parameters from the AdvancedSearch component.
  */
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -186,17 +185,77 @@ const mockProducts: Product[] = [
   }
 ]
 
-export default function Products() {
+function ProductsContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
+  
+  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch products when search parameters change
+  useEffect(() => {
+    const fetchProducts = async () => {
+      // Build query string from search params
+      const params = new URLSearchParams()
+      searchParams.forEach((value, key) => {
+        params.append(key, value)
+      })
+      
+      // Only fetch if there are search parameters, otherwise use mock data
+      if (params.toString()) {
+        setLoading(true)
+        setError(null)
+        
+        try {
+          const response = await fetch(`/api/products/search?${params.toString()}`)
+          if (response.ok) {
+            const data = await response.json()
+            
+            // Transform backend data to match Product interface
+            const transformedProducts = data.products.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              price: parseFloat(p.price),
+              originalPrice: p.salePrice ? parseFloat(p.salePrice) : undefined,
+              rating: parseFloat(p.ratingAverage || 0),
+              reviews: p.ratingCount || 0,
+              image: p.images && Array.isArray(p.images) && p.images[0] ? { src: p.images[0] } : phoneImg,
+              category: p.category?.name || 'Uncategorized',
+              hasAR: false, // TODO: Add hasAR field to backend
+              vendor: p.vendor?.displayName || 'Unknown',
+              isVerifiedVendor: p.vendor?.vendorStatus === 'approved'
+            }))
+            
+            setProducts(transformedProducts.length > 0 ? transformedProducts : mockProducts)
+          } else {
+            setError('Failed to fetch products')
+            setProducts(mockProducts)
+          }
+        } catch (err) {
+          console.error('Error fetching products:', err)
+          setError('An error occurred while fetching products')
+          setProducts(mockProducts)
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        // No search parameters, use mock data
+        setProducts(mockProducts)
+      }
+    }
+    
+    fetchProducts()
+  }, [searchParams])
 
   const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image.src,
+      image: typeof product.image === 'string' ? product.image : product.image.src,
       quantity: 1
     })
     toast.success("Added to cart!")
@@ -211,7 +270,7 @@ export default function Products() {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image.src
+      image: typeof product.image === 'string' ? product.image : product.image.src
     })
     toast.success("Added to wishlist!")
   }
@@ -225,8 +284,22 @@ export default function Products() {
           <AdvancedSearch />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {mockProducts.map((product) => (
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="mt-4 text-muted-foreground">Loading products...</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
+        
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
             <div
               key={product.id}
               className="group relative border rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-card"
@@ -309,9 +382,36 @@ export default function Products() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
+        
+        {!loading && products.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">No products found matching your criteria.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Try adjusting your filters or search query.</p>
+          </div>
+        )}
       </Container>
       <Footer />
     </div>
+  )
+}
+
+export default function Products() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <Container className="py-8">
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="mt-4 text-muted-foreground">Loading products...</p>
+          </div>
+        </Container>
+        <Footer />
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   )
 }

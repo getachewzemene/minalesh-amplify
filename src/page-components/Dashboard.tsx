@@ -3,11 +3,10 @@
 /**
  * Vendor Dashboard Component
  * 
- * TODO: Image upload uses URLs only (upload infrastructure not implemented)
- * The product image upload section currently shows a placeholder UI without
- * actual file upload functionality. Backend infrastructure with file storage
- * (e.g., AWS S3, Cloudinary) and API endpoints are needed to support real
- * image uploads, processing, and storage.
+ * Includes product image upload functionality using the /api/upload endpoint.
+ * Images are currently stored in public/uploads directory. For production,
+ * consider migrating to cloud storage (AWS S3, Cloudinary, etc.) for better
+ * scalability and CDN support.
  */
 
 import { useState } from "react"
@@ -135,6 +134,8 @@ export default function Dashboard() {
     category: "",
     image: ""
   })
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const { toast } = useToast()
   const { user, profile, requestVendorVerification } = useAuth()
 
@@ -198,6 +199,77 @@ export default function Dashboard() {
         description: "Please provide your Trade License and TIN Number in your profile.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPEG, PNG, or WebP image.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be less than 5MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to server
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNewProduct({ ...newProduct, image: data.url });
+        toast({
+          title: "Image uploaded",
+          description: "Your product image has been uploaded successfully."
+        });
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -562,14 +634,41 @@ export default function Dashboard() {
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="productImage">Product Image</Label>
-                          {/* TODO: Image upload uses URLs only (upload infrastructure not implemented) */}
-                          {/* This is a placeholder UI. Real implementation needs file input, validation, */}
-                          {/* upload to storage service (S3, Cloudinary), and saving URLs to database. */}
-                          <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                            <p className="mt-2 text-sm text-gray-600">Upload product image</p>
-                            <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-                          </div>
+                          <input
+                            type="file"
+                            id="productImage"
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="productImage"
+                            className={`border-2 border-dashed rounded-lg p-8 text-center block cursor-pointer hover:border-primary transition-colors ${
+                              uploadingImage ? 'opacity-50 cursor-wait' : ''
+                            }`}
+                          >
+                            {imagePreview ? (
+                              <div className="space-y-2">
+                                <img 
+                                  src={imagePreview} 
+                                  alt="Preview" 
+                                  className="mx-auto h-32 w-32 object-cover rounded"
+                                />
+                                <p className="text-sm text-gray-600">Click to change image</p>
+                              </div>
+                            ) : uploadingImage ? (
+                              <>
+                                <div className="mx-auto h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <p className="mt-2 text-sm text-gray-600">Uploading...</p>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                <p className="mt-2 text-sm text-gray-600">Click to upload product image</p>
+                                <p className="text-xs text-gray-500">PNG, JPG, WebP up to 5MB</p>
+                              </>
+                            )}
+                          </label>
                         </div>
                       </div>
                     </div>
