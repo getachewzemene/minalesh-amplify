@@ -1,5 +1,13 @@
 'use client'
 
+/**
+ * AdvancedSearch Component
+ * 
+ * Manages search/filter parameters and updates URL query string.
+ * The products page listens to URL changes and fetches filtered results
+ * from the backend API at /api/products/search.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { Search, Filter, Star, MapPin, Sliders, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

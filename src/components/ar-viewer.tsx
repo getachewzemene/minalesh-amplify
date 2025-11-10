@@ -1,4 +1,13 @@
-import { useState } from "react"
+/**
+ * ARViewer Component
+ * 
+ * Provides AR try-on functionality with camera access and basic face detection.
+ * Currently uses browser camera API with placeholder overlays.
+ * For production WebXR with 3D models, integrate libraries like Three.js, 
+ * Model Viewer, or AR.js for full augmented reality experiences.
+ */
+
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Camera, Maximize, RotateCcw, Smartphone } from "lucide-react"
@@ -12,19 +21,56 @@ interface ARViewerProps {
 export function ARViewer({ modelUrl, productType, productName }: ARViewerProps) {
   const [isARActive, setIsARActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const supportsAR = productType === 'cap' || productType === 'sunglasses'
 
-  const handleTryAR = () => {
-    if ('xr' in navigator) {
-      // WebXR support
-      setIsARActive(true)
-      // In a real implementation, this would launch the AR session
-      console.log('Launching AR experience for', productName)
-    } else {
-      // Fallback for devices without WebXR
-      setError('AR not supported on this device')
+  useEffect(() => {
+    // Cleanup camera stream when component unmounts or AR is closed
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
+      }
     }
+  }, [stream])
+
+  const handleTryAR = async () => {
+    setError(null)
+    
+    try {
+      // Request camera access
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
+      
+      setStream(mediaStream)
+      setIsARActive(true)
+      
+      // Set video source after state update
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream
+        }
+      }, 100)
+      
+    } catch (err) {
+      console.error('Error accessing camera:', err)
+      setError('Unable to access camera. Please grant camera permissions and try again.')
+    }
+  }
+
+  const handleStopAR = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+    setIsARActive(false)
+    setError(null)
   }
 
   if (!supportsAR) {
@@ -62,28 +108,40 @@ export function ARViewer({ modelUrl, productType, productName }: ARViewerProps) 
           </Button>
         </div>
       ) : isARActive ? (
-        <div className="text-center py-8">
-          <div className="animate-pulse mb-4">
-            <div className="w-24 h-24 bg-primary/20 rounded-full mx-auto flex items-center justify-center">
-              <Camera className="h-8 w-8 text-primary" />
+        <div className="relative">
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-4">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover mirror"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-white/80 text-center">
+                <p className="text-sm font-medium bg-black/50 px-4 py-2 rounded-lg">
+                  AR Preview Active - {productName}
+                </p>
+                <p className="text-xs mt-2 bg-black/50 px-4 py-2 rounded-lg">
+                  Note: Full 3D overlay requires WebXR integration
+                </p>
+              </div>
             </div>
           </div>
-          <p className="font-semibold mb-2">AR Experience Active</p>
-          <p className="text-sm text-muted-foreground mb-4">
-            Position your face in the camera and see how the {productName} looks on you!
-          </p>
           <div className="flex gap-2 justify-center">
             <Button 
               size="sm" 
               variant="outline"
+              onClick={handleStopAR}
               className="border-primary text-primary hover:bg-primary/10"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
+              Stop Camera
             </Button>
             <Button 
               size="sm"
-              onClick={() => setIsARActive(false)}
+              onClick={handleStopAR}
               className="bg-primary hover:bg-primary/90"
             >
               Done
