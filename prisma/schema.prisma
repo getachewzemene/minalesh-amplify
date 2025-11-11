@@ -46,6 +46,26 @@ enum NotificationType {
   system
 }
 
+enum DiscountType {
+  percentage
+  fixed_amount
+  free_shipping
+}
+
+enum CouponStatus {
+  active
+  inactive
+  expired
+  depleted
+}
+
+enum PromotionType {
+  product_discount
+  category_discount
+  cart_discount
+  buy_x_get_y
+}
+
 // Models
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -59,6 +79,7 @@ model User {
   orders        Order[]
   reviews       Review[]
   wishlists     Wishlist[]
+  couponUsages  CouponUsage[]
 
   @@map("users")
 }
@@ -147,6 +168,8 @@ model Product {
   orderItems         OrderItem[]
   reviews            Review[]
   wishlists          Wishlist[]
+  tieredPricing      TieredPricing[]
+  flashSales         FlashSale[]
 
   @@map("products")
 }
@@ -218,10 +241,18 @@ model Order {
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
-  user              User?         @relation(fields: [userId], references: [id])
+  user              User?           @relation(fields: [userId], references: [id])
   orderItems        OrderItem[]
   reviews           Review[]
   orderEvents       OrderEvent[]
+  couponId          String?         @map("coupon_id") @db.Uuid
+  coupon            Coupon?         @relation(fields: [couponId], references: [id])
+  promotionIds      Json            @default("[]") @map("promotion_ids")
+  shippingZoneId    String?         @map("shipping_zone_id") @db.Uuid
+  shippingZone      ShippingZone?   @relation(fields: [shippingZoneId], references: [id])
+  shippingMethodId  String?         @map("shipping_method_id") @db.Uuid
+  shippingMethod    ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
+  couponUsages      CouponUsage[]
 
   @@map("orders")
 }
@@ -337,4 +368,189 @@ model AnalyticsEvent {
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("analytics_events")
+}
+
+model Coupon {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String        @unique
+  description      String?
+  discountType     DiscountType  @map("discount_type")
+  discountValue    Decimal       @map("discount_value") @db.Decimal(10, 2)
+  minimumPurchase  Decimal?      @map("minimum_purchase") @db.Decimal(10, 2)
+  maximumDiscount  Decimal?      @map("maximum_discount") @db.Decimal(10, 2)
+  usageLimit       Int?          @map("usage_limit")
+  usageCount       Int           @default(0) @map("usage_count")
+  perUserLimit     Int?          @map("per_user_limit")
+  startsAt         DateTime?     @map("starts_at")
+  expiresAt        DateTime?     @map("expires_at")
+  status           CouponStatus  @default(active)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  orders           Order[]
+  couponUsages     CouponUsage[]
+
+  @@index([status])
+  @@index([expiresAt])
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couponId       String   @map("coupon_id") @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  orderId        String   @map("order_id") @db.Uuid
+  discountAmount Decimal  @map("discount_amount") @db.Decimal(10, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user           User?    @relation(fields: [userId], references: [id])
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([orderId])
+  @@map("coupon_usage")
+}
+
+model Promotion {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  description     String?
+  promotionType   PromotionType @map("promotion_type")
+  discountType    DiscountType  @map("discount_type")
+  discountValue   Decimal       @map("discount_value") @db.Decimal(10, 2)
+  productIds      Json          @default("[]") @map("product_ids")
+  categoryIds     Json          @default("[]") @map("category_ids")
+  minimumQuantity Int?          @map("minimum_quantity")
+  minimumPurchase Decimal?      @map("minimum_purchase") @db.Decimal(10, 2)
+  buyQuantity     Int?          @map("buy_quantity")
+  getQuantity     Int?          @map("get_quantity")
+  isActive        Boolean       @default(true) @map("is_active")
+  startsAt        DateTime      @map("starts_at")
+  endsAt          DateTime?     @map("ends_at")
+  priority        Int           @default(0)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([startsAt, endsAt])
+  @@map("promotions")
+}
+
+model TieredPricing {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId     String       @map("product_id") @db.Uuid
+  minQuantity   Int          @map("min_quantity")
+  maxQuantity   Int?         @map("max_quantity")
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(10, 2)
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("tiered_pricing")
+}
+
+model FlashSale {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  description   String?
+  productId     String       @map("product_id") @db.Uuid
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(10, 2)
+  originalPrice Decimal      @map("original_price") @db.Decimal(10, 2)
+  flashPrice    Decimal      @map("flash_price") @db.Decimal(10, 2)
+  stockLimit    Int?         @map("stock_limit")
+  stockSold     Int          @default(0) @map("stock_sold")
+  startsAt      DateTime     @map("starts_at")
+  endsAt        DateTime     @map("ends_at")
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([startsAt, endsAt])
+  @@map("flash_sales")
+}
+
+model ShippingZone {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  countries   Json     @default("[\"ET\"]")
+  regions     Json     @default("[]")
+  cities      Json     @default("[]")
+  postalCodes Json     @default("[]") @map("postal_codes")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  shippingRates ShippingRate[]
+  orders        Order[]
+
+  @@map("shipping_zones")
+}
+
+model ShippingMethod {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  description       String?
+  carrier           String?
+  estimatedDaysMin  Int?     @map("estimated_days_min")
+  estimatedDaysMax  Int?     @map("estimated_days_max")
+  isActive          Boolean  @default(true) @map("is_active")
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  shippingRates     ShippingRate[]
+  orders            Order[]
+
+  @@map("shipping_methods")
+}
+
+model ShippingRate {
+  id                     String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  zoneId                 String         @map("zone_id") @db.Uuid
+  methodId               String         @map("method_id") @db.Uuid
+  baseRate               Decimal        @map("base_rate") @db.Decimal(10, 2)
+  perKgRate              Decimal?       @map("per_kg_rate") @db.Decimal(10, 2)
+  freeShippingThreshold  Decimal?       @map("free_shipping_threshold") @db.Decimal(10, 2)
+  minOrderAmount         Decimal?       @map("min_order_amount") @db.Decimal(10, 2)
+  maxOrderAmount         Decimal?       @map("max_order_amount") @db.Decimal(10, 2)
+  isActive               Boolean        @default(true) @map("is_active")
+  createdAt              DateTime       @default(now()) @map("created_at")
+  updatedAt              DateTime       @updatedAt @map("updated_at")
+
+  zone                   ShippingZone   @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  method                 ShippingMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+
+  @@index([zoneId, methodId])
+  @@map("shipping_rates")
+}
+
+model TaxRate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  rate        Decimal  @db.Decimal(5, 4)
+  country     String   @default("ET")
+  region      String?
+  city        String?
+  taxType     String   @default("VAT") @map("tax_type")
+  isCompound  Boolean  @default(false) @map("is_compound")
+  isActive    Boolean  @default(true) @map("is_active")
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([country, region, city])
+  @@index([isActive])
+  @@map("tax_rates")
 }
