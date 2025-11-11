@@ -11,6 +11,9 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - AR view for select products
 - Wishlist and cart functionality
 - Product reviews and ratings
+- **Coupon codes and discounts** - Apply promotional codes at checkout
+- **Multiple shipping options** - Choose from standard, express, or store pickup
+- **Transparent pricing** - View itemized costs including discounts, shipping, and VAT
 
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
@@ -25,6 +28,15 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - Analytics dashboard
 - Category management
 - Order oversight
+- **Pricing & Promotions Management**
+  - Create and manage coupon codes (percentage, fixed amount, free shipping)
+  - Set up promotions and discounts
+  - Configure flash sales with time limits
+  - Implement tiered pricing for bulk purchases
+- **Shipping & Tax Configuration**
+  - Define shipping zones for Ethiopian regions
+  - Configure shipping methods and rates
+  - Set up VAT and tax rates (15% Ethiopian VAT)
 - [View detailed admin documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md)
 
 ### Ethiopian-Specific Features
@@ -33,6 +45,9 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - ☕ Ethiopian product categories (Coffee, Traditional Clothing, Spices, etc.)
 - 📍 Ethiopian market context and terminology
 - 🎨 Cultural sensitivity in product categorization
+- 🚚 Ethiopian shipping zones (Addis Ababa, Major Cities, Regional Areas)
+- 💰 Ethiopian VAT (15%) automatically calculated
+- 🏙️ Support for major Ethiopian cities and regions
 
 ## Getting Started
 
@@ -103,6 +118,9 @@ This project is built with:
 - `npm run build` - Build the production application
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint
+- `npm run test` - Run test suite
+- `npm run db:seed:categories` - Seed Ethiopian categories
+- `npm run db:seed:shipping-tax` - Seed shipping zones and tax rates
 
 ## Key Routes
 
@@ -139,6 +157,168 @@ The platform supports culturally relevant categories including:
 - And more...
 
 Run the seed script to populate these categories in your database.
+
+## Pricing & Promotions System
+
+### Discount Types
+The platform supports three types of discounts:
+- **Percentage Discount** - e.g., 10% off
+- **Fixed Amount** - e.g., 50 ETB off
+- **Free Shipping** - Waive shipping charges
+
+### Coupon Codes
+Create promotional codes with:
+- Usage limits (total and per-user)
+- Minimum purchase requirements
+- Maximum discount caps
+- Start and expiration dates
+- Status tracking (active, inactive, expired, depleted)
+
+**Example API Usage:**
+```bash
+# Validate a coupon code
+POST /api/coupons/validate
+{
+  "code": "WELCOME10",
+  "subtotal": 500
+}
+```
+
+### Promotions
+Configure automatic discounts:
+- **Product Discount** - Discount on specific products
+- **Category Discount** - Discount on product categories
+- **Cart Discount** - Discount on entire cart
+- **Buy X Get Y** - Bundle deals
+
+### Tiered Pricing
+Offer quantity-based discounts:
+- Define min/max quantity ranges
+- Apply percentage or fixed discounts
+- Automatic calculation at checkout
+
+### Flash Sales
+Create time-limited sales with:
+- Scheduled start and end times
+- Stock limits
+- Countdown timers
+- Priority over other discounts
+
+**Example API Usage:**
+```bash
+# Get active promotions
+GET /api/promotions?productId={productId}
+```
+
+## Shipping & Tax System
+
+### Ethiopian Shipping Zones
+Pre-configured zones for Ethiopia:
+1. **Addis Ababa** - Capital city
+   - Standard: 50 ETB base + 10 ETB/kg
+   - Express: 100 ETB base + 20 ETB/kg
+   - Free shipping threshold: 1,000 ETB
+
+2. **Major Cities** - Dire Dawa, Bahir Dar, Gondar, Mekelle, etc.
+   - Standard: 100 ETB base + 15 ETB/kg
+   - Express: 200 ETB base + 25 ETB/kg
+   - Free shipping threshold: 1,500 ETB
+
+3. **Regional Areas** - Other cities and towns
+   - Standard: 150 ETB base + 20 ETB/kg
+   - Free shipping threshold: 2,000 ETB
+
+### Shipping Methods
+- **Standard Delivery** - 3-7 business days
+- **Express Delivery** - 1-3 business days
+- **Store Pickup** - Free, 1-2 days
+
+**Example API Usage:**
+```bash
+# Calculate shipping rates
+POST /api/shipping/rates
+{
+  "address": {
+    "country": "ET",
+    "city": "Addis Ababa"
+  },
+  "subtotal": 500,
+  "totalWeight": 2.5
+}
+```
+
+### Ethiopian Tax (VAT)
+- Standard VAT rate: **15%**
+- Automatic calculation based on address
+- Tax-exempt categories supported (basic food, medicine, books)
+- Compound tax support for multiple tax rates
+
+### Complete Cart Calculation
+Calculate totals with all pricing rules:
+```bash
+POST /api/cart/calculate
+{
+  "subtotal": 500,
+  "couponCode": "WELCOME10",
+  "shippingRateId": "...",
+  "shippingAddress": {
+    "country": "ET",
+    "city": "Addis Ababa"
+  }
+}
+
+# Response
+{
+  "subtotal": 500,
+  "discountAmount": 50,
+  "subtotalAfterDiscount": 450,
+  "shippingAmount": 50,
+  "taxAmount": 67.50,
+  "total": 567.50
+}
+```
+
+## Admin API Endpoints
+
+### Coupon Management
+- `GET /api/admin/coupons` - List all coupons
+- `POST /api/admin/coupons` - Create new coupon
+- Query params: `status`, `page`, `perPage`
+
+### Promotion Management
+- `GET /api/admin/promotions` - List all promotions
+- `POST /api/admin/promotions` - Create new promotion
+- Query params: `isActive`, `page`, `perPage`
+
+### Flash Sale Management
+- `GET /api/admin/flash-sales` - List all flash sales
+- `POST /api/admin/flash-sales` - Create new flash sale
+- Includes product information and stock tracking
+
+### Shipping Zone Management
+- `GET /api/admin/shipping-zones` - List all zones with rates
+- `POST /api/admin/shipping-zones` - Create new zone
+
+**Note:** All admin endpoints require authentication and admin privileges (set via `ADMIN_EMAILS` env variable).
+
+## Database Seeding
+
+After setting up the database, run the seed scripts:
+
+```bash
+# Seed Ethiopian categories
+npm run db:seed:categories
+
+# Seed shipping zones and tax rates
+npm run db:seed:shipping-tax
+```
+
+This will populate:
+- Ethiopian product categories
+- Shipping zones for Ethiopian regions
+- Shipping methods (Standard, Express, Pickup)
+- Shipping rates in ETB
+- 15% Ethiopian VAT rate
 
 ## Deployment
 
