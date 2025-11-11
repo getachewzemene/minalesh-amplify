@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:seed:categories": "npx tsx prisma/seeds/categories.ts",
+    "db:seed:shipping-tax": "npx tsx prisma/seeds/shipping-and-tax.ts",
     "test": "vitest run"
   },
   "dependencies": {
