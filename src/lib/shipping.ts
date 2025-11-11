@@ -134,9 +134,7 @@ export async function getShippingOptions(
       ],
     },
     include: {
-      method: {
-        where: { isActive: true },
-      },
+      method: true,
       zone: true,
     },
     orderBy: {

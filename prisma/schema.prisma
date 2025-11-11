@@ -108,6 +108,7 @@ model Profile {
   products      Product[]
   orderItems    OrderItem[]
   vendorPayouts VendorPayout[]
+  vendorStatements VendorStatement[]
 
   @@map("profiles")
 }
@@ -170,6 +171,7 @@ model Product {
   wishlists          Wishlist[]
   tieredPricing      TieredPricing[]
   flashSales         FlashSale[]
+  reservations       InventoryReservation[]
 
   @@map("products")
 }
@@ -192,6 +194,7 @@ model ProductVariant {
   product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   carts         Cart[]
   orderItems    OrderItem[]
+  reservations  InventoryReservation[]
 
   @@map("product_variants")
 }
@@ -253,6 +256,8 @@ model Order {
   shippingMethodId  String?         @map("shipping_method_id") @db.Uuid
   shippingMethod    ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
   couponUsages      CouponUsage[]
+  refunds           Refund[]
+  invoice           Invoice?
 
   @@map("orders")
 }
@@ -375,6 +380,7 @@ model VendorPayout {
   createdAt        DateTime  @default(now()) @map("created_at")
 
   vendor           Profile   @relation(fields: [vendorId], references: [id])
+  statements       VendorStatement[]
 
   @@map("vendor_payouts")
 }
@@ -575,4 +581,102 @@ model TaxRate {
   @@index([country, region, city])
   @@index([isActive])
   @@map("tax_rates")
+}
+
+model InventoryReservation {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  variantId   String?   @map("variant_id") @db.Uuid
+  quantity    Int
+  userId      String?   @map("user_id") @db.Uuid
+  sessionId   String?   @map("session_id")
+  orderId     String?   @map("order_id") @db.Uuid
+  status      String    @default("active")
+  expiresAt   DateTime  @map("expires_at")
+  releasedAt  DateTime? @map("released_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([variantId])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([orderId])
+  @@index([status, expiresAt])
+  @@map("inventory_reservations")
+}
+
+model Refund {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String    @map("order_id") @db.Uuid
+  amount          Decimal   @db.Decimal(10, 2)
+  reason          String?
+  status          String    @default("pending")
+  provider        String?
+  providerRefundId String?  @map("provider_refund_id")
+  processedAt     DateTime? @map("processed_at")
+  failedAt        DateTime? @map("failed_at")
+  failureReason   String?   @map("failure_reason")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@map("refunds")
+}
+
+model Invoice {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String    @unique @map("order_id") @db.Uuid
+  invoiceNumber   String    @unique @map("invoice_number")
+  issueDate       DateTime  @map("issue_date")
+  dueDate         DateTime? @map("due_date")
+  subtotal        Decimal   @db.Decimal(10, 2)
+  taxAmount       Decimal   @db.Decimal(10, 2) @map("tax_amount")
+  discountAmount  Decimal   @default(0) @db.Decimal(10, 2) @map("discount_amount")
+  shippingAmount  Decimal   @default(0) @db.Decimal(10, 2) @map("shipping_amount")
+  totalAmount     Decimal   @db.Decimal(10, 2) @map("total_amount")
+  currency        String    @default("ETB")
+  status          String    @default("draft")
+  pdfUrl          String?   @map("pdf_url")
+  emailSentAt     DateTime? @map("email_sent_at")
+  paidAt          DateTime? @map("paid_at")
+  notes           String?
+  tinNumber       String?   @map("tin_number")
+  tradeLicense    String?   @map("trade_license")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceNumber])
+  @@index([status])
+  @@map("invoices")
+}
+
+model VendorStatement {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId         String   @map("vendor_id") @db.Uuid
+  payoutId         String?  @map("payout_id") @db.Uuid
+  statementNumber  String   @unique @map("statement_number")
+  periodStart      DateTime @map("period_start")
+  periodEnd        DateTime @map("period_end")
+  totalSales       Decimal  @map("total_sales") @db.Decimal(10, 2)
+  commissionAmount Decimal  @map("commission_amount") @db.Decimal(10, 2)
+  payoutAmount     Decimal  @map("payout_amount") @db.Decimal(10, 2)
+  pdfUrl           String?  @map("pdf_url")
+  emailSentAt      DateTime? @map("email_sent_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  vendor           Profile       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  payout           VendorPayout? @relation(fields: [payoutId], references: [id])
+
+  @@index([vendorId])
+  @@index([payoutId])
+  @@map("vendor_statements")
 }
