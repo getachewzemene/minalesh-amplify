@@ -240,6 +240,28 @@ model OrderEvent {
   @@map("order_events")
 }
 
+model WebhookEvent {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider    String
+  eventId     String?  @map("event_id")
+  orderId     String?  @map("order_id") @db.Uuid
+  signature   String?
+  signatureHash String? @map("signature_hash")
+  payload     Json
+  status      String   @default("received")
+  createdAt   DateTime @default(now()) @map("created_at")
+  processedAt DateTime? @map("processed_at")
+  ipAddress   String?  @map("ip_address")
+  latencyMs   Int?      @map("latency_ms")
+  errorMessage String?  @map("error_message")
+  retryCount  Int       @default(0) @map("retry_count")
+  nextRetryAt DateTime? @map("next_retry_at")
+  archived    Boolean   @default(false)
+
+  @@unique([provider, eventId])
+  @@map("webhook_events")
+}
+
 model OrderItem {
   id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orderId     String          @map("order_id") @db.Uuid
