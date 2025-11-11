@@ -10,7 +10,7 @@ import { Prisma } from '@prisma/client';
 
 export interface RefundRequest {
   orderId: string;
-  amount: Decimal.Value;
+  amount: number | string;
   reason?: string;
   restoreStock?: boolean;
 }

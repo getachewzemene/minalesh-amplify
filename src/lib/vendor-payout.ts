@@ -37,7 +37,7 @@ export async function calculateVendorPayout(
         vendorId,
         order: {
           status: {
-            in: ['delivered', 'completed'],
+            in: ['delivered'],
           },
           deliveredAt: {
             gte: periodStart,

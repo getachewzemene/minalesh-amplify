@@ -135,6 +135,8 @@ export async function POST(request: Request) {
     const orderNumber = `MIN-${Date.now()}`;
 
     // Atomic transaction: decrement stock and create order. Use transaction callback to allow early abort.
+    // This provides immediate stock protection against overselling.
+    // For enhanced reservation system, use inventory reservation API before order creation.
     try {
       const result = await prisma.$transaction(async (tx) => {
         // Decrement stock for each product conditionally
