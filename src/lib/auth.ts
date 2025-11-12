@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt, { Secret } from 'jsonwebtoken';
+import { UserRole } from '@prisma/client';
 
 // Ensure JWT_SECRET is set in production
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
@@ -8,10 +9,17 @@ if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
 
 const JWT_SECRET: Secret = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+
+// Max login attempts before lockout
+const MAX_LOGIN_ATTEMPTS = 5;
+// Lockout duration in minutes
+const LOCKOUT_DURATION_MINUTES = 15;
 
 export interface JWTPayload {
   userId: string;
   email: string;
+  role: UserRole;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -24,6 +32,11 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 export function generateToken(payload: JWTPayload): string {
   const options: jwt.SignOptions = { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] };
+  return jwt.sign(payload, JWT_SECRET, options);
+}
+
+export function generateRefreshToken(payload: JWTPayload): string {
+  const options: jwt.SignOptions = { expiresIn: REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'] };
   return jwt.sign(payload, JWT_SECRET, options);
 }
 
@@ -49,12 +62,64 @@ export function getUserFromToken(token: string | null): JWTPayload | null {
 }
 
 /**
- * Check if user is an admin based on email.
- * TODO: Replace with proper role-based access control when admin role is added to User model.
- * For now, checks if email is in ADMIN_EMAILS environment variable (comma-separated).
+ * Check if user has the specified role
  */
-export function isAdmin(email: string): boolean {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
-  return adminEmails.includes(email.toLowerCase());
+export function hasRole(userRole: UserRole, requiredRole: UserRole | UserRole[]): boolean {
+  if (Array.isArray(requiredRole)) {
+    return requiredRole.includes(userRole);
+  }
+  return userRole === requiredRole;
+}
+
+/**
+ * Check if user is an admin
+ */
+export function isAdmin(role: UserRole): boolean {
+  return role === 'admin';
+}
+
+/**
+ * Check if user is a vendor
+ */
+export function isVendor(role: UserRole): boolean {
+  return role === 'vendor' || role === 'admin';
+}
+
+/**
+ * Check if user is a customer (or has any valid role)
+ */
+export function isCustomer(role: UserRole): boolean {
+  return role === 'customer' || role === 'vendor' || role === 'admin';
+}
+
+/**
+ * Generate a random token for email verification or password reset
+ */
+export function generateRandomToken(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+/**
+ * Get lockout time for failed login attempts
+ */
+export function calculateLockoutTime(): Date {
+  const lockoutTime = new Date();
+  lockoutTime.setMinutes(lockoutTime.getMinutes() + LOCKOUT_DURATION_MINUTES);
+  return lockoutTime;
+}
+
+/**
+ * Check if account is currently locked out
+ */
+export function isAccountLockedOut(lockoutUntil: Date | null): boolean {
+  if (!lockoutUntil) return false;
+  return new Date() < lockoutUntil;
+}
+
+/**
+ * Check if login attempts should reset lockout
+ */
+export function shouldResetLoginAttempts(loginAttempts: number, lockoutUntil: Date | null): boolean {
+  return loginAttempts >= MAX_LOGIN_ATTEMPTS && (!lockoutUntil || new Date() >= lockoutUntil);
 }
 
