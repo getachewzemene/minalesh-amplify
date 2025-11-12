@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@/lib/auth', () => ({
-  getTokenFromRequest: () => 'token',
-  getUserFromToken: () => ({ userId: 'user-1', email: 'user@example.com' }),
+vi.mock('@/lib/middleware', () => ({
+  withAuth: () => ({ error: null, payload: { userId: 'user-1', email: 'user@example.com', role: 'customer' } }),
+}));
+
+vi.mock('@/lib/email', () => ({
+  sendEmail: vi.fn().mockResolvedValue(true),
+  createOrderConfirmationEmail: vi.fn(),
 }));
 
 function createMockPrisma() {
@@ -10,6 +14,9 @@ function createMockPrisma() {
   product: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
+  },
+  user: {
+    findUnique: vi.fn().mockResolvedValue({ email: 'user@example.com' }),
   },
   order: {
     create: vi.fn(),
@@ -25,6 +32,9 @@ import prisma from '@/lib/prisma';
 type MockedPrisma = {
   product: {
     findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+  user: {
     findUnique: ReturnType<typeof vi.fn>;
   };
   order: { create: ReturnType<typeof vi.fn> };
