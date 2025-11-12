@@ -134,6 +134,8 @@ This project is built with:
 - JWT Authentication
 - AWS S3 (Optional - Media Storage)
 - Sharp (Image Optimization)
+- Sentry (Error Tracking & Performance Monitoring)
+- Pino (Structured Logging)
 
 ## Available Scripts
 
@@ -364,6 +366,38 @@ This will populate:
 - Shipping methods (Standard, Express, Pickup)
 - Shipping rates in ETB
 - 15% Ethiopian VAT rate
+
+## Observability & Performance
+
+The platform includes comprehensive observability and performance optimizations:
+
+### Observability Features
+- ✅ **Structured Logging** - JSON-formatted logs with Pino for production monitoring
+- ✅ **Error Tracking** - Sentry integration for client, server, and edge errors
+- ✅ **Performance Metrics** - Request duration, cache hit rates, and custom metrics
+- ✅ **API Request Logging** - Automatic logging for all API routes with user context
+
+### Performance Features
+- ✅ **CDN Optimization** - Cache headers for static assets and API responses
+- ✅ **API Response Caching** - In-memory caching with configurable TTL
+- ✅ **Stale-While-Revalidate** - Serve stale content while refreshing in background
+- ✅ **Image Optimization** - Next.js Image Optimization with AVIF/WebP support
+- ✅ **Cache Invalidation** - Automatic cache clearing on content updates
+
+📚 **[View Observability & Performance Documentation](docs/OBSERVABILITY_AND_PERFORMANCE.md)** for detailed implementation guide.
+
+### Configuration
+
+Set up observability by adding these environment variables:
+
+```bash
+# Sentry (Optional)
+SENTRY_DSN="your-sentry-dsn"
+NEXT_PUBLIC_SENTRY_DSN="your-sentry-dsn"
+
+# Logging
+LOG_LEVEL="info"  # Options: trace, debug, info, warn, error, fatal
+```
 
 ## Deployment
 

@@ -109,38 +109,34 @@ function buildWhereClause(filters: SearchFilters): Prisma.ProductWhereInput {
     };
   }
 
-  // Vendor filter
+  // Vendor filter - combine all vendor filters into one
   if (filters.vendorId) {
     where.vendorId = filters.vendorId;
-  } else if (filters.vendorName) {
-    where.vendor = {
-      displayName: {
+  } else if (filters.vendorName || filters.city || filters.verified) {
+    const vendorFilter: any = {};
+    
+    if (filters.vendorName) {
+      vendorFilter.displayName = {
         contains: filters.vendorName,
         mode: 'insensitive',
-      },
-    };
-  }
-
-  // Location filter
-  if (filters.city) {
-    where.vendor = {
-      ...where.vendor,
-      city: filters.city,
-    };
+      };
+    }
+    
+    if (filters.city) {
+      vendorFilter.city = filters.city;
+    }
+    
+    if (filters.verified) {
+      vendorFilter.vendorStatus = 'approved';
+    }
+    
+    where.vendor = vendorFilter;
   }
 
   // Stock filter
   if (filters.inStock) {
     where.stockQuantity = {
       gt: 0,
-    };
-  }
-
-  // Verified vendors filter
-  if (filters.verified) {
-    where.vendor = {
-      ...where.vendor,
-      vendorStatus: 'approved',
     };
   }
 
