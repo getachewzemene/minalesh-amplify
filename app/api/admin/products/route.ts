@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withAdmin } from '@/lib/middleware';
+import { logApiRequest, logError, logEvent } from '@/lib/logger';
+import { invalidateCache } from '@/lib/cache';
 
 // Get all products for admin (with pagination and filtering)
 export async function GET(request: Request) {
@@ -87,8 +89,9 @@ export async function PATCH(request: Request) {
   const { error, payload } = withAdmin(request);
   if (error) return error;
 
-  try {
+  const startTime = Date.now();
 
+  try {
     const { id, ...data } = await request.json();
 
     if (!id) {
@@ -118,9 +121,33 @@ export async function PATCH(request: Request) {
       },
     });
 
+    // Invalidate product caches
+    await invalidateCache(/^products:/, { prefix: 'products' });
+    await invalidateCache(/^search:/, { prefix: 'products' });
+
+    // Log the update event
+    logEvent('product_updated', {
+      productId: id,
+      adminId: payload?.userId,
+      changes: Object.keys(data),
+    });
+
+    logApiRequest({
+      method: 'PATCH',
+      path: '/api/admin/products',
+      statusCode: 200,
+      duration: Date.now() - startTime,
+      userId: payload?.userId,
+    });
+
     return NextResponse.json(product);
   } catch (error) {
-    console.error('Error updating product:', error);
+    const err = error as Error;
+    logError(err, {
+      method: 'PATCH',
+      path: '/api/admin/products',
+      userId: payload?.userId,
+    });
     return NextResponse.json(
       { error: 'An error occurred' },
       { status: 500 }
@@ -133,8 +160,9 @@ export async function DELETE(request: Request) {
   const { error, payload } = withAdmin(request);
   if (error) return error;
 
-  try {
+  const startTime = Date.now();
 
+  try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -149,12 +177,35 @@ export async function DELETE(request: Request) {
       where: { id },
     });
 
+    // Invalidate product caches
+    await invalidateCache(/^products:/, { prefix: 'products' });
+    await invalidateCache(/^search:/, { prefix: 'products' });
+
+    // Log the delete event
+    logEvent('product_deleted', {
+      productId: id,
+      adminId: payload?.userId,
+    });
+
+    logApiRequest({
+      method: 'DELETE',
+      path: '/api/admin/products',
+      statusCode: 200,
+      duration: Date.now() - startTime,
+      userId: payload?.userId,
+    });
+
     return NextResponse.json({ 
       success: true, 
       message: 'Product deleted successfully' 
     });
   } catch (error) {
-    console.error('Error deleting product:', error);
+    const err = error as Error;
+    logError(err, {
+      method: 'DELETE',
+      path: '/api/admin/products',
+      userId: payload?.userId,
+    });
     return NextResponse.json(
       { error: 'An error occurred' },
       { status: 500 }
