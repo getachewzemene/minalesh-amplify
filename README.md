@@ -6,6 +6,7 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 
 ### For Customers
 - Browse products with Ethiopian Birr (ETB) pricing
+- **Advanced Search** - Full-text search with autocomplete suggestions and faceted filtering
 - Search and filter by Ethiopian-specific categories
 - Traditional and modern product categories
 - AR view for select products
@@ -18,6 +19,8 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
 - Product management (Create, Read, Update, Delete)
+- **Media Management** - Upload images with automatic optimization and S3 storage
+- **Accessibility Support** - Add alt text to product images
 - Inventory tracking
 - Sales analytics
 - Order management
@@ -107,10 +110,12 @@ This project is built with:
 - React 18
 - Tailwind CSS
 - shadcn-ui
-- PostgreSQL (Database)
+- PostgreSQL (Database with pg_trgm extension)
 - Prisma ORM
 - TanStack Query
 - JWT Authentication
+- AWS S3 (Optional - Media Storage)
+- Sharp (Image Optimization)
 
 ## Available Scripts
 
@@ -132,6 +137,28 @@ This project is built with:
 - `/profile` - User profile and vendor management
 - `/cart` - Shopping cart
 - `/wishlist` - Saved items
+
+## Advanced Search Backend
+
+The platform features a powerful PostgreSQL-based search system:
+- **Full-Text Search**: PostgreSQL trigram similarity for relevant results
+- **Faceted Filtering**: Category, price range, rating, vendor, location filters
+- **Search Suggestions**: Autocomplete for better UX
+- **Multiple Sort Options**: Relevance, price, rating, newest, popular
+- **Performance Optimized**: GIN indexes for fast queries
+
+See [Search Backend Documentation](docs/SEARCH_BACKEND.md) for API details.
+
+## Media Management
+
+Comprehensive image handling with professional features:
+- **S3 Storage**: AWS S3 integration with local fallback
+- **Auto-Optimization**: Multiple sizes (thumbnail, medium, large)
+- **WebP Conversion**: Modern format for better compression
+- **Alt Text Support**: Accessibility-first design
+- **Secure Upload**: Authentication and authorization checks
+
+See [Media Management Documentation](docs/MEDIA_MANAGEMENT.md) for API details.
 
 ## Admin Product Management
 
