@@ -1,177 +1,79 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { searchProducts, SearchFilters, SearchSort } from '@/lib/search';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Extract search parameters
-    const query = searchParams.get('search') || '';
-    const category = searchParams.get('category');
-    const minPrice = searchParams.get('min_price');
-    const maxPrice = searchParams.get('max_price');
-    const rating = searchParams.get('rating');
-    const vendor = searchParams.get('vendor');
-    const location = searchParams.get('location');
-    const inStock = searchParams.get('in_stock');
-    const hasAR = searchParams.get('has_ar');
-    const verified = searchParams.get('verified');
-    const sort = searchParams.get('sort') || 'relevance';
+    // Extract and build filters
+    const filters: SearchFilters = {
+      query: searchParams.get('search') || undefined,
+      categorySlug: searchParams.get('category') || undefined,
+      minPrice: searchParams.get('min_price') 
+        ? parseFloat(searchParams.get('min_price')!)
+        : undefined,
+      maxPrice: searchParams.get('max_price')
+        ? parseFloat(searchParams.get('max_price')!)
+        : undefined,
+      minRating: searchParams.get('rating')
+        ? parseFloat(searchParams.get('rating')!)
+        : undefined,
+      vendorName: searchParams.get('vendor') || undefined,
+      city: searchParams.get('location') || undefined,
+      inStock: searchParams.get('in_stock') === 'true',
+      verified: searchParams.get('verified') === 'true',
+    };
+
+    // Extract sort parameters
+    const sortParam = searchParams.get('sort') || 'relevance';
+    let sort: SearchSort = { field: 'relevance' };
+    
+    switch (sortParam) {
+      case 'price_low':
+        sort = { field: 'price', order: 'asc' };
+        break;
+      case 'price_high':
+        sort = { field: 'price', order: 'desc' };
+        break;
+      case 'rating':
+        sort = { field: 'rating', order: 'desc' };
+        break;
+      case 'newest':
+        sort = { field: 'newest' };
+        break;
+      case 'popular':
+        sort = { field: 'popular' };
+        break;
+      default:
+        sort = { field: 'relevance' };
+    }
+
+    // Extract pagination
     const page = parseInt(searchParams.get('page') || '1');
     const perPage = Math.min(parseInt(searchParams.get('per_page') || '20'), 100);
 
-    // Build where clause
-    const where: any = {
-      isActive: true,
-    };
-
-    // Search query - search in name and description
-    if (query) {
-      where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { shortDescription: { contains: query, mode: 'insensitive' } },
-      ];
-    }
-
-    // Category filter
-    if (category && category !== 'all') {
-      where.category = {
-        slug: category,
-      };
-    }
-
-    // Price range filter
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) {
-        where.price.gte = parseFloat(minPrice);
-      }
-      if (maxPrice) {
-        where.price.lte = parseFloat(maxPrice);
-      }
-    }
-
-    // Rating filter
-    if (rating) {
-      where.ratingAverage = {
-        gte: parseFloat(rating),
-      };
-    }
-
-    // Vendor filter
-    if (vendor) {
-      where.vendor = {
-        displayName: { contains: vendor, mode: 'insensitive' },
-      };
-    }
-
-    // Location filter
-    if (location) {
-      where.vendor = {
-        ...where.vendor,
-        city: location,
-      };
-    }
-
-    // In stock filter
-    if (inStock === 'true') {
-      where.stockQuantity = {
-        gt: 0,
-      };
-    }
-
-    // Verified vendors only filter
-    if (verified === 'true') {
-      where.vendor = {
-        ...where.vendor,
-        vendorStatus: 'approved',
-      };
-    }
-
-    // Build orderBy clause
-    let orderBy: any = {};
-    switch (sort) {
-      case 'price_low':
-        orderBy = { price: 'asc' };
-        break;
-      case 'price_high':
-        orderBy = { price: 'desc' };
-        break;
-      case 'rating':
-        orderBy = { ratingAverage: 'desc' };
-        break;
-      case 'newest':
-        orderBy = { createdAt: 'desc' };
-        break;
-      default:
-        // Relevance - if query exists, prioritize by name match
-        if (query) {
-          orderBy = [
-            { isFeatured: 'desc' },
-            { viewCount: 'desc' },
-          ];
-        } else {
-          orderBy = { createdAt: 'desc' };
-        }
-    }
-
-    // Calculate pagination
-    const skip = (page - 1) * perPage;
-
-    // Execute query
-    const [products, totalCount] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: {
-          vendor: {
-            select: {
-              displayName: true,
-              vendorStatus: true,
-              city: true,
-            },
-          },
-          category: {
-            select: {
-              name: true,
-              slug: true,
-            },
-          },
-        },
-        orderBy,
-        skip,
-        take: perPage,
-      }),
-      prisma.product.count({ where }),
-    ]);
-
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(totalCount / perPage);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
+    // Execute search using new search utility
+    const result = await searchProducts({
+      filters,
+      sort,
+      page,
+      perPage,
+    });
 
     return NextResponse.json({
-      products,
-      pagination: {
-        page,
-        perPage,
-        totalCount,
-        totalPages,
-        hasNextPage,
-        hasPrevPage,
-      },
+      products: result.products,
+      pagination: result.pagination,
       filters: {
-        query,
-        category,
-        minPrice,
-        maxPrice,
-        rating,
-        vendor,
-        location,
-        inStock,
-        hasAR,
-        verified,
-        sort,
+        query: filters.query,
+        category: filters.categorySlug,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        rating: filters.minRating,
+        vendor: filters.vendorName,
+        location: filters.city,
+        inStock: filters.inStock,
+        verified: filters.verified,
+        sort: sortParam,
       },
     });
   } catch (error) {

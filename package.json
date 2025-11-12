@@ -12,6 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.929.0",
+    "@aws-sdk/lib-storage": "^3.929.0",
     "@hookform/resolvers": "^3.10.0",
     "@next/bundle-analyzer": "^16.0.1",
     "@prisma/client": "^6.18.0",
@@ -79,6 +81,7 @@
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.32.0",
+    "eslint-config-next": "16.0.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
