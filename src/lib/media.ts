@@ -16,6 +16,33 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+/**
+ * Check if a URL is a valid S3 URL by verifying the hostname
+ */
+function isS3Url(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    // Check if hostname ends with .s3.amazonaws.com or is exactly s3.amazonaws.com
+    return parsedUrl.hostname.endsWith('.s3.amazonaws.com') || 
+           parsedUrl.hostname === 's3.amazonaws.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safely extract S3 key from a valid S3 URL
+ */
+function extractS3Key(url: string): string | null {
+  try {
+    const parsedUrl = new URL(url);
+    // Remove leading slash from pathname
+    return parsedUrl.pathname.substring(1);
+  } catch {
+    return null;
+  }
+}
+
 export interface CreateMediaInput {
   productId: string;
   file: Buffer;
@@ -205,16 +232,20 @@ export async function deleteMedia(mediaId: string): Promise<void> {
   }
 
   // Delete from S3 if configured
-  if (isS3Configured() && media.url.includes('s3.amazonaws.com')) {
-    const key = media.url.split('/').slice(-2).join('/');
-    await deleteFromS3(key);
+  if (isS3Configured() && isS3Url(media.url)) {
+    const key = extractS3Key(media.url);
+    if (key) {
+      await deleteFromS3(key);
+    }
 
     // Delete optimized versions
     const optimizedVersions = media.optimizedVersions as OptimizedVersions;
     for (const version of Object.values(optimizedVersions)) {
-      if (version.url.includes('s3.amazonaws.com')) {
-        const versionKey = version.url.split('/').slice(-2).join('/');
-        await deleteFromS3(versionKey);
+      if (isS3Url(version.url)) {
+        const versionKey = extractS3Key(version.url);
+        if (versionKey) {
+          await deleteFromS3(versionKey);
+        }
       }
     }
   }
