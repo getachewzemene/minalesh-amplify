@@ -88,16 +88,34 @@ npx tsx prisma/seeds/categories.ts
 npm run dev
 ```
 
-### Security Notes
+### Security & RBAC
 
-⚠️ **Important Security Considerations:**
+✅ **Security Features Implemented:**
 
-1. **JWT Secret**: Always set a strong, random `JWT_SECRET` in production. The application will fail to start if this is not set.
-2. **Admin Access**: Set `ADMIN_EMAILS` environment variable with comma-separated admin email addresses. This is a temporary solution - implement proper role-based access control for production.
-3. **Token Storage**: Currently using localStorage for JWT tokens. For production, consider implementing httpOnly cookies for better XSS protection.
-4. **Vendor Approval**: The vendor approval endpoint (`/api/profile/[vendorId]/approve`) requires admin access.
-5. **Password Policy**: Enforces minimum 8 characters with at least one letter and one number.
-6. **Database Connection**: Ensure your PostgreSQL connection string uses SSL in production.
+1. **Role-Based Access Control (RBAC)**: Database-backed roles (admin, vendor, customer) with server-side enforcement
+2. **Authentication Hardening**: 
+   - Email verification for new accounts
+   - Password reset with secure tokens
+   - Brute-force protection with account lockout
+   - Token refresh mechanism
+3. **Email Notifications**: 
+   - Transactional emails (order confirmation, shipping updates)
+   - User notification preferences
+   - Ready for integration with SendGrid, AWS SES, or Mailgun
+4. **Security Best Practices**:
+   - Cryptographically secure token generation
+   - Password strength requirements (8+ chars, letter + number)
+   - JWT tokens with configurable expiry
+   - CodeQL security scanning
+
+📚 **[View Security & RBAC Documentation](docs/SECURITY_AND_RBAC.md)** for complete API reference and implementation details.
+
+⚠️ **Production Checklist:**
+- Set strong `JWT_SECRET` environment variable
+- Configure email service provider
+- Manually assign admin roles via database
+- Use HTTPS and consider httpOnly cookies
+- Enable PostgreSQL SSL connections
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 

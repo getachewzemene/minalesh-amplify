@@ -93,10 +93,18 @@ export function isCustomer(role: UserRole): boolean {
 }
 
 /**
- * Generate a random token for email verification or password reset
+ * Generate a cryptographically secure random token for email verification or password reset
  */
 export function generateRandomToken(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  // Use crypto.randomBytes for cryptographically secure random values
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    // Modern approach: use crypto.randomUUID() which is available in Node.js 14.17+
+    return crypto.randomUUID().replace(/-/g, '');
+  } else {
+    // Fallback for older Node.js versions: use crypto.randomBytes
+    const crypto = require('crypto');
+    return crypto.randomBytes(32).toString('hex');
+  }
 }
 
 /**
