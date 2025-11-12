@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
-
-// Check if user is admin
-function isAdmin(email: string): boolean {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
-  return adminEmails.includes(email);
-}
+import { withAdmin } from '@/lib/middleware';
 
 export async function GET(request: Request) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
 
-    if (!payload || !isAdmin(payload.email)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  try {
 
     const shippingZones = await prisma.shippingZone.findMany({
       include: {
@@ -57,13 +48,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
 
-    if (!payload || !isAdmin(payload.email)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  try {
 
     const body = await request.json();
     const { name, description, countries, regions, cities, postalCodes } = body;

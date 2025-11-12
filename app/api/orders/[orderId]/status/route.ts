@@ -26,7 +26,7 @@ export async function PUT(
     const internalAuthorized = !!process.env.INTERNAL_API_SECRET && internalSecret === process.env.INTERNAL_API_SECRET;
 
   const token = internalAuthorized ? null : getTokenFromRequest(request);
-  const payload = internalAuthorized ? ({ userId: 'system', email: 'system@internal' } as { userId: string; email: string }) : getUserFromToken(token);
+  const payload = internalAuthorized ? ({ userId: 'system', email: 'system@internal', role: 'admin' as const }) : getUserFromToken(token);
 
     if (!payload && !internalAuthorized) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function PUT(
     }
 
     // Check authorization - user can only view their own orders unless admin
-    const userIsAdmin = internalAuthorized ? true : isAdmin(payload.email);
+    const userIsAdmin = internalAuthorized ? true : isAdmin(payload.role);
     if (!internalAuthorized && !userIsAdmin && order.userId !== payload.userId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only update your own orders' },

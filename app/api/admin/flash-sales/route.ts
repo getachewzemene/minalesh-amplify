@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
 
-    if (!payload || !isAdmin(payload.email)) {
+    if (!payload || !isAdmin(payload.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
 
-    if (!payload || !isAdmin(payload.email)) {
+    if (!payload || !isAdmin(payload.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

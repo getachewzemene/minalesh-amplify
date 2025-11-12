@@ -61,10 +61,10 @@ export async function POST(request: Request) {
       where: { userId: payload.userId },
     });
 
-    const isAdmin = process.env.ADMIN_EMAILS?.split(',').includes(payload.email);
+    const isAdminUser = payload.role === 'admin';
     const isOwner = product.vendor.userId === payload.userId;
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdminUser && !isOwner) {
       return NextResponse.json(
         { error: 'Not authorized to upload media for this product' },
         { status: 403 }

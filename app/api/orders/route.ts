@@ -192,7 +192,7 @@ export async function POST(request: Request) {
           const emailTemplate = createOrderConfirmationEmail(
             user.email,
             result.orderNumber,
-            result.totalAmount,
+            result.totalAmount.toString(),
             orderItems
           );
           

@@ -35,7 +35,7 @@ export async function GET(
     }
 
     // Check authorization
-    const userIsAdmin = isAdmin(payload.email);
+    const userIsAdmin = isAdmin(payload.role);
     if (!userIsAdmin && order.userId !== payload.userId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only view your own order events' },
@@ -103,7 +103,7 @@ export async function POST(
     }
 
     // Check authorization - only admin or order owner can add events
-    const userIsAdmin = isAdmin(payload.email);
+    const userIsAdmin = isAdmin(payload.role);
     if (!userIsAdmin && order.userId !== payload.userId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only add events to your own orders' },
