@@ -39,6 +39,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { LoadingState, CardLoadingSkeleton } from "@/components/ui/loading-state"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   ChartContainer,
   ChartTooltip,
@@ -127,6 +131,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('7d')
   const [showAddProductForm, setShowAddProductForm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: "",
@@ -273,9 +279,50 @@ export default function Dashboard() {
     }
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-8">
+          <Container>
+            <LoadingState message="Loading dashboard..." />
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <CardLoadingSkeleton count={4} />
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-8">
+          <Container>
+            <ErrorState 
+              message={error}
+              onRetry={() => {
+                setError(null);
+                setLoading(true);
+                setTimeout(() => setLoading(false), 1000);
+              }}
+            />
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <Navbar />
       
       <main className="py-8">
         <Container>
@@ -751,6 +798,7 @@ export default function Dashboard() {
       </main>
 
       <Footer />
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }

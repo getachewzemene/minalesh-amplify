@@ -20,6 +20,10 @@ import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { AdvancedSearch } from "@/components/search/AdvancedSearch"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { LoadingState } from "@/components/ui/loading-state"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 import phoneImg from "@/assets/products/phone.jpg"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 import earbudsImg from "@/assets/products/earbuds.jpg"
@@ -276,28 +280,31 @@ function ProductsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <Container className="py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">All Products</h1>
-          <AdvancedSearch />
-        </div>
-        
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <p className="mt-4 text-muted-foreground">Loading products...</p>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <Container className="py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">All Products</h1>
+            <AdvancedSearch />
           </div>
-        )}
-        
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
-        
-        {!loading && (
+          
+          {loading && (
+            <LoadingState message="Loading products..." />
+          )}
+          
+          {error && (
+            <ErrorState 
+              message={error}
+              onRetry={() => {
+                setError(null);
+                setLoading(true);
+                // Retry logic here
+              }}
+            />
+          )}
+          
+          {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
             <div
@@ -385,15 +392,21 @@ function ProductsContent() {
           </div>
         )}
         
-        {!loading && products.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground">No products found matching your criteria.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Try adjusting your filters or search query.</p>
-          </div>
+        {!loading && !error && products.length === 0 && (
+          <EmptyState 
+            variant="products"
+            title="No products found"
+            description="Try adjusting your filters or search query to find what you're looking for."
+            action={{
+              label: "Clear filters",
+              onClick: () => router.push('/products')
+            }}
+          />
         )}
       </Container>
       <Footer />
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }
 
