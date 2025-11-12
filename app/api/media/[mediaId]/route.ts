@@ -51,10 +51,10 @@ export async function PATCH(
       );
     }
 
-    const isAdmin = process.env.ADMIN_EMAILS?.split(',').includes(payload.email);
+    const isAdminUser = payload.role === 'admin';
     const isOwner = media.product.vendor.userId === payload.userId;
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdminUser && !isOwner) {
       return NextResponse.json(
         { error: 'Not authorized to update this media' },
         { status: 403 }
@@ -115,10 +115,10 @@ export async function DELETE(
       );
     }
 
-    const isAdmin = process.env.ADMIN_EMAILS?.split(',').includes(payload.email);
+    const isAdminUser = payload.role === 'admin';
     const isOwner = media.product.vendor.userId === payload.userId;
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdminUser && !isOwner) {
       return NextResponse.json(
         { error: 'Not authorized to delete this media' },
         { status: 403 }

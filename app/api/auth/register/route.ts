@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { hashPassword, generateToken } from '@/lib/auth';
+import { hashPassword, generateToken, generateRefreshToken, generateRandomToken } from '@/lib/auth';
+import { sendEmail, createEmailVerificationEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -55,11 +56,15 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
+    // Generate email verification token
+    const emailVerificationToken = generateRandomToken();
+
     // Create user and profile
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
+        emailVerificationToken,
         profile: {
           create: {
             displayName: displayName || email,
@@ -73,17 +78,34 @@ export async function POST(request: Request) {
       },
     });
 
-    // Generate JWT token
-    const token = generateToken({ userId: user.id, email: user.email });
+    // Send email verification
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const emailTemplate = createEmailVerificationEmail(user.email, emailVerificationToken, appUrl);
+    await sendEmail(emailTemplate);
+
+    // Generate JWT tokens
+    const token = generateToken({ 
+      userId: user.id, 
+      email: user.email,
+      role: user.role
+    });
+    const refreshToken = generateRefreshToken({ 
+      userId: user.id, 
+      email: user.email,
+      role: user.role
+    });
 
     return NextResponse.json({
-      message: 'Registration successful',
+      message: 'Registration successful. Please check your email to verify your account.',
       user: {
         id: user.id,
         email: user.email,
+        role: user.role,
+        emailVerified: user.emailVerified,
         profile: user.profile,
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     console.error('Registration error:', error);

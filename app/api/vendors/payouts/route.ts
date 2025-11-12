@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
+import { withAuth, withAdmin } from '@/lib/middleware';
+import { isAdmin } from '@/lib/auth';
 import {
   calculateVendorPayout,
   createVendorPayout,
@@ -23,17 +24,10 @@ const markPaidSchema = z.object({
 
 // POST /api/vendors/payouts/calculate - Calculate payout (admin only)
 export async function POST(request: Request) {
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (!isAdmin(payload.email)) {
-      return NextResponse.json({ error: 'Forbidden - Admin only' }, { status: 403 });
-    }
 
     const body = await request.json();
     const parsed = calculateSchema.safeParse(body);
@@ -87,20 +81,16 @@ export async function POST(request: Request) {
 
 // GET /api/vendors/payouts - Get payouts
 export async function GET(request: Request) {
+  const { error, payload } = withAuth(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const vendorId = searchParams.get('vendorId');
     const pending = searchParams.get('pending') === 'true';
 
     // Admin can view all, vendors can only view their own
-    const userIsAdmin = isAdmin(payload.email);
+    const userIsAdmin = isAdmin(payload!.role);
 
     if (pending && !userIsAdmin) {
       return NextResponse.json({ error: 'Forbidden - Admin only' }, { status: 403 });
@@ -115,7 +105,7 @@ export async function GET(request: Request) {
       // Check authorization
       if (!userIsAdmin) {
         const profile = await prisma.profile.findUnique({
-          where: { userId: payload.userId },
+          where: { userId: payload!.userId },
           select: { id: true },
         });
 
@@ -133,7 +123,7 @@ export async function GET(request: Request) {
 
     // Get current vendor's payouts
     const profile = await prisma.profile.findUnique({
-      where: { userId: payload.userId },
+      where: { userId: payload!.userId },
       select: { id: true, isVendor: true },
     });
 
@@ -157,17 +147,10 @@ export async function GET(request: Request) {
 
 // PATCH /api/vendors/payouts - Mark payout as paid (admin only)
 export async function PATCH(request: Request) {
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (!isAdmin(payload.email)) {
-      return NextResponse.json({ error: 'Forbidden - Admin only' }, { status: 403 });
-    }
 
     const body = await request.json();
     const parsed = markPaidSchema.safeParse(body);

@@ -1,27 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
+import { withAdmin } from '@/lib/middleware';
 
 // Get all products for admin (with pagination and filtering)
 export async function GET(request: Request) {
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin access
-    if (!isAdmin(payload.email)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -98,24 +84,10 @@ export async function GET(request: Request) {
 
 // Update product (admin can update any product)
 export async function PATCH(request: Request) {
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin access
-    if (!isAdmin(payload.email)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
 
     const { id, ...data } = await request.json();
 
@@ -158,24 +130,10 @@ export async function PATCH(request: Request) {
 
 // Delete product (admin can delete any product)
 export async function DELETE(request: Request) {
+  const { error, payload } = withAdmin(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin access
-    if (!isAdmin(payload.email)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

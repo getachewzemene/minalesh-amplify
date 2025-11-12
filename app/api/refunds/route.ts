@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const userIsAdmin = isAdmin(payload.email);
+    const userIsAdmin = isAdmin(payload.role);
     if (!userIsAdmin && order.userId !== payload.userId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only refund your own orders' },
@@ -116,7 +116,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const userIsAdmin = isAdmin(payload.email);
+    const userIsAdmin = isAdmin(payload.role);
     if (!userIsAdmin && order.userId !== payload.userId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only view your own order refunds' },

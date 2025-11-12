@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
+import { isAdmin } from '@/lib/auth';
 import {
   createInvoice,
   getInvoice,
@@ -17,14 +18,10 @@ const createInvoiceSchema = z.object({
 
 // POST /api/invoices - Create invoice for an order
 export async function POST(request: Request) {
+  const { error, payload } = withAuth(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const parsed = createInvoiceSchema.safeParse(body);
 
@@ -47,8 +44,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const userIsAdmin = isAdmin(payload.email);
-    if (!userIsAdmin && order.userId !== payload.userId) {
+    const userIsAdmin = isAdmin(payload!.role);
+    if (!userIsAdmin && order.userId !== payload!.userId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only create invoices for your own orders' },
         { status: 403 }
@@ -81,20 +78,16 @@ export async function POST(request: Request) {
 
 // GET /api/invoices?invoiceId=xxx or ?orderId=xxx or list all (admin)
 export async function GET(request: Request) {
+  const { error, payload } = withAuth(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const invoiceId = searchParams.get('invoiceId');
     const orderId = searchParams.get('orderId');
     const format = searchParams.get('format'); // 'html' for HTML output
 
-    const userIsAdmin = isAdmin(payload.email);
+    const userIsAdmin = isAdmin(payload!.role);
 
     // Get specific invoice by ID
     if (invoiceId) {
@@ -105,7 +98,7 @@ export async function GET(request: Request) {
       }
 
       // Check authorization
-      if (!userIsAdmin && invoice.order.userId !== payload.userId) {
+      if (!userIsAdmin && invoice.order.userId !== payload!.userId) {
         return NextResponse.json(
           { error: 'Forbidden - You can only view your own invoices' },
           { status: 403 }
@@ -135,7 +128,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      if (!userIsAdmin && order.userId !== payload.userId) {
+      if (!userIsAdmin && order.userId !== payload!.userId) {
         return NextResponse.json(
           { error: 'Forbidden - You can only view your own invoices' },
           { status: 403 }

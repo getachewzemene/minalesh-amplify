@@ -66,20 +66,33 @@ enum PromotionType {
   buy_x_get_y
 }
 
+enum UserRole {
+  customer
+  vendor
+  admin
+}
+
 // Models
 model User {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email         String    @unique
-  password      String
-  emailVerified DateTime? @map("email_verified")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String    @unique
+  password              String
+  role                  UserRole  @default(customer)
+  emailVerified         DateTime? @map("email_verified")
+  emailVerificationToken String?  @map("email_verification_token")
+  passwordResetToken    String?   @map("password_reset_token")
+  passwordResetExpiry   DateTime? @map("password_reset_expiry")
+  loginAttempts         Int       @default(0) @map("login_attempts")
+  lockoutUntil          DateTime? @map("lockout_until")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   profile       Profile?
   orders        Order[]
   reviews       Review[]
   wishlists     Wishlist[]
   couponUsages  CouponUsage[]
+  notificationPreferences NotificationPreference?
 
   @@map("users")
 }
@@ -700,4 +713,21 @@ model Media {
 
   @@index([productId])
   @@map("media")
+}
+
+model NotificationPreference {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String   @unique @map("user_id") @db.Uuid
+  emailOrderConfirm     Boolean  @default(true) @map("email_order_confirm")
+  emailShippingUpdate   Boolean  @default(true) @map("email_shipping_update")
+  emailPromotions       Boolean  @default(false) @map("email_promotions")
+  emailNewsletter       Boolean  @default(false) @map("email_newsletter")
+  inAppOrderUpdates     Boolean  @default(true) @map("inapp_order_updates")
+  inAppPromotions       Boolean  @default(true) @map("inapp_promotions")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

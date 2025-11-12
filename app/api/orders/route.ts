@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
 import { type PaymentMethod } from '@/types/payment';
 import { z } from 'zod';
+import { sendEmail, createOrderConfirmationEmail } from '@/lib/email';
 
 export async function GET(request: Request) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error, payload } = withAuth(request);
+  if (error) return error;
 
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  try {
 
     const orders = await prisma.order.findMany({
-      where: { userId: payload.userId },
+      where: { userId: payload!.userId },
       include: {
         orderItems: {
           select: {
@@ -44,16 +39,10 @@ export async function GET(request: Request) {
 
 // Create a new order from client cart with selected payment method
 export async function POST(request: Request) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error, payload } = withAuth(request);
+  if (error) return error;
 
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  try {
 
     const addressSchema = z.object({
       name: z.string().min(1).optional(),
@@ -153,7 +142,7 @@ export async function POST(request: Request) {
 
         const order = await tx.order.create({
           data: {
-            userId: payload.userId,
+            userId: payload!.userId,
             orderNumber,
             status: 'pending',
             paymentStatus: 'pending',
@@ -185,6 +174,37 @@ export async function POST(request: Request) {
 
         return order;
       });
+
+      // Send order confirmation email
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: payload!.userId },
+          select: { email: true },
+        });
+
+        if (user) {
+          const orderItems = result.orderItems.map(item => ({
+            name: item.productName,
+            quantity: item.quantity,
+            price: Number(item.price),
+          }));
+
+          const emailTemplate = createOrderConfirmationEmail(
+            user.email,
+            result.orderNumber,
+            result.totalAmount.toString(),
+            orderItems
+          );
+          
+          // Send email asynchronously, don't block order creation
+          sendEmail(emailTemplate).catch(err => 
+            console.error('Failed to send order confirmation email:', err)
+          );
+        }
+      } catch (emailError) {
+        console.error('Error preparing order confirmation email:', emailError);
+        // Don't fail the order if email fails
+      }
 
       return NextResponse.json({ success: true, order: result });
     } catch (txErr: unknown) {
