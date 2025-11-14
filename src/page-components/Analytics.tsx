@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { LoadingState, CardLoadingSkeleton, ChartLoadingSkeleton } from "@/components/ui/loading-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ChartContainer,
   ChartTooltip,
@@ -30,6 +34,8 @@ import {
   CartesianGrid,
   XAxis,
   YAxis,
+  Funnel,
+  FunnelChart,
 } from "recharts";
 import {
   TrendingUp,
@@ -47,7 +53,9 @@ import {
   ArrowDown,
   MapPin,
   Star,
-  Clock
+  Clock,
+  Repeat,
+  Target
 } from "lucide-react";
 
 const chartConfig = {
@@ -133,11 +141,40 @@ const regionalData = [
   { region: "Other", sales: 2500000, orders: 580, users: 1500 },
 ];
 
+// Cohort Retention Analysis Data
+const cohortData = [
+  { cohort: "Week 1", week0: 100, week1: 65, week2: 48, week3: 38, week4: 32 },
+  { cohort: "Week 2", week0: 100, week1: 68, week2: 52, week3: 42, week4: 35 },
+  { cohort: "Week 3", week0: 100, week1: 72, week2: 58, week3: 46, week4: 39 },
+  { cohort: "Week 4", week0: 100, week1: 75, week2: 62, week3: 51, week4: 43 },
+];
+
+// Advanced Conversion Funnel Data
+const conversionFunnelData = [
+  { stage: "Visits", value: 25000, rate: 100 },
+  { stage: "Product Views", value: 18000, rate: 72 },
+  { stage: "Add to Cart", value: 8000, rate: 44.4 },
+  { stage: "Checkout Started", value: 4500, rate: 56.2 },
+  { stage: "Payment Info", value: 3200, rate: 71.1 },
+  { stage: "Order Complete", value: 2500, rate: 78.1 },
+];
+
+// Sales Trending/Forecasting Data
+const salesTrendData = [
+  { month: "Oct", actual: 2800000, forecast: 2750000, trend: "up" },
+  { month: "Nov", actual: 3100000, forecast: 3050000, trend: "up" },
+  { month: "Dec", actual: 3800000, forecast: 3700000, trend: "up" },
+  { month: "Jan", actual: null, forecast: 4200000, trend: "up" },
+  { month: "Feb", actual: null, forecast: 4500000, trend: "up" },
+];
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState("7d");
   const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Analytics Dashboard — Minalesh";
@@ -174,11 +211,57 @@ export default function Analytics() {
     conversionRate: (salesData.reduce((sum, d) => sum + d.orders, 0) / salesData.reduce((sum, d) => sum + d.users, 0)) * 100
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-6 md:py-8">
+          <Container>
+            <LoadingState message="Loading analytics data..." />
+            <div className="mt-8 grid grid-cols-2 lg:grid-cols-6 gap-4">
+              <CardLoadingSkeleton count={6} />
+            </div>
+            <div className="mt-8 grid lg:grid-cols-2 gap-6">
+              <ChartLoadingSkeleton />
+              <ChartLoadingSkeleton />
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-6 md:py-8">
+          <Container>
+            <ErrorState 
+              message={error}
+              onRetry={() => {
+                setError(null);
+                setLoading(true);
+                // Simulate retry
+                setTimeout(() => setLoading(false), 1000);
+              }}
+            />
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="py-6 md:py-8">
-        <Container>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-6 md:py-8">
+          <Container>
           {/* Header */}
           <div className="mb-6 md:mb-8">
             <div className="bg-gradient-hero text-white rounded-lg p-6 md:p-8">
@@ -320,11 +403,13 @@ export default function Analytics() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="sales">Sales</TabsTrigger>
               <TabsTrigger value="traffic">Traffic</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="funnel">Funnel</TabsTrigger>
+              <TabsTrigger value="cohorts">Cohorts</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -573,10 +658,202 @@ export default function Analytics() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="funnel" className="space-y-6">
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Conversion Funnel Visualization */}
+                <Card className="bg-gradient-card shadow-card lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      Conversion Funnel Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {conversionFunnelData.map((stage, index) => {
+                        const nextStage = conversionFunnelData[index + 1];
+                        const dropoffRate = nextStage 
+                          ? ((stage.value - nextStage.value) / stage.value * 100).toFixed(1) 
+                          : 0;
+                        
+                        return (
+                          <div key={stage.stage} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                                  {index + 1}
+                                </div>
+                                <span className="font-medium">{stage.stage}</span>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold">{stage.value.toLocaleString()}</p>
+                                <p className="text-xs text-muted-foreground">{stage.rate}% of previous</p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <div className="w-full bg-muted rounded-full h-6">
+                                <div 
+                                  className="bg-primary h-6 rounded-full flex items-center justify-end pr-2" 
+                                  style={{ width: `${(stage.value / conversionFunnelData[0].value) * 100}%` }}
+                                >
+                                  <span className="text-xs text-primary-foreground font-medium">
+                                    {((stage.value / conversionFunnelData[0].value) * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+                              {nextStage && (
+                                <div className="absolute -bottom-5 left-0 right-0 text-center">
+                                  <Badge variant="outline" className="text-xs">
+                                    {dropoffRate}% drop-off
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Sales Forecasting */}
+                <Card className="bg-gradient-card shadow-card lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5" />
+                      Sales Trend & Forecast
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={salesTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis dataKey="month" className="text-xs" />
+                          <YAxis className="text-xs" />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <ChartLegend content={<ChartLegendContent />} />
+                          <Line 
+                            type="monotone" 
+                            dataKey="actual" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth={3}
+                            name="Actual Sales"
+                            dot={{ r: 4 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="forecast" 
+                            stroke="hsl(var(--muted-foreground))" 
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            name="Forecast"
+                            dot={{ r: 3 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="cohorts" className="space-y-6">
+              <Card className="bg-gradient-card shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Repeat className="h-5 w-5" />
+                    Cohort Retention Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-2 font-medium">Cohort</th>
+                          <th className="text-center py-3 px-2 font-medium">Week 0</th>
+                          <th className="text-center py-3 px-2 font-medium">Week 1</th>
+                          <th className="text-center py-3 px-2 font-medium">Week 2</th>
+                          <th className="text-center py-3 px-2 font-medium">Week 3</th>
+                          <th className="text-center py-3 px-2 font-medium">Week 4</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cohortData.map((cohort) => (
+                          <tr key={cohort.cohort} className="border-b">
+                            <td className="py-3 px-2 font-medium">{cohort.cohort}</td>
+                            <td className="text-center py-3 px-2">
+                              <div className="inline-block px-3 py-1 rounded bg-primary/20 text-primary font-semibold">
+                                {cohort.week0}%
+                              </div>
+                            </td>
+                            <td className="text-center py-3 px-2">
+                              <div 
+                                className="inline-block px-3 py-1 rounded font-semibold"
+                                style={{
+                                  backgroundColor: `hsl(var(--primary) / ${cohort.week1 / 100})`,
+                                  color: cohort.week1 > 50 ? 'white' : 'inherit'
+                                }}
+                              >
+                                {cohort.week1}%
+                              </div>
+                            </td>
+                            <td className="text-center py-3 px-2">
+                              <div 
+                                className="inline-block px-3 py-1 rounded font-semibold"
+                                style={{
+                                  backgroundColor: `hsl(var(--primary) / ${cohort.week2 / 100})`,
+                                  color: cohort.week2 > 50 ? 'white' : 'inherit'
+                                }}
+                              >
+                                {cohort.week2}%
+                              </div>
+                            </td>
+                            <td className="text-center py-3 px-2">
+                              <div 
+                                className="inline-block px-3 py-1 rounded font-semibold"
+                                style={{
+                                  backgroundColor: `hsl(var(--primary) / ${cohort.week3 / 100})`,
+                                  color: cohort.week3 > 50 ? 'white' : 'inherit'
+                                }}
+                              >
+                                {cohort.week3}%
+                              </div>
+                            </td>
+                            <td className="text-center py-3 px-2">
+                              <div 
+                                className="inline-block px-3 py-1 rounded font-semibold"
+                                style={{
+                                  backgroundColor: `hsl(var(--primary) / ${cohort.week4 / 100})`,
+                                  color: cohort.week4 > 50 ? 'white' : 'inherit'
+                                }}
+                              >
+                                {cohort.week4}%
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-6 p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold mb-2">Insights</h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• Week 4 cohort shows the highest retention rate at 43% after 4 weeks</li>
+                      <li>• Average week-1 retention is 70%, indicating strong initial engagement</li>
+                      <li>• Retention stabilizes around 35-43% by week 4, suggesting loyal customer base</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </Container>
       </main>
       <Footer />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
