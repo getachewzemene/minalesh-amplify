@@ -8,12 +8,21 @@ function createMockPrisma() {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    inventoryReservation: {
+      findMany: vi.fn(),
+    },
     $queryRawUnsafe: vi.fn(),
     $executeRawUnsafe: vi.fn(),
   };
 }
 
 vi.mock('@/lib/prisma', () => ({ default: createMockPrisma() }));
+
+// Mock inventory functions
+vi.mock('@/lib/inventory', () => ({
+  commitReservation: vi.fn().mockResolvedValue(true),
+  releaseReservation: vi.fn().mockResolvedValue(true),
+}));
 
 // Import after mocks
 import { POST as webhookPost } from '../../app/api/payments/webhook/route';
@@ -23,6 +32,9 @@ type MockedPrisma = {
     findFirst: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+  };
+  inventoryReservation: {
+    findMany: ReturnType<typeof vi.fn>;
   };
   $queryRawUnsafe: ReturnType<typeof vi.fn>;
   $executeRawUnsafe: ReturnType<typeof vi.fn>;
@@ -51,6 +63,10 @@ describe('Payments Webhook', () => {
     const mp = prisma as unknown as MockedPrisma;
     mp.order.findFirst.mockResolvedValue(order);
     mp.order.findUnique.mockResolvedValue({ ...order, paymentStatus: 'pending' });
+    
+    // Mock inventory reservations - return empty array (no active reservations)
+    mp.inventoryReservation.findMany.mockResolvedValue([]);
+    
     // Simulate raw queries for webhook events + order update
     mp.$queryRawUnsafe.mockImplementation((sql: string) => {
       if (sql.startsWith('SELECT id, status FROM "webhook_events"')) return Promise.resolve([]);
@@ -61,6 +77,7 @@ describe('Payments Webhook', () => {
       if (sql.startsWith('INSERT INTO "webhook_events"')) return Promise.resolve(1);
       if (sql.startsWith('INSERT INTO "order_events"')) return Promise.resolve(1);
       if (sql.startsWith('UPDATE "webhook_events"')) return Promise.resolve(1);
+      if (sql.startsWith('UPDATE "orders"')) return Promise.resolve(1);
       return Promise.resolve(1);
     });
     // After update fetch returns completed
