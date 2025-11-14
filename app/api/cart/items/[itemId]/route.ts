@@ -62,38 +62,55 @@ export async function PUT(
       );
     }
 
-    // Check stock availability
-    const availableStock = cartItem.variant?.stockQuantity || cartItem.product.stockQuantity;
-    if (availableStock < quantity) {
-      return NextResponse.json(
-        { error: 'Insufficient stock' },
-        { status: 400 }
-      );
-    }
+    // Update quantity with transaction for concurrency safety
+    const updatedItem = await prisma.$transaction(async (tx) => {
+      // Re-check stock within transaction to prevent race conditions
+      const currentProduct = await tx.product.findUnique({
+        where: { id: cartItem.productId },
+        select: { stockQuantity: true },
+      });
 
-    // Update quantity
-    const updatedItem = await prisma.cart.update({
-      where: { id: params.itemId },
-      data: { quantity },
-      include: {
-        product: {
-          select: {
-            name: true,
-            price: true,
-            salePrice: true,
-            images: true,
+      let availableStock = currentProduct?.stockQuantity || 0;
+
+      if (cartItem.variantId) {
+        const currentVariant = await tx.productVariant.findUnique({
+          where: { id: cartItem.variantId },
+          select: { stockQuantity: true },
+        });
+        availableStock = currentVariant?.stockQuantity || 0;
+      }
+
+      if (availableStock < quantity) {
+        throw new Error('Insufficient stock');
+      }
+
+      // Update cart item
+      return await tx.cart.update({
+        where: { id: params.itemId },
+        data: { quantity },
+        include: {
+          product: {
+            select: {
+              name: true,
+              price: true,
+              salePrice: true,
+              images: true,
+            },
           },
+          variant: true,
         },
-        variant: true,
-      },
+      });
     });
 
     return NextResponse.json(updatedItem);
   } catch (error) {
     console.error('Error updating cart item:', error);
+    const errorMessage = error instanceof Error && error.message === 'Insufficient stock'
+      ? 'Insufficient stock'
+      : 'An error occurred while updating cart item';
     return NextResponse.json(
-      { error: 'An error occurred while updating cart item' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: error instanceof Error && error.message === 'Insufficient stock' ? 400 : 500 }
     );
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { commitReservation } from '@/lib/inventory';
 
 const schema = z.object({
   provider: z.string().min(1),
@@ -219,6 +220,19 @@ export async function POST(request: Request) {
       }
 
       const now = new Date();
+      
+      // Commit inventory reservations
+      const reservations = await prisma.inventoryReservation.findMany({
+        where: { orderId: order.id, status: 'active' },
+      });
+      
+      for (const reservation of reservations) {
+        const committed = await commitReservation(reservation.id, order.id);
+        if (!committed) {
+          console.error(`Failed to commit reservation ${reservation.id} for order ${order.id}`);
+        }
+      }
+      
       await prisma.$executeRawUnsafe(
         'UPDATE "orders" SET payment_status=$2, status=$3, paid_at=$4, updated_at=$4 WHERE id=$1',
         order.id,
@@ -249,6 +263,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, order: fresh });
     }
 
+    // For failed states, release inventory reservations
+    if (status === 'failed') {
+      const reservations = await prisma.inventoryReservation.findMany({
+        where: { orderId: order.id, status: 'active' },
+      });
+      
+      for (const reservation of reservations) {
+        await prisma.inventoryReservation.update({
+          where: { id: reservation.id },
+          data: { status: 'released', releasedAt: new Date() },
+        }).catch(err => console.error('Error releasing reservation:', err));
+      }
+    }
+    
     // For failed/pending states, record provider info in notes
     const updated = await prisma.order.update({
       where: { id: order.id },

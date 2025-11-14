@@ -1,20 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
+import { withRole } from '@/lib/middleware';
+import { validateStatusTransition } from '@/lib/order-status';
 import type { OrderStatus } from '@prisma/client';
-
-// Valid order status transitions
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  pending: ['paid', 'cancelled'],
-  paid: ['confirmed', 'cancelled', 'refunded'],
-  confirmed: ['processing', 'cancelled'],
-  processing: ['fulfilled', 'cancelled'],
-  fulfilled: ['shipped', 'cancelled'],
-  shipped: ['delivered', 'cancelled'],
-  delivered: ['refunded'],
-  cancelled: [],
-  refunded: [],
-};
 
 // PUT - Update order status
 export async function PUT(
@@ -73,14 +62,11 @@ export async function PUT(
       );
     }
 
-    // Validate status transition
-  const validNextStatuses = VALID_TRANSITIONS[order.status];
-    if (!validNextStatuses.includes(status)) {
+    // Validate status transition using centralized validator
+    const validation = validateStatusTransition(order.status as OrderStatus, status as OrderStatus);
+    if (!validation.valid) {
       return NextResponse.json(
-        { 
-          error: `Invalid status transition from ${order.status} to ${status}`,
-          validTransitions: validNextStatuses 
-        },
+        { error: validation.error },
         { status: 400 }
       );
     }
