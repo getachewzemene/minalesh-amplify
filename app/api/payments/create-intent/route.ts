@@ -42,6 +42,7 @@ const createIntentSchema = z.object({
     .optional(),
   couponCode: z.string().optional(),
   shippingMethodId: z.string().uuid().optional(),
+  captureMethod: z.enum(['automatic', 'manual']).default('automatic'),
 });
 
 /**
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { items, shippingAddress, billingAddress, couponCode, shippingMethodId } = parsed.data;
+    const { items, shippingAddress, billingAddress, couponCode, shippingMethodId, captureMethod } = parsed.data;
 
     // Fetch products to validate and calculate totals
     const productIds = items.map((i) => i.productId);
@@ -271,10 +272,12 @@ export async function POST(request: Request) {
         const paymentIntent = await stripe.paymentIntents.create({
           amount: Math.round(totalAmount * 100), // Convert to cents
           currency: 'usd', // Note: Stripe doesn't support ETB directly
+          capture_method: captureMethod, // Support manual capture for partial captures
           metadata: {
             orderId: order.id,
             orderNumber: order.orderNumber,
             userId: payload!.userId,
+            captureMethod,
           },
           automatic_payment_methods: {
             enabled: true,
@@ -284,6 +287,7 @@ export async function POST(request: Request) {
         stripePaymentIntent = {
           id: paymentIntent.id,
           clientSecret: paymentIntent.client_secret,
+          captureMethod: paymentIntent.capture_method,
         };
 
         // Update order with Stripe session ID
