@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { verifyToken } from '@/lib/auth';
-import { isAdmin } from '@/lib/rbac';
+import { verifyToken, isAdmin } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -26,8 +25,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = await verifyToken(token);
-    if (!decoded || !isAdmin(decoded)) {
+    const decoded = verifyToken(token);
+    if (!decoded || !isAdmin(decoded.role)) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
 
