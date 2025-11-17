@@ -7,6 +7,14 @@
 
 import prisma from './prisma';
 import { Prisma } from '@prisma/client';
+import Stripe from 'stripe';
+
+// Initialize Stripe if configured
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-10-29.clover',
+    })
+  : null;
 
 export interface RefundRequest {
   orderId: string;
@@ -137,27 +145,55 @@ export async function processRefund(refundId: string): Promise<boolean> {
       return false;
     }
 
-    // Provider-specific logic would go here
-    // For now, we'll simulate immediate success
+    // Provider-specific logic
     const provider = refund.provider?.toLowerCase();
 
     let success = false;
     let providerRefundId: string | null = null;
 
     switch (provider) {
+      case 'stripe':
+        // Implement Stripe refund API
+        if (stripe && refund.order.stripeSessionId) {
+          try {
+            const stripeRefund = await stripe.refunds.create({
+              payment_intent: refund.order.stripeSessionId,
+              amount: Math.round(Number(refund.amount) * 100), // Convert to cents
+              metadata: {
+                orderId: refund.orderId,
+                refundId: refund.id,
+                orderNumber: refund.order.orderNumber,
+              },
+            });
+            success = stripeRefund.status === 'succeeded' || stripeRefund.status === 'pending';
+            providerRefundId = stripeRefund.id;
+          } catch (error: unknown) {
+            console.error('Stripe refund error:', error);
+            success = false;
+            providerRefundId = null;
+          }
+        } else {
+          // No Stripe configured or no payment intent ID - mark as manual
+          success = true;
+          providerRefundId = 'MANUAL';
+        }
+        break;
       case 'telebirr':
-        // TODO: Implement TeleBirr refund API
-        success = true;
+        // TeleBirr refund API - placeholder for Ethiopian provider integration
+        // In production, call actual TeleBirr API endpoint
+        success = await processTeleBirrRefund(refund);
         providerRefundId = `TBR-${Date.now()}`;
         break;
       case 'cbe':
-        // TODO: Implement CBE refund API
-        success = true;
+        // CBE refund API - placeholder for Ethiopian provider integration
+        // In production, call actual CBE Bank API endpoint
+        success = await processCBERefund(refund);
         providerRefundId = `CBE-${Date.now()}`;
         break;
       case 'awash':
-        // TODO: Implement Awash Bank refund API
-        success = true;
+        // Awash Bank refund API - placeholder for Ethiopian provider integration
+        // In production, call actual Awash Bank API endpoint
+        success = await processAwashRefund(refund);
         providerRefundId = `AWB-${Date.now()}`;
         break;
       case 'cod':
@@ -261,4 +297,107 @@ export async function getRefundableAmount(orderId: string): Promise<number> {
 
   const orderTotal = Number(order.totalAmount);
   return Math.max(0, orderTotal - totalRefunded);
+}
+
+/**
+ * Process TeleBirr refund
+ * Ethiopian mobile payment refund integration
+ */
+async function processTeleBirrRefund(
+  refund: { amount: Prisma.Decimal; orderId: string; order: { paymentReference?: string | null } }
+): Promise<boolean> {
+  // Placeholder for TeleBirr API integration
+  // In production, implement actual API call:
+  // 
+  // const response = await fetch('https://api.telebirr.et/v1/refunds', {
+  //   method: 'POST',
+  //   headers: {
+  //     'Authorization': `Bearer ${process.env.TELEBIRR_API_KEY}`,
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     payment_reference: refund.order.paymentReference,
+  //     amount: Number(refund.amount),
+  //     currency: 'ETB',
+  //   }),
+  // });
+  // return response.ok;
+
+  console.log('TeleBirr refund:', {
+    amount: Number(refund.amount),
+    orderId: refund.orderId,
+    reference: refund.order.paymentReference,
+  });
+  
+  // Return true for development/testing
+  // In production, this should return the actual API response status
+  return true;
+}
+
+/**
+ * Process CBE (Commercial Bank of Ethiopia) refund
+ */
+async function processCBERefund(
+  refund: { amount: Prisma.Decimal; orderId: string; order: { paymentReference?: string | null } }
+): Promise<boolean> {
+  // Placeholder for CBE Bank API integration
+  // In production, implement actual API call:
+  //
+  // const response = await fetch('https://api.cbe.et/payments/refund', {
+  //   method: 'POST',
+  //   headers: {
+  //     'Authorization': `Bearer ${process.env.CBE_API_KEY}`,
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     transaction_id: refund.order.paymentReference,
+  //     amount: Number(refund.amount),
+  //     currency: 'ETB',
+  //   }),
+  // });
+  // return response.ok;
+
+  console.log('CBE refund:', {
+    amount: Number(refund.amount),
+    orderId: refund.orderId,
+    reference: refund.order.paymentReference,
+  });
+  
+  // Return true for development/testing
+  // In production, this should return the actual API response status
+  return true;
+}
+
+/**
+ * Process Awash Bank refund
+ */
+async function processAwashRefund(
+  refund: { amount: Prisma.Decimal; orderId: string; order: { paymentReference?: string | null } }
+): Promise<boolean> {
+  // Placeholder for Awash Bank API integration
+  // In production, implement actual API call:
+  //
+  // const response = await fetch('https://api.awashbank.com/refunds', {
+  //   method: 'POST',
+  //   headers: {
+  //     'Authorization': `Bearer ${process.env.AWASH_API_KEY}`,
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     payment_reference: refund.order.paymentReference,
+  //     refund_amount: Number(refund.amount),
+  //     currency: 'ETB',
+  //   }),
+  // });
+  // return response.ok;
+
+  console.log('Awash Bank refund:', {
+    amount: Number(refund.amount),
+    orderId: refund.orderId,
+    reference: refund.order.paymentReference,
+  });
+  
+  // Return true for development/testing
+  // In production, this should return the actual API response status
+  return true;
 }
