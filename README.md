@@ -98,10 +98,13 @@ npm run dev
    - Password reset with secure tokens
    - Brute-force protection with account lockout
    - Token refresh mechanism
-3. **Email Notifications**: 
-   - Transactional emails (order confirmation, shipping updates)
+3. **Email Service with Queue & Retry**: 
+   - Resend integration for reliable email delivery
+   - Database-backed email queue with retry logic
+   - Transactional emails (order confirmation, password reset, shipping updates)
+   - Background worker for email processing
    - User notification preferences
-   - Ready for integration with SendGrid, AWS SES, or Mailgun
+   - 📚 **[View Email Service Documentation](docs/EMAIL_SERVICE.md)**
 4. **Security Best Practices**:
    - Cryptographically secure token generation
    - Password strength requirements (8+ chars, letter + number)
@@ -112,7 +115,8 @@ npm run dev
 
 ⚠️ **Production Checklist:**
 - Set strong `JWT_SECRET` environment variable
-- Configure email service provider
+- Configure Resend API key (`RESEND_API_KEY`) and verify domain
+- Set up cron job for email queue processing (every 1-5 minutes)
 - Manually assign admin roles via database
 - Use HTTPS and consider httpOnly cookies
 - Enable PostgreSQL SSL connections

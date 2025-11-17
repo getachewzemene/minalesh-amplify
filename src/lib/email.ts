@@ -1,48 +1,293 @@
 /**
  * Email service for sending transactional emails
- * This is a basic implementation that logs emails to console in development
- * In production, integrate with services like SendGrid, AWS SES, or Mailgun
+ * Supports Resend email service with queue and retry logic
  */
+
+import { Resend } from 'resend';
+import prisma from './prisma';
+import { logError, logEvent } from './logger';
 
 export interface EmailTemplate {
   to: string;
   subject: string;
   html: string;
   text: string;
+  template?: string;
+  metadata?: Record<string, unknown>;
+}
+
+// Initialize Resend client
+let resendClient: Resend | null = null;
+function getResendClient(): Resend | null {
+  if (!resendClient && process.env.RESEND_API_KEY) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
 }
 
 /**
- * Send an email (logs to console in development, should use real service in production)
+ * Queue an email for sending
+ * Emails are added to the queue and processed by a background worker
  */
-export async function sendEmail(template: EmailTemplate): Promise<boolean> {
+export async function queueEmail(
+  template: EmailTemplate,
+  scheduledFor?: Date
+): Promise<string> {
   try {
+    const email = await prisma.emailQueue.create({
+      data: {
+        to: template.to,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        template: template.template,
+        metadata: template.metadata as any,
+        status: 'pending',
+        scheduledFor: scheduledFor || new Date(),
+      },
+    });
+
+    logEvent('email_queued', {
+      emailId: email.id,
+      to: template.to,
+      template: template.template,
+    });
+
+    return email.id;
+  } catch (error) {
+    logError(error, { operation: 'queueEmail', to: template.to });
+    throw error;
+  }
+}
+
+/**
+ * Send an email immediately (bypasses queue)
+ * Use this for critical emails that need to be sent synchronously
+ */
+export async function sendEmailImmediate(template: EmailTemplate): Promise<boolean> {
+  try {
+    const resend = getResendClient();
+    const emailFrom = process.env.EMAIL_FROM || 'noreply@minalesh.et';
+
     // In development, log the email
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' || !resend) {
       console.log('📧 Email would be sent:');
       console.log('To:', template.to);
       console.log('Subject:', template.subject);
       console.log('---');
       console.log(template.text);
       console.log('---');
+      
+      if (!resend) {
+        console.warn('Resend API key not configured. Set RESEND_API_KEY environment variable.');
+      }
       return true;
     }
 
-    // TODO: Integrate with email service provider
-    // Example with SendGrid:
-    // const sgMail = require('@sendgrid/mail');
-    // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    // await sgMail.send({
-    //   to: template.to,
-    //   from: process.env.EMAIL_FROM,
-    //   subject: template.subject,
-    //   text: template.text,
-    //   html: template.html,
-    // });
+    // Send email via Resend
+    const result = await resend.emails.send({
+      from: emailFrom,
+      to: template.to,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
 
-    console.warn('Email service not configured for production');
-    return false;
+    if (result.error) {
+      logError(new Error(result.error.message), {
+        operation: 'sendEmailImmediate',
+        to: template.to,
+      });
+      return false;
+    }
+
+    logEvent('email_sent', {
+      emailId: result.data?.id,
+      to: template.to,
+      template: template.template,
+    });
+
+    return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    logError(error, { operation: 'sendEmailImmediate', to: template.to });
+    return false;
+  }
+}
+
+/**
+ * Legacy function for backwards compatibility
+ * Now queues email by default
+ */
+export async function sendEmail(template: EmailTemplate): Promise<boolean> {
+  try {
+    await queueEmail(template);
+    return true;
+  } catch (error) {
+    logError(error, { operation: 'sendEmail', to: template.to });
+    return false;
+  }
+}
+
+/**
+ * Process pending emails from the queue
+ * Called by the email worker/cron job
+ */
+export async function processEmailQueue(batchSize = 10): Promise<{
+  processed: number;
+  sent: number;
+  failed: number;
+}> {
+  try {
+    // Get pending emails that are ready to be sent
+    const emails = await prisma.emailQueue.findMany({
+      where: {
+        status: 'pending',
+        scheduledFor: {
+          lte: new Date(),
+        },
+        attempts: {
+          lt: prisma.emailQueue.fields.maxAttempts,
+        },
+      },
+      orderBy: {
+        scheduledFor: 'asc',
+      },
+      take: batchSize,
+    });
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const email of emails) {
+      const success = await sendQueuedEmail(email.id);
+      if (success) {
+        sent++;
+      } else {
+        failed++;
+      }
+    }
+
+    logEvent('email_queue_processed', {
+      processed: emails.length,
+      sent,
+      failed,
+    });
+
+    return {
+      processed: emails.length,
+      sent,
+      failed,
+    };
+  } catch (error) {
+    logError(error, { operation: 'processEmailQueue' });
+    throw error;
+  }
+}
+
+/**
+ * Send a specific queued email
+ */
+async function sendQueuedEmail(emailId: string): Promise<boolean> {
+  try {
+    // Mark as processing
+    const email = await prisma.emailQueue.update({
+      where: { id: emailId },
+      data: {
+        status: 'processing',
+        lastAttemptAt: new Date(),
+      },
+    });
+
+    const resend = getResendClient();
+    const emailFrom = process.env.EMAIL_FROM || 'noreply@minalesh.et';
+
+    // In development or if Resend is not configured, mark as sent
+    if (process.env.NODE_ENV !== 'production' || !resend) {
+      console.log('📧 Queued email would be sent:');
+      console.log('To:', email.to);
+      console.log('Subject:', email.subject);
+      
+      await prisma.emailQueue.update({
+        where: { id: emailId },
+        data: {
+          status: 'sent',
+          sentAt: new Date(),
+          attempts: email.attempts + 1,
+        },
+      });
+      return true;
+    }
+
+    // Send email via Resend
+    const result = await resend.emails.send({
+      from: emailFrom,
+      to: email.to,
+      subject: email.subject,
+      text: email.text,
+      html: email.html,
+    });
+
+    if (result.error) {
+      // Mark as failed if max attempts reached
+      const newAttempts = email.attempts + 1;
+      const shouldRetry = newAttempts < email.maxAttempts;
+      
+      await prisma.emailQueue.update({
+        where: { id: emailId },
+        data: {
+          status: shouldRetry ? 'pending' : 'failed',
+          attempts: newAttempts,
+          lastError: result.error.message,
+        },
+      });
+
+      logError(new Error(result.error.message), {
+        operation: 'sendQueuedEmail',
+        emailId,
+        shouldRetry,
+      });
+
+      return false;
+    }
+
+    // Mark as sent
+    await prisma.emailQueue.update({
+      where: { id: emailId },
+      data: {
+        status: 'sent',
+        sentAt: new Date(),
+        attempts: email.attempts + 1,
+      },
+    });
+
+    logEvent('queued_email_sent', {
+      emailId,
+      to: email.to,
+      resendId: result.data?.id,
+    });
+
+    return true;
+  } catch (error) {
+    // Handle transient failures with retry
+    const email = await prisma.emailQueue.findUnique({
+      where: { id: emailId },
+    });
+
+    if (email) {
+      const newAttempts = email.attempts + 1;
+      const shouldRetry = newAttempts < email.maxAttempts;
+      
+      await prisma.emailQueue.update({
+        where: { id: emailId },
+        data: {
+          status: shouldRetry ? 'pending' : 'failed',
+          attempts: newAttempts,
+          lastError: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+    }
+
+    logError(error, { operation: 'sendQueuedEmail', emailId });
     return false;
   }
 }

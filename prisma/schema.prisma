@@ -731,3 +731,26 @@ model NotificationPreference {
 
   @@map("notification_preferences")
 }
+
+model EmailQueue {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  to            String
+  subject       String
+  html          String
+  text          String
+  template      String?
+  metadata      Json?
+  status        String    @default("pending") // pending, processing, sent, failed
+  attempts      Int       @default(0)
+  maxAttempts   Int       @default(3) @map("max_attempts")
+  lastError     String?   @map("last_error")
+  lastAttemptAt DateTime? @map("last_attempt_at")
+  sentAt        DateTime? @map("sent_at")
+  scheduledFor  DateTime? @map("scheduled_for")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, scheduledFor])
+  @@index([createdAt])
+  @@map("email_queue")
+}
