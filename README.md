@@ -15,6 +15,7 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - **Coupon codes and discounts** - Apply promotional codes at checkout
 - **Multiple shipping options** - Choose from standard, express, or store pickup
 - **Transparent pricing** - View itemized costs including discounts, shipping, and VAT
+- **Refunds & Returns** - Request full or partial refunds with automatic stock restoration
 
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
@@ -40,6 +41,11 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Define shipping zones for Ethiopian regions
   - Configure shipping methods and rates
   - Set up VAT and tax rates (15% Ethiopian VAT)
+- **Payment Management**
+  - Process full and partial refunds
+  - Capture authorized payments (full or partial amounts)
+  - Support for Stripe and Ethiopian payment providers
+  - 📚 **[View Refunds & Captures Documentation](docs/REFUNDS_AND_CAPTURES.md)**
 - [View detailed admin documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md)
 
 ### Ethiopian-Specific Features
@@ -349,6 +355,33 @@ POST /api/cart/calculate
 ### Shipping Zone Management
 - `GET /api/admin/shipping-zones` - List all zones with rates
 - `POST /api/admin/shipping-zones` - Create new zone
+
+### Payment Management
+- `POST /api/refunds` - Initiate full or partial refund
+- `GET /api/refunds?orderId={id}` - Get refund history for an order
+- `POST /api/payments/capture` - Capture authorized payment (full or partial)
+- `GET /api/payments/capture?orderId={id}` - Get capture status
+
+**Example - Process Partial Refund:**
+```bash
+POST /api/refunds
+{
+  "orderId": "uuid",
+  "amount": 500.00,
+  "reason": "Damaged item",
+  "restoreStock": true
+}
+```
+
+**Example - Partial Payment Capture:**
+```bash
+POST /api/payments/capture
+{
+  "orderId": "uuid",
+  "amount": 750.00,
+  "finalCapture": false
+}
+```
 
 **Note:** All admin endpoints require authentication and admin privileges (set via `ADMIN_EMAILS` env variable).
 
