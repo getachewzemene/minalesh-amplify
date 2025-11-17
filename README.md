@@ -436,6 +436,41 @@ NEXT_PUBLIC_SENTRY_DSN="your-sentry-dsn"
 LOG_LEVEL="info"  # Options: trace, debug, info, warn, error, fatal
 ```
 
+## Analytics & Reporting
+
+The platform includes comprehensive analytics and reporting capabilities for admins:
+
+### Analytics Features
+- ✅ **Sales Analytics** - Revenue trends with day/week/month grouping
+- ✅ **Conversion Funnel** - 5-stage funnel tracking with drop-off rates
+- ✅ **Cohort Retention** - Customer retention analysis by cohort
+- ✅ **Product Performance** - Top products and category breakdown
+- ✅ **Regional Analytics** - Geographic performance metrics
+- ✅ **Overview Dashboard** - KPIs with period-over-period comparison
+
+### Analytics API Endpoints
+- `GET /api/analytics/overview` - Comprehensive KPIs
+- `GET /api/analytics/sales` - Sales metrics and trends
+- `GET /api/analytics/conversion-funnel` - Funnel analysis
+- `GET /api/analytics/cohort-retention` - Retention metrics
+- `GET /api/analytics/products` - Product performance
+- `GET /api/analytics/regional` - Regional performance
+
+All analytics endpoints require admin authentication and support date range filtering.
+
+📚 **[View Analytics API Documentation](docs/ANALYTICS_API.md)** for complete API reference and examples.
+
+## Mobile Responsiveness
+
+The platform is fully responsive with excellent mobile user experience:
+- ✅ **Mobile-First Design** - 88+ responsive breakpoint instances
+- ✅ **Card-Based Layouts** - No tables, optimal for mobile
+- ✅ **Adaptive Navigation** - Mobile menu and responsive search
+- ✅ **Touch-Friendly** - Proper touch target sizing
+- ✅ **Responsive Charts** - Analytics charts adapt to screen size
+
+📚 **[View Mobile Responsiveness QA Report](docs/MOBILE_RESPONSIVENESS_QA.md)** for detailed audit results.
+
 ## Deployment
 
 This Next.js application can be deployed to platforms like:
