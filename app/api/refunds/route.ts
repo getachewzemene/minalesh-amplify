@@ -16,7 +16,62 @@ const refundSchema = z.object({
   restoreStock: z.boolean().default(true),
 });
 
-// POST /api/refunds - Initiate a refund
+/**
+ * @swagger
+ * /api/refunds:
+ *   post:
+ *     summary: Initiate a refund
+ *     description: Process a full or partial refund for an order
+ *     tags: [Refunds]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - orderId
+ *               - amount
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *                 description: Refund amount in ETB
+ *               reason:
+ *                 type: string
+ *               restoreStock:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       200:
+ *         description: Refund processed successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
+ *       422:
+ *         description: Validation error
+ *   get:
+ *     summary: Get refund history
+ *     description: Retrieve refund history for an order
+ *     tags: [Refunds]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Refund history
+ *       401:
+ *         description: Unauthorized
+ */
 export async function POST(request: Request) {
   try {
     const token = getTokenFromRequest(request);

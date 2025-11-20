@@ -46,8 +46,52 @@ const createIntentSchema = z.object({
 });
 
 /**
- * POST /api/payments/create-intent
- * Create a payment intent and reserve inventory
+ * @swagger
+ * /api/payments/create-intent:
+ *   post:
+ *     summary: Create payment intent
+ *     description: Create a Stripe payment intent and reserve inventory
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     productId:
+ *                       type: string
+ *                     variantId:
+ *                       type: string
+ *                     quantity:
+ *                       type: integer
+ *               shippingAddress:
+ *                 type: object
+ *               billingAddress:
+ *                 type: object
+ *               couponCode:
+ *                 type: string
+ *               shippingMethodId:
+ *                 type: string
+ *               captureMethod:
+ *                 type: string
+ *                 enum: [automatic, manual]
+ *     responses:
+ *       200:
+ *         description: Payment intent created successfully
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
  */
 export async function POST(request: Request) {
   const { error, payload } = withAuth(request);

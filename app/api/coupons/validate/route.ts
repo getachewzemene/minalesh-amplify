@@ -2,6 +2,48 @@ import { NextResponse } from 'next/server';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import { validateCoupon } from '@/lib/coupon';
 
+/**
+ * @swagger
+ * /api/coupons/validate:
+ *   post:
+ *     summary: Validate coupon code
+ *     description: Validate a coupon code and calculate discount amount
+ *     tags: [Coupons]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *               - subtotal
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: WELCOME10
+ *               subtotal:
+ *                 type: number
+ *                 example: 500
+ *     responses:
+ *       200:
+ *         description: Validation result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *                 coupon:
+ *                   type: object
+ *                 discountAmount:
+ *                   type: number
+ *       400:
+ *         description: Invalid request
+ */
 export async function POST(request: Request) {
   try {
     const token = getTokenFromRequest(request);

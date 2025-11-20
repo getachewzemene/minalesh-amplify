@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 
+/**
+ * @swagger
+ * /api/reviews:
+ *   get:
+ *     summary: Get product reviews
+ *     description: Retrieve all approved reviews for a product
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: query
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: List of reviews
+ *       400:
+ *         description: Product ID required
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -43,6 +63,41 @@ export async function GET(request: Request) {
   }
 }
 
+/**
+ * @swagger
+ * /api/reviews:
+ *   post:
+ *     summary: Create a review
+ *     description: Submit a review for a product
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - rating
+ *             properties:
+ *               productId:
+ *                 type: string
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *               comment:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Review created successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ */
 export async function POST(request: Request) {
   try {
     const token = getTokenFromRequest(request);

@@ -8,6 +8,35 @@ function isAdmin(email: string): boolean {
   return adminEmails.includes(email);
 }
 
+/**
+ * @swagger
+ * /api/admin/coupons:
+ *   get:
+ *     summary: Get all coupons (Admin)
+ *     description: Retrieve all coupons with optional filtering
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive, expired, depleted]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: perPage
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of coupons
+ *       401:
+ *         description: Unauthorized
+ */
 export async function GET(request: Request) {
   try {
     const token = getTokenFromRequest(request);

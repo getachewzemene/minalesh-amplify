@@ -12,6 +12,59 @@ import { validateRequestBody, authSchemas } from '@/lib/validation';
 import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 import { withApiLogger } from '@/lib/api-logger';
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticate user with email and password
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                 token:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *       401:
+ *         description: Invalid credentials
+ *       429:
+ *         description: Account locked due to too many failed attempts
+ */
 async function loginHandler(request: Request): Promise<NextResponse> {
   // Validate request body
   const validation = await validateRequestBody(request, authSchemas.login);
