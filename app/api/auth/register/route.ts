@@ -6,6 +6,41 @@ import { validateRequestBody, authSchemas } from '@/lib/validation';
 import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 import { withApiLogger } from '@/lib/api-logger';
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: User registration
+ *     description: Register a new user account
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - firstName
+ *               - lastName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: User already exists or invalid input
+ */
 async function registerHandler(request: Request): Promise<NextResponse> {
   // Validate request body
   const validation = await validateRequestBody(request, authSchemas.register);

@@ -4,7 +4,40 @@ import { createMedia, getProductMedia } from '@/lib/media';
 import prisma from '@/lib/prisma';
 
 /**
- * Upload media for a product
+ * @swagger
+ * /api/media:
+ *   post:
+ *     summary: Upload media file
+ *     description: Upload an image for a product with automatic optimization
+ *     tags: [Media]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - productId
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               productId:
+ *                 type: string
+ *               altText:
+ *                 type: string
+ *               sortOrder:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Media uploaded successfully
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
  */
 export async function POST(request: Request) {
   try {
