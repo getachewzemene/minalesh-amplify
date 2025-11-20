@@ -7,6 +7,12 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 ### For Customers
 - Browse products with Ethiopian Birr (ETB) pricing
 - **Advanced Search** - Full-text search with autocomplete suggestions and faceted filtering
+- **Product Discovery Features** - Smart recommendations, top products, and new arrivals
+  - Personalized recommendations based on browsing and purchase history
+  - Top-selling and most popular products
+  - Recently added products to the marketplace
+  - Similar product suggestions on product detail pages
+  - 📚 **[View Product Recommendations Documentation](docs/PRODUCT_RECOMMENDATIONS.md)**
 - Search and filter by Ethiopian-specific categories
 - Traditional and modern product categories
 - AR view for select products
