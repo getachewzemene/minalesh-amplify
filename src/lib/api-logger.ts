@@ -86,15 +86,11 @@ export function withApiLogger<T = any>(
 
       // Report to Sentry with full context
       Sentry.captureException(err, {
-        contexts: {
-          request: {
-            method,
-            url: path,
-            query_string: url.search,
-          },
-          trace: {
-            trace_id: correlationId,
-          },
+        extra: {
+          method,
+          path,
+          query: url.search,
+          correlationId,
         },
         tags: {
           path,

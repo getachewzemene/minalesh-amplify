@@ -12,10 +12,10 @@ import { validateRequestBody, authSchemas } from '@/lib/validation';
 import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 import { withApiLogger } from '@/lib/api-logger';
 
-async function loginHandler(request: Request) {
+async function loginHandler(request: Request): Promise<NextResponse> {
   // Validate request body
   const validation = await validateRequestBody(request, authSchemas.login);
-  if (!validation.success) {
+  if (validation.success === false) {
     return validation.response;
   }
   

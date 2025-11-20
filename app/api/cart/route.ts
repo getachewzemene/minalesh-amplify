@@ -40,7 +40,7 @@ async function calculateItemPrice(productId: string, variantId: string | null) {
 }
 
 // GET - Fetch cart items
-async function getHandler(request: Request) {
+async function getHandler(request: Request): Promise<NextResponse> {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -133,10 +133,10 @@ async function getHandler(request: Request) {
 export const GET = withApiLogger(getHandler);
 
 // POST - Add item to cart
-async function postHandler(request: Request) {
+async function postHandler(request: Request): Promise<NextResponse> {
   // Validate request body
   const validation = await validateRequestBody(request, cartSchemas.addItem);
-  if (!validation.success) {
+  if (validation.success === false) {
     return validation.response;
   }
   
@@ -247,7 +247,7 @@ async function postHandler(request: Request) {
 export const POST = withApiLogger(postHandler);
 
 // DELETE - Clear entire cart
-async function deleteHandler(request: Request) {
+async function deleteHandler(request: Request): Promise<NextResponse> {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
