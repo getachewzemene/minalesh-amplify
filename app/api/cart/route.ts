@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { validateRequestBody, cartSchemas } from '@/lib/validation';
+import { withApiLogger } from '@/lib/api-logger';
 
 // Helper function to get or create session ID from headers
 function getSessionId(request: Request): string {
@@ -38,7 +40,7 @@ async function calculateItemPrice(productId: string, variantId: string | null) {
 }
 
 // GET - Fetch cart items
-export async function GET(request: Request) {
+async function getHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -124,30 +126,26 @@ export async function GET(request: Request) {
       itemCount: itemsWithPricing.reduce((sum, item) => sum + item.quantity, 0),
     });
   } catch (error) {
-    console.error('Error fetching cart:', error);
-    return NextResponse.json(
-      { error: 'An error occurred while fetching cart' },
-      { status: 500 }
-    );
+    throw error;
   }
 }
 
+export const GET = withApiLogger(getHandler);
+
 // POST - Add item to cart
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
+  // Validate request body
+  const validation = await validateRequestBody(request, cartSchemas.addItem);
+  if (!validation.success) {
+    return validation.response;
+  }
+  
+  const { productId, variantId, quantity } = validation.data;
+  
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
     const sessionId = getSessionId(request);
-
-    const body = await request.json();
-    const { productId, variantId, quantity = 1 } = body;
-
-    if (!productId) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
-    }
 
     // Verify product exists and has stock
     const product = await prisma.product.findUnique({
@@ -242,16 +240,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json(cartItem);
   } catch (error) {
-    console.error('Error adding to cart:', error);
-    return NextResponse.json(
-      { error: 'An error occurred while adding to cart' },
-      { status: 500 }
-    );
+    throw error;
   }
 }
 
+export const POST = withApiLogger(postHandler);
+
 // DELETE - Clear entire cart
-export async function DELETE(request: Request) {
+async function deleteHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -269,10 +265,8 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: 'Cart cleared successfully' });
   } catch (error) {
-    console.error('Error clearing cart:', error);
-    return NextResponse.json(
-      { error: 'An error occurred while clearing cart' },
-      { status: 500 }
-    );
+    throw error;
   }
 }
+
+export const DELETE = withApiLogger(deleteHandler);

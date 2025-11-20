@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { searchProducts, SearchFilters, SearchSort } from '@/lib/search';
 import { withApiLogger } from '@/lib/api-logger';
 import { getOrSetCache } from '@/lib/cache';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 
 async function handler(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -102,5 +103,7 @@ async function handler(request: Request) {
   return response;
 }
 
-// Export with API logging and error handling
-export const GET = withApiLogger(handler);
+// Export with rate limiting, API logging and error handling
+export const GET = withApiLogger(
+  withRateLimit(handler, RATE_LIMIT_CONFIGS.productList)
+);
