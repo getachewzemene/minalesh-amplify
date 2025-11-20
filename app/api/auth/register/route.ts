@@ -2,44 +2,20 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { hashPassword, generateToken, generateRefreshToken, generateRandomToken } from '@/lib/auth';
 import { sendEmail, createEmailVerificationEmail } from '@/lib/email';
+import { validateRequestBody, authSchemas } from '@/lib/validation';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
+import { withApiLogger } from '@/lib/api-logger';
 
-export async function POST(request: Request) {
+async function registerHandler(request: Request): Promise<NextResponse> {
+  // Validate request body
+  const validation = await validateRequestBody(request, authSchemas.register);
+  if (validation.success === false) {
+    return validation.response;
+  }
+  
+  const { email, password, firstName, lastName } = validation.data;
+
   try {
-    const { email, password, displayName, firstName, lastName } = await request.json();
-
-    // Validate input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate password strength (min 8 chars, at least one letter and one number)
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
-
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    if (!hasLetter || !hasNumber) {
-      return NextResponse.json(
-        { error: 'Password must contain at least one letter and one number' },
-        { status: 400 }
-      );
-    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -67,7 +43,7 @@ export async function POST(request: Request) {
         emailVerificationToken,
         profile: {
           create: {
-            displayName: displayName || email,
+            displayName: email,
             firstName,
             lastName,
           },
@@ -108,10 +84,12 @@ export async function POST(request: Request) {
       refreshToken,
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    return NextResponse.json(
-      { error: 'An error occurred during registration' },
-      { status: 500 }
-    );
+    // Error is caught and logged by withApiLogger wrapper
+    throw error;
   }
 }
+
+// Apply rate limiting and logging middleware
+export const POST = withApiLogger(
+  withRateLimit(registerHandler, RATE_LIMIT_CONFIGS.auth)
+);

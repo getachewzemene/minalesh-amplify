@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { logApiRequest, logError } from './logger';
 import * as Sentry from '@sentry/nextjs';
+import { getCorrelationId, CORRELATION_ID_HEADER } from './correlation';
 
 export interface ApiHandlerOptions {
   requireAuth?: boolean;
@@ -30,6 +31,9 @@ export function withApiLogger<T = any>(
     const url = new URL(request.url);
     const method = request.method;
     const path = url.pathname;
+    
+    // Get or generate correlation ID for request tracking
+    const correlationId = getCorrelationId(request);
 
     // Extract user ID if available (from token or context)
     let userId: string | undefined;
@@ -58,11 +62,13 @@ export function withApiLogger<T = any>(
         statusCode,
         duration,
         userId,
+        correlationId,
         query: Object.fromEntries(url.searchParams),
       });
 
-      // Add performance headers
+      // Add performance and correlation headers
       response.headers.set('X-Response-Time', `${duration}ms`);
+      response.headers.set(CORRELATION_ID_HEADER, correlationId);
 
       return response;
     } catch (error) {
@@ -75,20 +81,21 @@ export function withApiLogger<T = any>(
         path,
         duration,
         userId,
+        correlationId,
       });
 
-      // Report to Sentry
+      // Report to Sentry with full context
       Sentry.captureException(err, {
-        contexts: {
-          request: {
-            method,
-            url: path,
-            query_string: url.search,
-          },
+        extra: {
+          method,
+          path,
+          query: url.search,
+          correlationId,
         },
         tags: {
           path,
           method,
+          correlationId,
         },
         user: userId ? { id: userId } : undefined,
       });
@@ -100,6 +107,7 @@ export function withApiLogger<T = any>(
         statusCode: 500,
         duration,
         userId,
+        correlationId,
         error: err.message,
       });
 

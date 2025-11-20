@@ -8,18 +8,20 @@ import {
   shouldResetLoginAttempts,
   calculateLockoutTime
 } from '@/lib/auth';
+import { validateRequestBody, authSchemas } from '@/lib/validation';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
+import { withApiLogger } from '@/lib/api-logger';
 
-export async function POST(request: Request) {
+async function loginHandler(request: Request): Promise<NextResponse> {
+  // Validate request body
+  const validation = await validateRequestBody(request, authSchemas.login);
+  if (validation.success === false) {
+    return validation.response;
+  }
+  
+  const { email, password } = validation.data;
+
   try {
-    const { email, password } = await request.json();
-
-    // Validate input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -117,10 +119,12 @@ export async function POST(request: Request) {
       refreshToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'An error occurred during login' },
-      { status: 500 }
-    );
+    // Error is caught and logged by withApiLogger wrapper
+    throw error;
   }
 }
+
+// Apply rate limiting and logging middleware
+export const POST = withApiLogger(
+  withRateLimit(loginHandler, RATE_LIMIT_CONFIGS.auth)
+);

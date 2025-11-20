@@ -48,6 +48,7 @@ export interface ApiLogContext extends LogContext {
   statusCode?: number;
   duration?: number;
   userId?: string;
+  correlationId?: string;
   error?: Error | string;
 }
 
@@ -55,7 +56,7 @@ export interface ApiLogContext extends LogContext {
  * Log an API request
  */
 export function logApiRequest(context: ApiLogContext) {
-  const { method, path, statusCode, duration, userId, ...rest } = context;
+  const { method, path, statusCode, duration, userId, correlationId, ...rest } = context;
   
   const logData = {
     type: 'api_request',
@@ -64,6 +65,7 @@ export function logApiRequest(context: ApiLogContext) {
     statusCode,
     duration,
     userId,
+    correlationId,
     ...rest,
   };
 
