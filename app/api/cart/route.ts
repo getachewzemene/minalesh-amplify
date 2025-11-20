@@ -39,6 +39,33 @@ async function calculateItemPrice(productId: string, variantId: string | null) {
   return product.salePrice || product.price;
 }
 
+/**
+ * @swagger
+ * /api/cart:
+ *   get:
+ *     summary: Get cart items
+ *     description: Retrieve cart items for authenticated user or anonymous session
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *       - sessionAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart items retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/CartItem'
+ *                 subtotal:
+ *                   type: number
+ *                 itemCount:
+ *                   type: integer
+ */
 // GET - Fetch cart items
 async function getHandler(request: Request): Promise<NextResponse> {
   try {
@@ -132,6 +159,41 @@ async function getHandler(request: Request): Promise<NextResponse> {
 
 export const GET = withApiLogger(getHandler);
 
+/**
+ * @swagger
+ * /api/cart:
+ *   post:
+ *     summary: Add item to cart
+ *     description: Add a product to the cart for authenticated user or anonymous session
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *       - sessionAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - quantity
+ *             properties:
+ *               productId:
+ *                 type: string
+ *               variantId:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *                 minimum: 1
+ *     responses:
+ *       200:
+ *         description: Item added to cart successfully
+ *       400:
+ *         description: Insufficient stock
+ *       404:
+ *         description: Product not found
+ */
 // POST - Add item to cart
 async function postHandler(request: Request): Promise<NextResponse> {
   // Validate request body
@@ -246,6 +308,20 @@ async function postHandler(request: Request): Promise<NextResponse> {
 
 export const POST = withApiLogger(postHandler);
 
+/**
+ * @swagger
+ * /api/cart:
+ *   delete:
+ *     summary: Clear cart
+ *     description: Remove all items from the cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *       - sessionAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart cleared successfully
+ */
 // DELETE - Clear entire cart
 async function deleteHandler(request: Request): Promise<NextResponse> {
   try {

@@ -5,6 +5,27 @@ import { type PaymentMethod } from '@/types/payment';
 import { z } from 'zod';
 import { sendEmail, createOrderConfirmationEmail } from '@/lib/email';
 
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Get user orders
+ *     description: Retrieve all orders for the authenticated user
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Order'
+ *       401:
+ *         description: Unauthorized
+ */
 export async function GET(request: Request) {
   const { error, payload } = withAuth(request);
   if (error) return error;
@@ -37,6 +58,39 @@ export async function GET(request: Request) {
   }
 }
 
+/**
+ * @swagger
+ * /api/orders:
+ *   post:
+ *     summary: Create a new order
+ *     description: Create a new order from cart items
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - paymentMethod
+ *             properties:
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [stripe, cod, bank_transfer]
+ *               shippingAddress:
+ *                 type: object
+ *               billingAddress:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Order created successfully
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
+ */
 // Create a new order from client cart with selected payment method
 export async function POST(request: Request) {
   const { error, payload } = withAuth(request);

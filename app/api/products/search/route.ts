@@ -4,6 +4,89 @@ import { withApiLogger } from '@/lib/api-logger';
 import { getOrSetCache } from '@/lib/cache';
 import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 
+/**
+ * @swagger
+ * /api/products/search:
+ *   get:
+ *     summary: Search products
+ *     description: Search and filter products with full-text search and faceted filtering
+ *     tags: [Search]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search query
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Category slug
+ *       - in: query
+ *         name: min_price
+ *         schema:
+ *           type: number
+ *         description: Minimum price
+ *       - in: query
+ *         name: max_price
+ *         schema:
+ *           type: number
+ *         description: Maximum price
+ *       - in: query
+ *         name: rating
+ *         schema:
+ *           type: number
+ *         description: Minimum rating
+ *       - in: query
+ *         name: vendor
+ *         schema:
+ *           type: string
+ *         description: Vendor name
+ *       - in: query
+ *         name: location
+ *         schema:
+ *           type: string
+ *         description: City/location
+ *       - in: query
+ *         name: in_stock
+ *         schema:
+ *           type: boolean
+ *         description: Only in-stock items
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [relevance, price_low, price_high, rating, newest, popular]
+ *         description: Sort order
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ */
 async function handler(request: Request) {
   const { searchParams } = new URL(request.url);
   

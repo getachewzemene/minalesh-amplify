@@ -3,6 +3,23 @@ import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import { getOrSetCache } from '@/lib/cache';
 
+/**
+ * @swagger
+ * /api/categories:
+ *   get:
+ *     summary: Get all categories
+ *     description: Retrieve all active product categories
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: List of categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Category'
+ */
 async function handler() {
   // Cache categories for 1 hour (they change infrequently)
   const categories = await getOrSetCache(

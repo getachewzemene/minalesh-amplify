@@ -129,6 +129,35 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
+## API Documentation
+
+The API is fully documented using **Swagger/OpenAPI 3.0** specification. 
+
+📚 **Interactive API Documentation:** Visit [http://localhost:3000/api-docs](http://localhost:3000/api-docs) to explore and test all API endpoints.
+
+### Key Features:
+- ✅ **Interactive Testing** - Try out API endpoints directly from the browser
+- ✅ **Complete Documentation** - All 57+ endpoints documented with request/response schemas
+- ✅ **Authentication Support** - Test endpoints with JWT bearer tokens
+- ✅ **Organized by Tags** - Endpoints grouped by functionality (Authentication, Products, Cart, Orders, etc.)
+- ✅ **Schema Definitions** - Detailed data models for all entities
+
+### API Endpoint Categories:
+- **Authentication** - Login, logout, password reset, email verification
+- **Products** - CRUD operations for vendor products
+- **Categories** - Browse product categories
+- **Cart** - Shopping cart management
+- **Orders** - Order creation and tracking
+- **Payments** - Payment intent creation and processing
+- **Shipping** - Shipping rate calculation
+- **Coupons** - Coupon validation and discounts
+- **Search** - Advanced product search with filters
+- **Admin** - Administrative operations (coupons, promotions, shipping zones)
+- **Analytics** - Sales and performance metrics
+- **Vendors** - Vendor-specific operations
+
+Access the OpenAPI JSON specification at: [http://localhost:3000/api/swagger.json](http://localhost:3000/api/swagger.json)
+
 ## Technologies Used
 
 This project is built with:
