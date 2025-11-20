@@ -66,8 +66,11 @@ export async function calculateVendorPayout(
       0
     );
 
-    // Use provided commission rate or default
-    const rate = commissionRate ?? DEFAULT_COMMISSION_RATE;
+    // Use provided commission rate, vendor's rate, or default
+    let rate = commissionRate;
+    if (rate === undefined) {
+      rate = await getVendorCommissionRate(vendorId);
+    }
     const commissionAmount = totalSales * rate;
     const payoutAmount = totalSales - commissionAmount;
 
@@ -339,7 +342,207 @@ export async function getVendorPayoutSummary(vendorId: string) {
 export async function getVendorCommissionRate(
   vendorId: string
 ): Promise<number> {
-  // For now, return default rate
-  // In future, this could be stored in a vendor settings table
-  return DEFAULT_COMMISSION_RATE;
+  try {
+    const vendor = await prisma.profile.findUnique({
+      where: { id: vendorId },
+      select: { commissionRate: true },
+    });
+
+    if (vendor?.commissionRate) {
+      return Number(vendor.commissionRate);
+    }
+
+    return DEFAULT_COMMISSION_RATE;
+  } catch (error) {
+    console.error('Error fetching vendor commission rate:', error);
+    return DEFAULT_COMMISSION_RATE;
+  }
+}
+
+/**
+ * Create commission ledger entries when an order is paid
+ * This should be called from the payment webhook when order status becomes 'paid'
+ */
+export async function createCommissionLedgerEntries(
+  orderId: string
+): Promise<number> {
+  try {
+    // Get order items with vendor information
+    const orderItems = await prisma.orderItem.findMany({
+      where: { orderId },
+      include: {
+        order: {
+          select: {
+            status: true,
+            paymentStatus: true,
+            paidAt: true,
+          },
+        },
+      },
+    });
+
+    if (orderItems.length === 0) {
+      return 0;
+    }
+
+    let entriesCreated = 0;
+
+    for (const item of orderItems) {
+      // Get vendor's commission rate
+      const rate = await getVendorCommissionRate(item.vendorId);
+      const saleAmount = Number(item.total);
+      const commissionAmount = saleAmount * rate;
+      const vendorPayout = saleAmount - commissionAmount;
+
+      // Check if ledger entry already exists
+      const existing = await prisma.commissionLedger.findFirst({
+        where: {
+          orderId,
+          orderItemId: item.id,
+        },
+      });
+
+      if (!existing) {
+        // Create ledger entry
+        await prisma.commissionLedger.create({
+          data: {
+            vendorId: item.vendorId,
+            orderId,
+            orderItemId: item.id,
+            saleAmount: new Prisma.Decimal(saleAmount),
+            commissionRate: new Prisma.Decimal(rate),
+            commissionAmount: new Prisma.Decimal(commissionAmount),
+            vendorPayout: new Prisma.Decimal(vendorPayout),
+            status: 'recorded',
+            paidAt: item.order.paidAt,
+          },
+        });
+        entriesCreated++;
+      }
+    }
+
+    return entriesCreated;
+  } catch (error) {
+    console.error('Error creating commission ledger entries:', error);
+    return 0;
+  }
+}
+
+/**
+ * Get commission ledger entries for a vendor
+ */
+export async function getVendorLedger(
+  vendorId: string,
+  options?: {
+    startDate?: Date;
+    endDate?: Date;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }
+) {
+  const { startDate, endDate, status, limit = 50, offset = 0 } = options || {};
+
+  const where: {
+    vendorId: string;
+    createdAt?: { gte?: Date; lte?: Date };
+    status?: string;
+  } = { vendorId };
+
+  if (startDate || endDate) {
+    where.createdAt = {};
+    if (startDate) where.createdAt.gte = startDate;
+    if (endDate) where.createdAt.lte = endDate;
+  }
+
+  if (status) {
+    where.status = status;
+  }
+
+  const [entries, total] = await Promise.all([
+    prisma.commissionLedger.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+    }),
+    prisma.commissionLedger.count({ where }),
+  ]);
+
+  return { entries, total };
+}
+
+/**
+ * Calculate month-end commission total for a vendor
+ * Returns accurate commission breakdown for a given month
+ */
+export async function calculateMonthEndCommission(
+  vendorId: string,
+  year: number,
+  month: number
+): Promise<{
+  vendorId: string;
+  period: { year: number; month: number; start: Date; end: Date };
+  totalSales: number;
+  totalCommission: number;
+  totalPayout: number;
+  entryCount: number;
+  averageRate: number;
+} | null> {
+  try {
+    // Calculate period boundaries
+    const periodStart = new Date(year, month - 1, 1); // First day of month
+    const periodEnd = new Date(year, month, 0, 23, 59, 59, 999); // Last day of month
+
+    // Get all ledger entries for this period
+    const entries = await prisma.commissionLedger.findMany({
+      where: {
+        vendorId,
+        paidAt: {
+          gte: periodStart,
+          lte: periodEnd,
+        },
+      },
+    });
+
+    if (entries.length === 0) {
+      return null;
+    }
+
+    // Calculate totals
+    const totalSales = entries.reduce(
+      (sum, entry) => sum + Number(entry.saleAmount),
+      0
+    );
+    const totalCommission = entries.reduce(
+      (sum, entry) => sum + Number(entry.commissionAmount),
+      0
+    );
+    const totalPayout = entries.reduce(
+      (sum, entry) => sum + Number(entry.vendorPayout),
+      0
+    );
+
+    // Calculate weighted average commission rate
+    const averageRate =
+      totalSales > 0 ? totalCommission / totalSales : DEFAULT_COMMISSION_RATE;
+
+    return {
+      vendorId,
+      period: {
+        year,
+        month,
+        start: periodStart,
+        end: periodEnd,
+      },
+      totalSales,
+      totalCommission,
+      totalPayout,
+      entryCount: entries.length,
+      averageRate,
+    };
+  } catch (error) {
+    console.error('Error calculating month-end commission:', error);
+    return null;
+  }
 }

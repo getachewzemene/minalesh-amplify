@@ -114,6 +114,7 @@ model Profile {
   vendorStatus  VendorStatus  @default(pending) @map("vendor_status")
   tradeLicense  String?       @map("trade_license")
   tinNumber     String?       @map("tin_number")
+  commissionRate Decimal?     @default(0.15) @map("commission_rate") @db.Decimal(5, 4)
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
@@ -753,4 +754,25 @@ model EmailQueue {
   @@index([status, scheduledFor])
   @@index([createdAt])
   @@map("email_queue")
+}
+
+model CommissionLedger {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId         String   @map("vendor_id") @db.Uuid
+  orderId          String   @map("order_id") @db.Uuid
+  orderItemId      String?  @map("order_item_id") @db.Uuid
+  saleAmount       Decimal  @map("sale_amount") @db.Decimal(10, 2)
+  commissionRate   Decimal  @map("commission_rate") @db.Decimal(5, 4)
+  commissionAmount Decimal  @map("commission_amount") @db.Decimal(10, 2)
+  vendorPayout     Decimal  @map("vendor_payout") @db.Decimal(10, 2)
+  status           String   @default("pending")
+  paidAt           DateTime? @map("paid_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([vendorId])
+  @@index([orderId])
+  @@index([status])
+  @@index([paidAt])
+  @@map("commission_ledger")
 }

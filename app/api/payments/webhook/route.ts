@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { commitReservation } from '@/lib/inventory';
+import { createCommissionLedgerEntries } from '@/lib/vendor-payout';
 
 const schema = z.object({
   provider: z.string().min(1),
@@ -248,6 +249,15 @@ export async function POST(request: Request) {
         `Payment completed by ${provider}`,
         JSON.stringify({ provider, reference: paymentReference || null, orderNumber: order.orderNumber, webhookEventId })
       );
+      
+      // Create commission ledger entries for vendor payouts
+      try {
+        const entriesCreated = await createCommissionLedgerEntries(order.id);
+        console.log(`Created ${entriesCreated} commission ledger entries for order ${order.id}`);
+      } catch (ledgerError) {
+        console.error('Error creating commission ledger entries:', ledgerError);
+        // Don't fail the payment if ledger creation fails
+      }
       const latency = Date.now() - t0;
       if (webhookEventId) {
         await prisma.$executeRawUnsafe(
