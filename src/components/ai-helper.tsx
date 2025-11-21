@@ -50,18 +50,22 @@ export function AIHelper() {
         const reply = { role: "assistant" as const, text: data.response };
         setMessages((m) => [...m, reply]);
       } else {
-        const fallback = language === "en"
-          ? "I'm having trouble connecting. Please try again later."
-          : "ለመገናኘት እየተቸገርኩ ነው። እባክዎ ቆይተው ይሞክሩ።";
-        const reply = { role: "assistant" as const, text: fallback };
+        const fallbackMessages = {
+          en: "I'm having trouble connecting. Please try again later.",
+          am: "ለመገናኘት እየተቸገርኩ ነው። እባክዎ ቆይተው ይሞክሩ።",
+          om: "Walitti dhufeenya qaba jira. Maaloo booda yaali."
+        };
+        const reply = { role: "assistant" as const, text: fallbackMessages[language] };
         setMessages((m) => [...m, reply]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      const fallback = language === "en"
-        ? "I'm having trouble connecting. Please try again later."
-        : "ለመገናኘት እየተቸገርኩ ነው። እባክዎ ቆይተው ይሞክሩ።";
-      const reply = { role: "assistant" as const, text: fallback };
+      const fallbackMessages = {
+        en: "I'm having trouble connecting. Please try again later.",
+        am: "ለመገናኘት እየተቸገርኩ ነው። እባክዎ ቆይተው ይሞክሩ።",
+        om: "Walitti dhufeenya qaba jira. Maaloo booda yaali."
+      };
+      const reply = { role: "assistant" as const, text: fallbackMessages[language] };
       setMessages((m) => [...m, reply]);
     } finally {
       setLoading(false);
@@ -73,9 +77,19 @@ export function AIHelper() {
       {open && (
         <Card className="w-80 mb-3 shadow-card">
           <CardHeader className="flex items-center justify-between">
-            <CardTitle className="text-base">AI Helper {language === "am" ? "(አማርኛ)" : "(English)"}</CardTitle>
+            <CardTitle className="text-base">
+              AI Helper {language === "am" ? "(አማርኛ)" : language === "om" ? "(Afaan Oromoo)" : "(English)"}
+            </CardTitle>
             <div className="flex items-center gap-2">
-              <Button aria-label="Switch language" variant="outline" size="icon" onClick={() => setLanguage(language === "en" ? "am" : "en")}>
+              <Button 
+                aria-label="Switch language" 
+                variant="outline" 
+                size="icon" 
+                onClick={() => {
+                  const nextLang = language === "en" ? "am" : language === "am" ? "om" : "en";
+                  setLanguage(nextLang);
+                }}
+              >
                 <Languages className="h-4 w-4" />
               </Button>
               <Button aria-label="Close" variant="ghost" size="icon" onClick={() => setOpen(false)}>
@@ -89,7 +103,9 @@ export function AIHelper() {
                 <p className="text-sm text-muted-foreground">
                   {language === "en"
                     ? "Ask me about becoming a vendor, AR try-on, payments, shipping, or any other questions!"
-                    : "ስለ ሻጭ መሆን፣ AR ሙከራ፣ ክፍያ፣ ማድረስ ወይም ማንኛውም ሌላ ጥያቄዎች ጠይቁኝ!"}
+                    : language === "am"
+                    ? "ስለ ሻጭ መሆን፣ AR ሙከራ፣ ክፍያ፣ ማድረስ ወይም ማንኛውም ሌላ ጥያቄዎች ጠይቁኝ!"
+                    : "Waa'ee daldaltuu ta'uu, AR yaalii, kaffaltii, ergaa, ykn gaaffilee biroo na gaafadhu!"}
                 </p>
               )}
               {messages.map((m, i) => (
@@ -118,11 +134,11 @@ export function AIHelper() {
           </CardContent>
           <CardFooter className="gap-2">
             <Input
-              aria-label={language === "en" ? "Type your question" : "ጥያቄዎን ይተይቡ"}
+              aria-label={language === "en" ? "Type your question" : language === "am" ? "ጥያቄዎን ይተይቡ" : "Gaaffii kee barreessi"}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder={language === "en" ? "Type your question..." : "ጥያቄ ያስገቡ..."}
+              placeholder={language === "en" ? "Type your question..." : language === "am" ? "ጥያቄ ያስገቡ..." : "Gaaffii galchi..."}
               disabled={loading}
             />
             <Button aria-label="Send" onClick={send} className="bg-primary hover:bg-primary/90" disabled={loading}>
@@ -133,13 +149,17 @@ export function AIHelper() {
       )}
 
       <Button
-        aria-label={open ? (language === "en" ? "Close AI helper" : "AI አጋዥን ዝጋ") : (language === "en" ? "Open AI helper" : "AI አጋዥን ክፈት")}
+        aria-label={
+          open 
+            ? (language === "en" ? "Close AI helper" : language === "am" ? "AI አጋዥን ዝጋ" : "Gargaaraa AI cufi")
+            : (language === "en" ? "Open AI helper" : language === "am" ? "AI አጋዥን ክፈት" : "Gargaaraa AI bani")
+        }
         onClick={() => setOpen((o) => !o)}
         size="lg"
         className="rounded-full bg-primary hover:bg-primary/90 shadow-gold"
       >
         <MessageCircle className="h-5 w-5 mr-2" />
-        {language === "en" ? "Ask AI" : "AI ጠይቅ"}
+        {language === "en" ? "Ask AI" : language === "am" ? "AI ጠይቅ" : "AI Gaafadhu"}
       </Button>
     </div>
   );
