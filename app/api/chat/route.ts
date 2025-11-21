@@ -15,7 +15,7 @@ interface Message {
 
 interface ChatRequest {
   message: string;
-  language: 'en' | 'am';
+  language: 'en' | 'am' | 'om';
   history?: Message[];
 }
 
@@ -72,10 +72,40 @@ const knowledgeBase = {
       keywords: ['ማድረስ', 'መላክ', 'ማጓጓዝ'],
       response: 'የማድረስ መረጃ:\n• ከ500 ብር በላይ በሆኑ ትዕዛዞች ላይ ነፃ ማድረስ\n• መደበኛ ማድረስ: 3-5 የስራ ቀናት\n• ፈጣን ማድረስ: 1-2 የስራ ቀናት (ተጨማሪ ክፍያ)\n• በመላ አገር ሽፋን\n\nትዕዛዝዎ ከተላከ በኋላ በኤስኤምኤስ እና በኢሜል የክትትል መረጃ ይደርስዎታል።'
     }
+  ],
+  om: [
+    {
+      keywords: ['daldaltuu', 'gurgurtaa', 'ta\'uu', 'galmaa\'uu'],
+      response: 'Minalesh irratti daldaltuu ta\'uuf:\n1. Herrega uumaa ykn seenaa\n2. Gara Dashboard deemaa\n3. Odeeffannoo daldalaa keessanii xumuree\n4. Waraqaa Daldalaa fi Lakkoofsa TIN kennaa\n5. Hayyama bulchaa eegaa\n6. Oomishaalee kee tarreessuu jalqabi!\n\nAdeemsi guyyoota hojii 1-2 fudhata.'
+    },
+    {
+      keywords: ['AR', 'yaalii', 'dhugaa', 'mul\'isa'],
+      response: 'Yaaliin AR oomishaawwan filatamoo kanneen akka borqii, kophee, fi meeshaalee biroo irratti argama! "AR View" mallattoo fuula oomishaawwan irratti argaa. Isin:\n• Oomishaaleen si irratti akkamitti akka fakkaatan yeroo qajeelaa ilaalaa\n• Kofa adda addaa yaali\n• Murtii bittaa amanamaa godhadha\n\nYaadannoo: Amaloota AR meeshaalee mobaayilaa kaameraa qabaniin gaarii hojjetu.'
+    },
+    {
+      keywords: ['kaffaltii', 'kaffaluu', 'kaardii', 'maallaqa'],
+      response: 'Mala kaffaltii hedduu fudhanna:\n• Kaardiiwwan Kireeditii/Debitii (Visa, Mastercard)\n• Maallaqa Mobaayilaa (M-Pesa, HelloCash, fi kkf)\n• Maallaqa Yeroo Oomishaan Dhufu (COD) magaalota filatamoo keessatti\n• Jijjiirraa Baankii\n\nDaldalli hundi encryption tiin eegame. COD Finfinnee, Dire Dawa, Mekelle, fi Bahir Dar keessatti argama.'
+    },
+    {
+      keywords: ['ergaa', 'erguu', 'geejjiba'],
+      response: 'Odeeffannoo Ergaa:\n• Ajaja Birrii 500 ol ta\'etti ergaa bilisaa\n• Ergaa idilee: guyyoota hojii 3-5\n• Ergaa saffisaa: guyyoota hojii 1-2 (kaffaltii dabalataa)\n• Biyyattii guutuu keessatti argama\n\nAjajni keessan erga ergamee booda odeeffannoo hordoffii SMS fi email tiin ni argatu.'
+    },
+    {
+      keywords: ['deebisuu', 'maallaqa deebisuu', 'jijjiirraa'],
+      response: 'Seera deebisuu keenya:\n• Meeshaalee hedduu irraaf foddaa deebisuu guyyaa 7\n• Meeshaaleen hin fayyadamne fi qabxii jalqabaa keessa ta\'uu qabu\n• Oomishaalee hanqina qaban irratti deebisuu bilisaa\n• Maallaqa deebisuu guyyoota daldalaa 5-7 keessatti raawwatama\n\nDeebisuu jalqabuuf tajaajila maamiltootaa quunnamaa.'
+    },
+    {
+      keywords: ['hordofuu', 'ajaja', 'haala', 'eessa'],
+      response: 'Ajaja kee hordofuuf:\n1. Herrega keetti seenaa\n2. Gara Dashboard > Ajajawwan deemaa\n3. Ajaja kee irra cuqaasii hordoffii yeroo qajeelaa ilaalaa\n\nGeessituu email/SMS keetti ergame fayyadamuunis hordofuu dandeessa.'
+    },
+    {
+      keywords: ['herrega', 'piroofaayilii', 'seenuu', 'jecha icciitii'],
+      response: 'Gargaarsa herregaa:\n• Jecha icciitii dagatteettaa? Geessituu "Jecha Icciitii Dagate" fuula seensaa irratti fayyadamaa\n• Piroofaayilii haaromsuu: Dashboard > Qindaa\'ina Piroofaayilii\n• Jecha icciitii jijjiiruu: Qindaa\'ina Piroofaayilii > Nageenyaa\n\nYoo gargaarsa dabalataa barbaadde tajaajila quunnamaa.'
+    }
   ]
 };
 
-function findBestMatch(message: string, language: 'en' | 'am'): string | null {
+function findBestMatch(message: string, language: 'en' | 'am' | 'om'): string | null {
   const kb = knowledgeBase[language];
   const lowerMessage = message.toLowerCase();
   
@@ -99,16 +129,24 @@ function findBestMatch(message: string, language: 'en' | 'am'): string | null {
   return highestScore > 0 ? bestMatch : null;
 }
 
-function getGreeting(language: 'en' | 'am'): string {
-  return language === 'en'
-    ? 'Hello! Welcome to Minalesh. How can I help you today?'
-    : 'ሰላም! ወደ ሚናሌሽ እንኳን ደህና መጡ። ዛሬ እንዴት ልርዳዎት እችላለሁ?';
+function getGreeting(language: 'en' | 'am' | 'om'): string {
+  if (language === 'en') {
+    return 'Hello! Welcome to Minalesh. How can I help you today?';
+  } else if (language === 'am') {
+    return 'ሰላም! ወደ ሚናሌሽ እንኳን ደህና መጡ። ዛሬ እንዴት ልርዳዎት እችላለሁ?';
+  } else {
+    return 'Akkam! Gara Minalesh baga nagaan dhuftan. Har\'a akkamitti sin gargaaruu danda\'a?';
+  }
 }
 
-function getFallbackResponse(language: 'en' | 'am'): string {
-  return language === 'en'
-    ? 'I\'m here to help! I can assist you with:\n• Becoming a vendor\n• AR try-on features\n• Payment methods\n• Shipping and delivery\n• Returns and refunds\n• Order tracking\n• Account management\n\nWhat would you like to know more about?'
-    : 'ለመርዳት እዚህ ነኝ! ስለሚከተለው ልርዳዎ እችላለሁ:\n• ሻጭ መሆን\n• AR ሙከራ ባህሪያት\n• የክፍያ መንገዶች\n• ማድረስ እና ማስተላለፍ\n• ተመላሾች እና ተመላሾች\n• ትዕዛዝ መከታተል\n• የመለያ አስተዳደር\n\nስለምን የበለጠ ማወቅ ይፈልጋሉ?';
+function getFallbackResponse(language: 'en' | 'am' | 'om'): string {
+  if (language === 'en') {
+    return 'I\'m here to help! I can assist you with:\n• Becoming a vendor\n• AR try-on features\n• Payment methods\n• Shipping and delivery\n• Returns and refunds\n• Order tracking\n• Account management\n\nWhat would you like to know more about?';
+  } else if (language === 'am') {
+    return 'ለመርዳት እዚህ ነኝ! ስለሚከተለው ልርዳዎ እችላለሁ:\n• ሻጭ መሆን\n• AR ሙከራ ባህሪያት\n• የክፍያ መንገዶች\n• ማድረስ እና ማስተላለፍ\n• ተመላሾች እና ተመላሾች\n• ትዕዛዝ መከታተል\n• የመለያ አስተዳደር\n\nስለምን የበለጠ ማወቅ ይፈልጋሉ?';
+  } else {
+    return 'Gargaaruuf asuman jira! Waa\'ee kanneenii sin gargaaruu danda\'a:\n• Daldaltuu ta\'uu\n• Amaloota AR yaalii\n• Mala kaffaltii\n• Ergaa fi geejjiba\n• Deebisuu fi maallaqa deebisuu\n• Ajaja hordofuu\n• Bulchiinsa herregaa\n\nWaa\'ee maalii baay\'ee beekuu barbaadda?';
+  }
 }
 
 export async function POST(request: Request) {
@@ -123,7 +161,7 @@ export async function POST(request: Request) {
     }
     
     // Check for greetings
-    const greetings = ['hi', 'hello', 'hey', 'greetings', 'ሰላም', 'ሄይ'];
+    const greetings = ['hi', 'hello', 'hey', 'greetings', 'ሰላም', 'ሄይ', 'akkam', 'nagaa'];
     if (greetings.some(g => message.toLowerCase().trim() === g)) {
       return NextResponse.json({
         response: getGreeting(language || 'en'),

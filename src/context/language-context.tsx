@@ -2,12 +2,18 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-export type Language = "en" | "am";
+export type Language = "en" | "am" | "om";
+
+interface Translations {
+  en: string;
+  am: string;
+  om: string;
+}
 
 interface LanguageContextValue {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (en: string, am: string) => string;
+  t: (translations: Translations) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
@@ -29,7 +35,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const t = (en: string, am: string) => (language === "am" ? am : en);
+  const t = (translations: Translations) => translations[language];
 
   const value = useMemo(() => ({ language, setLanguage, t }), [language]);
 
