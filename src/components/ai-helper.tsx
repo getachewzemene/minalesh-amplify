@@ -43,6 +43,16 @@ const translations = {
     am: "AI አጋዥን ዝጋ",
     om: "Gargaaraa AI cufi"
   },
+  closeButtonLabel: {
+    en: "Close",
+    am: "ዝጋ",
+    om: "Cufi"
+  },
+  switchLanguageLabel: {
+    en: "Switch language",
+    am: "ቋንቋ ቀይር",
+    om: "Afaan jijjiiri"
+  },
   openLabel: {
     en: "Open AI helper",
     am: "AI አጋዥን ክፈት",
@@ -52,6 +62,11 @@ const translations = {
     en: "Ask AI",
     am: "AI ጠይቅ",
     om: "AI Gaafadhu"
+  },
+  sendLabel: {
+    en: "Send",
+    am: "ላክ",
+    om: "Ergi"
   },
   fallbackError: {
     en: "I'm having trouble connecting. Please try again later.",
@@ -122,14 +137,19 @@ export function AIHelper() {
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button 
-                aria-label="Switch language" 
+                aria-label={translations.switchLanguageLabel[language]}
                 variant="outline" 
                 size="icon" 
                 onClick={() => setLanguage(getNextLanguage(language))}
               >
                 <Languages className="h-4 w-4" />
               </Button>
-              <Button aria-label="Close" variant="ghost" size="icon" onClick={() => setOpen(false)}>
+              <Button 
+                aria-label={translations.closeButtonLabel[language]}
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setOpen(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -174,7 +194,12 @@ export function AIHelper() {
               placeholder={translations.inputPlaceholder[language]}
               disabled={loading}
             />
-            <Button aria-label="Send" onClick={send} className="bg-primary hover:bg-primary/90" disabled={loading}>
+            <Button 
+              aria-label={translations.sendLabel[language]}
+              onClick={send} 
+              className="bg-primary hover:bg-primary/90" 
+              disabled={loading}
+            >
               <Send className="h-4 w-4" />
             </Button>
           </CardFooter>
