@@ -63,7 +63,22 @@ export default function OrdersPage() {
           {loading && (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
+                <div key={i} className="border rounded-lg p-4 bg-card space-y-3">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-2 flex-1">
+                      <Skeleton variant="shimmer" className="h-5 w-32" />
+                      <Skeleton variant="shimmer" className="h-4 w-48" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton variant="shimmer" className="h-6 w-20 rounded-full" />
+                      <Skeleton variant="shimmer" className="h-6 w-24 rounded-full" />
+                    </div>
+                  </div>
+                  <Skeleton variant="shimmer" className="h-20 w-full" />
+                  <div className="flex justify-end">
+                    <Skeleton variant="shimmer" className="h-5 w-32" />
+                  </div>
+                </div>
               ))}
             </div>
           )}

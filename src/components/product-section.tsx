@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
 import { toast } from "sonner"
 import { formatCurrency } from "@/lib/utils"
+import { ProductCardSkeleton } from "@/components/ui/loading-state"
 
 interface Product {
   id: string
@@ -133,13 +134,7 @@ export function ProductSection({
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-card rounded-lg border p-4 animate-pulse">
-                <div className="w-full h-48 bg-gray-200 rounded mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              </div>
-            ))}
+            <ProductCardSkeleton count={limit > 4 ? 4 : limit} />
           </div>
         </div>
       </section>
