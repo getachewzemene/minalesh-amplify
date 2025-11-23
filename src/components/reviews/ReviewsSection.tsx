@@ -1,10 +1,24 @@
 import { useState, useEffect } from "react";
-import { Star, ThumbsUp, MoreVertical } from "lucide-react";
+import { Star, ThumbsUp, MoreVertical, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 
@@ -32,6 +46,10 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
   const [newReview, setNewReview] = useState({ rating: 5, title: "", comment: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [isReporting, setIsReporting] = useState(false);
   const { user, profile } = useAuth();
 
   useEffect(() => {
@@ -104,6 +122,65 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
       toast.error("Failed to submit review");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleReportReview = (reviewId: string) => {
+    if (!user || !profile) {
+      toast.error("Please log in to report a review");
+      return;
+    }
+    setSelectedReviewId(reviewId);
+    setShowReportDialog(true);
+  };
+
+  const submitReport = async () => {
+    if (!reportReason.trim()) {
+      toast.error("Please provide a reason for reporting");
+      return;
+    }
+
+    if (!selectedReviewId) {
+      return;
+    }
+
+    setIsReporting(true);
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/reviews/${selectedReviewId}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reason: reportReason,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.actionTaken) {
+          toast.success("Review reported. Vendor has been suspended and product deactivated.", {
+            duration: 5000,
+          });
+        } else {
+          toast.success("Review reported successfully");
+        }
+        setShowReportDialog(false);
+        setReportReason("");
+        setSelectedReviewId(null);
+        fetchReviews();
+      } else {
+        toast.error(data.error || "Failed to report review");
+      }
+    } catch (error) {
+      console.error('Error reporting review:', error);
+      toast.error("Failed to report review");
+    } finally {
+      setIsReporting(false);
     }
   };
 
@@ -273,6 +350,21 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
                         <ThumbsUp className="h-4 w-4" />
                         Helpful ({review.helpful_count})
                       </button>
+                      {user && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleReportReview(review.id)}>
+                              <Flag className="h-4 w-4 mr-2" />
+                              Report Review
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -286,6 +378,38 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Report Review Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report Review</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for reporting this review. If this review has multiple reports and is rated poorly, appropriate action will be taken.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Describe why you're reporting this review..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowReportDialog(false);
+              setReportReason("");
+              setSelectedReviewId(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={submitReport} disabled={isReporting || !reportReason.trim()}>
+              {isReporting ? "Submitting..." : "Submit Report"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

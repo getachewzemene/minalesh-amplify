@@ -346,6 +346,8 @@ model Review {
   helpfulCount Int      @default(0) @map("helpful_count")
   isVerified   Boolean  @default(false) @map("is_verified")
   isApproved   Boolean  @default(true) @map("is_approved")
+  reportCount  Int      @default(0) @map("report_count")
+  reportedBy   Json     @default("[]") @map("reported_by")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
