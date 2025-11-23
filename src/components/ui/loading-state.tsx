@@ -106,6 +106,7 @@ export function ChartLoadingSkeleton() {
 
 /**
  * ProductCardSkeleton - beautiful skeleton loader for product cards
+ * @param count - Number of skeleton cards to display (default: 4)
  */
 export function ProductCardSkeleton({ count = 4 }: { count?: number }) {
   return (
@@ -117,7 +118,7 @@ export function ProductCardSkeleton({ count = 4 }: { count?: number }) {
         >
           {/* Image skeleton with shimmer */}
           <div className="relative overflow-hidden">
-            <Skeleton variant="shimmer" className="w-full h-48 rounded-t-lg rounded-b-none" />
+            <Skeleton variant="shimmer" className="w-full h-48 rounded-t-lg" />
             {/* Badge skeleton */}
             <div className="absolute top-3 left-3">
               <Skeleton variant="shimmer" className="h-5 w-16 rounded-full" />
