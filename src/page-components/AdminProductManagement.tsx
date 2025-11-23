@@ -28,6 +28,7 @@ import {
   Save
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Product {
   id: string;
@@ -409,7 +410,29 @@ export default function AdminProductManagement() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading products...</div>
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="border rounded-lg p-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Skeleton variant="shimmer" className="h-6 w-48" />
+                        <Skeleton variant="shimmer" className="h-6 w-16 rounded-full" />
+                      </div>
+                      <Skeleton variant="shimmer" className="h-4 w-64" />
+                      <div className="flex gap-2">
+                        <Skeleton variant="shimmer" className="h-5 w-20" />
+                        <Skeleton variant="shimmer" className="h-5 w-24" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton variant="shimmer" className="h-9 w-9" />
+                      <Skeleton variant="shimmer" className="h-9 w-9" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : products.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No products found
