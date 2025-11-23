@@ -163,7 +163,7 @@ export function ReviewsSection({ productId }: ReviewsSectionProps) {
 
       if (response.ok) {
         if (data.actionTaken) {
-          toast.success("Review reported. Vendor has been suspended and product removed.", {
+          toast.success("Review reported. Vendor has been suspended and product deactivated.", {
             duration: 5000,
           });
         } else {

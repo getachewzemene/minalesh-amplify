@@ -87,7 +87,16 @@ export async function POST(
     }
 
     // Check if user already reported this review
-    const reportedBy = (review.reportedBy as string[]) || [];
+    // Safely parse reportedBy as it's stored as JSON
+    let reportedBy: string[] = [];
+    try {
+      if (Array.isArray(review.reportedBy)) {
+        reportedBy = review.reportedBy.filter((id): id is string => typeof id === 'string');
+      }
+    } catch (error) {
+      console.error('Error parsing reportedBy:', error);
+    }
+
     if (reportedBy.includes(payload.userId)) {
       return NextResponse.json(
         { error: 'You have already reported this review' },
@@ -130,7 +139,9 @@ export async function POST(
       });
 
       // Create a notification for the vendor
-      const suspensionMessage = `Your vendor account has been suspended due to multiple reports (${newReportCount}) on a low-rated review (${review.rating} stars) for product "${review.product.name}". The review received reports citing: "${reason}". This action was taken to maintain the quality and integrity of our marketplace. Please contact support to appeal this decision.`;
+      // Sanitize the reason to prevent injection attacks
+      const sanitizedReason = reason.replace(/[<>'"]/g, '');
+      const suspensionMessage = `Your vendor account has been suspended due to multiple reports (${newReportCount}) on a low-rated review (${review.rating} stars) for product "${review.product.name}". The review received reports citing: "${sanitizedReason}". This action was taken to maintain the quality and integrity of our marketplace. Please contact support to appeal this decision.`;
 
       await prisma.notification.create({
         data: {
@@ -143,7 +154,7 @@ export async function POST(
             productId: review.productId,
             reportCount: newReportCount,
             rating: review.rating,
-            reason,
+            reason: sanitizedReason,
           },
         },
       });
