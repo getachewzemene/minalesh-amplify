@@ -58,12 +58,12 @@ export function CardLoadingSkeleton({ count = 1 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} className="bg-gradient-card shadow-card">
           <CardHeader>
-            <Skeleton className="h-6 w-1/2" />
+            <Skeleton variant="shimmer" className="h-6 w-1/2" />
           </CardHeader>
           <CardContent className="space-y-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-5/6" />
+            <Skeleton variant="shimmer" className="h-4 w-full" />
+            <Skeleton variant="shimmer" className="h-4 w-3/4" />
+            <Skeleton variant="shimmer" className="h-4 w-5/6" />
           </CardContent>
         </Card>
       ))}
@@ -80,7 +80,7 @@ export function TableLoadingSkeleton({ rows = 5, cols = 4 }: { rows?: number; co
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex gap-4">
           {Array.from({ length: cols }).map((_, j) => (
-            <Skeleton key={j} className="h-10 flex-1" />
+            <Skeleton variant="shimmer" key={j} className="h-10 flex-1" />
           ))}
         </div>
       ))}
@@ -95,11 +95,67 @@ export function ChartLoadingSkeleton() {
   return (
     <Card className="bg-gradient-card shadow-card">
       <CardHeader>
-        <Skeleton className="h-6 w-1/3" />
+        <Skeleton variant="shimmer" className="h-6 w-1/3" />
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[300px] w-full" />
+        <Skeleton variant="shimmer" className="h-[300px] w-full" />
       </CardContent>
     </Card>
+  )
+}
+
+/**
+ * ProductCardSkeleton - beautiful skeleton loader for product cards
+ */
+export function ProductCardSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="bg-card rounded-lg shadow-card border overflow-hidden"
+        >
+          {/* Image skeleton with shimmer */}
+          <div className="relative overflow-hidden">
+            <Skeleton variant="shimmer" className="w-full h-48 rounded-t-lg rounded-b-none" />
+            {/* Badge skeleton */}
+            <div className="absolute top-3 left-3">
+              <Skeleton variant="shimmer" className="h-5 w-16 rounded-full" />
+            </div>
+          </div>
+
+          {/* Content skeleton */}
+          <div className="p-4 space-y-3">
+            {/* Category badge */}
+            <Skeleton variant="shimmer" className="h-5 w-20 rounded-md" />
+            
+            {/* Product name */}
+            <Skeleton variant="shimmer" className="h-5 w-full" />
+            <Skeleton variant="shimmer" className="h-5 w-4/5" />
+            
+            {/* Rating */}
+            <div className="flex items-center gap-1">
+              <Skeleton variant="shimmer" className="h-3 w-24" />
+              <Skeleton variant="shimmer" className="h-3 w-10" />
+            </div>
+            
+            {/* Price */}
+            <div className="flex items-center gap-2">
+              <Skeleton variant="shimmer" className="h-6 w-24" />
+              <Skeleton variant="shimmer" className="h-4 w-20" />
+            </div>
+            
+            {/* Vendor */}
+            <Skeleton variant="shimmer" className="h-3 w-32" />
+            
+            {/* Buttons */}
+            <div className="flex gap-2 pt-2">
+              <Skeleton variant="shimmer" className="h-9 flex-1 rounded-md" />
+              <Skeleton variant="shimmer" className="h-9 w-24 rounded-md" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
   )
 }

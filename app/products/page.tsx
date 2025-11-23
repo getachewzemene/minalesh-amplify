@@ -21,7 +21,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { AdvancedSearch } from "@/components/search/AdvancedSearch"
 import { ErrorBoundary } from "@/components/error-boundary"
-import { LoadingState } from "@/components/ui/loading-state"
+import { LoadingState, ProductCardSkeleton } from "@/components/ui/loading-state"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import phoneImg from "@/assets/products/phone.jpg"
@@ -290,7 +290,9 @@ function ProductsContent() {
           </div>
           
           {loading && (
-            <LoadingState message="Loading products..." />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <ProductCardSkeleton count={8} />
+            </div>
           )}
           
           {error && (
@@ -416,9 +418,11 @@ export default function Products() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <Container className="py-8">
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <p className="mt-4 text-muted-foreground">Loading products...</p>
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">All Products</h1>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <ProductCardSkeleton count={8} />
           </div>
         </Container>
         <Footer />
