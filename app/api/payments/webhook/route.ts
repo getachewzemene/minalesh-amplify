@@ -209,11 +209,17 @@ export async function POST(request: Request) {
         })();
         if (!Number.isNaN(amt) && Math.abs(amt - total) > 0.005) {
           if (webhookEventId) {
+            // Calculate next retry time (1 minute from now for first retry)
+            const nextRetry = new Date();
+            nextRetry.setMinutes(nextRetry.getMinutes() + 1);
+            
             await prisma.$executeRawUnsafe(
-              'UPDATE "webhook_events" SET status=$2, error_message=$3 WHERE id=$1',
+              'UPDATE "webhook_events" SET status=$2, error_message=$3, retry_count=$4, next_retry_at=$5 WHERE id=$1',
               webhookEventId,
               'error',
-              `Amount mismatch: got ${amt}, expected ${total}`
+              `Amount mismatch: got ${amt}, expected ${total}`,
+              1,
+              nextRetry
             );
           }
           return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
@@ -313,6 +319,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, order: updated });
   } catch (err) {
     console.error('Webhook error:', err);
+    
+    // Try to update webhook event with error information if we have the ID
+    try {
+      // We need to get webhookEventId from the outer scope, but it might not be available
+      // Best effort to log the error
+      const body = await request.clone().json().catch(() => ({}));
+      const provider = body.provider || 'unknown';
+      
+      console.error('Failed webhook details:', {
+        provider,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    } catch (logError) {
+      // Ignore logging errors
+    }
+    
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
