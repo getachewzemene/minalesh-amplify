@@ -133,7 +133,7 @@ export async function getProducts(options: ProductQueryOptions) {
  */
 export async function createProduct(data: CreateProductRequest) {
   const product = await prisma.product.create({
-    data,
+    data: data as any,
   });
 
   // Invalidate product caches

@@ -10,7 +10,7 @@ const createIntentSchema = z.object({
       variantId: z.string().uuid().optional(),
       quantity: z.number().int().positive().max(999),
     })
-  ).min(1),
+  ).min(1) as z.ZodType<{ productId: string; variantId?: string; quantity: number; }[]>,
   shippingAddress: z
     .object({
       name: z.string().min(1).optional(),
