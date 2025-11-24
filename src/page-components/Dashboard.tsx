@@ -9,7 +9,7 @@
  * scalability and CDN support.
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { 
   Package, 
   TrendingUp, 
@@ -314,14 +314,15 @@ export default function Dashboard() {
   };
 
   // Fetch vendor statements
-  const fetchStatements = async () => {
+  const fetchStatements = useCallback(async () => {
     if (!profile?.isVendor) return;
     
     setLoadingStatements(true);
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
       const response = await fetch('/api/vendors/statements?limit=20', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         }
       });
 
@@ -341,17 +342,18 @@ export default function Dashboard() {
     } finally {
       setLoadingStatements(false);
     }
-  };
+  }, [profile?.isVendor, toast]);
 
   // Fetch commission ledger
-  const fetchLedger = async () => {
+  const fetchLedger = useCallback(async () => {
     if (!profile?.isVendor) return;
     
     setLoadingLedger(true);
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
       const response = await fetch('/api/vendors/ledger?limit=50', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         }
       });
 
@@ -371,7 +373,7 @@ export default function Dashboard() {
     } finally {
       setLoadingLedger(false);
     }
-  };
+  }, [profile?.isVendor, toast]);
 
   // Fetch data when switching tabs
   useEffect(() => {
@@ -381,7 +383,7 @@ export default function Dashboard() {
     if (activeTab === 'ledger' && ledgerEntries.length === 0) {
       fetchLedger();
     }
-  }, [activeTab]);
+  }, [activeTab, statements.length, ledgerEntries.length, fetchStatements, fetchLedger]);
 
   // Show loading state
   if (loading) {
@@ -1019,7 +1021,7 @@ export default function Dashboard() {
                         <tbody>
                           {ledgerEntries.map((entry: CommissionLedgerEntry) => (
                             <tr key={entry.id} className="border-b hover:bg-muted/50">
-                              <td className="py-3 font-mono text-sm">{entry.orderId.slice(0, 8)}...</td>
+                              <td className="py-3 font-mono text-sm">{entry.orderId ? entry.orderId.slice(0, 8) : 'N/A'}...</td>
                               <td className="text-right py-3">
                                 {formatCurrency(Number(entry.saleAmount))}
                               </td>
