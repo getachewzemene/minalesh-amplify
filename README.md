@@ -117,7 +117,12 @@ npm run dev
    - Background worker for email processing
    - User notification preferences
    - 📚 **[View Email Service Documentation](docs/EMAIL_SERVICE.md)**
-4. **Security Best Practices**:
+4. **Background Workers**:
+   - Email queue processor - Sends pending emails via Resend
+   - Webhook retry worker - Retries failed webhooks with exponential backoff
+   - Inventory cleanup worker - Releases expired reservations
+   - 📚 **[View Background Workers Documentation](docs/BACKGROUND_WORKERS.md)**
+5. **Security Best Practices**:
    - Cryptographically secure token generation
    - Password strength requirements (8+ chars, letter + number)
    - JWT tokens with configurable expiry
@@ -126,9 +131,12 @@ npm run dev
 📚 **[View Security & RBAC Documentation](docs/SECURITY_AND_RBAC.md)** for complete API reference and implementation details.
 
 ⚠️ **Production Checklist:**
-- Set strong `JWT_SECRET` environment variable
+- Set strong `JWT_SECRET` and `CRON_SECRET` environment variables
 - Configure Resend API key (`RESEND_API_KEY`) and verify domain
-- Set up cron job for email queue processing (every 1-5 minutes)
+- Set up cron jobs for background workers:
+  - Email queue processing (every 1-5 minutes)
+  - Webhook retry processing (every 5-10 minutes)
+  - Inventory cleanup (every 5 minutes)
 - Manually assign admin roles via database
 - Use HTTPS and consider httpOnly cookies
 - Enable PostgreSQL SSL connections
