@@ -338,7 +338,7 @@ export async function capturePayment(paymentIntentId: string, amount?: number) {
         id: paymentIntent.id,
         status: paymentIntent.status,
         amount: paymentIntent.amount,
-        amountCaptured: (paymentIntent as any).amount_captured || 0,
+        amountCaptured: 'amount_captured' in paymentIntent ? (paymentIntent.amount_captured ?? 0) : 0,
       },
     };
   } catch (error) {

@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
-
-// Check if user is admin
-function isAdmin(email: string): boolean {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
-  return adminEmails.includes(email);
-}
+import { withAdmin } from '@/lib/middleware';
 
 /**
  * @swagger
@@ -32,13 +26,10 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error } = withAdmin(request);
+  if (error) return error;
 
-    if (!payload || !isAdmin(payload.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  try {
 
     const coupon = await prisma.coupon.findUnique({
       where: { id: params.id },
@@ -106,13 +97,10 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error } = withAdmin(request);
+  if (error) return error;
 
-    if (!payload || !isAdmin(payload.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  try {
 
     const body = await request.json();
     const {
@@ -196,13 +184,10 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+  const { error } = withAdmin(request);
+  if (error) return error;
 
-    if (!payload || !isAdmin(payload.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  try {
 
     await prisma.coupon.delete({
       where: { id: params.id },

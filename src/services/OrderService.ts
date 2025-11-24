@@ -284,6 +284,12 @@ export async function updateOrderStatus(
     where.userId = userId;
   }
 
+  // Validate status is a valid OrderStatus enum value
+  const validStatuses = ['pending', 'paid', 'confirmed', 'processing', 'fulfilled', 'shipped', 'delivered', 'cancelled', 'refunded'];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid order status: ${status}`);
+  }
+
   return await prisma.order.update({
     where,
     data: { status: status as any },
