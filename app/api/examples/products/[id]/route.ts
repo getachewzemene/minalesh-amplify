@@ -81,8 +81,13 @@ async function patchHandler(
   }
 
   // Check if user is the vendor who owns this product
-  // (In real app, get vendorId from user's profile)
-  const isOwner = product.vendorId === 'vendor1'; // Mock check
+  // NOTE: This is a mock example. In a real application, you would:
+  // 1. Get the user's profile to find their vendorId
+  // 2. Compare product.vendorId with user's actual vendorId
+  // Example: const profile = await prisma.profile.findUnique({ where: { userId: user.userId } });
+  //          const isOwner = profile?.id === product.vendorId;
+  const mockVendorId = 'vendor1'; // In real app: get from user profile
+  const isOwner = product.vendorId === mockVendorId;
 
   if (!isOwner) {
     throw new ForbiddenError(
@@ -147,8 +152,9 @@ async function deleteHandler(
     throw new NotFoundError('Product not found', 'PRODUCT_NOT_FOUND', { productId: id });
   }
 
-  // Check ownership
-  const isOwner = product.vendorId === 'vendor1'; // Mock check
+  // Check ownership (see PATCH handler for explanation of mock data)
+  const mockVendorId = 'vendor1'; // In real app: get from user profile
+  const isOwner = product.vendorId === mockVendorId;
 
   if (!isOwner) {
     throw new ForbiddenError(

@@ -145,15 +145,21 @@ export function handleApiError(error: unknown, defaultMessage: string = 'An erro
   // Handle standard Error instances
   if (error instanceof Error) {
     // Check for common error messages and convert to AppError
+    // Note: This provides backward compatibility with existing error patterns
+    // For new code, prefer throwing AppError directly
     if (error.message.includes('not found') || error.message.includes('Not found')) {
       return createErrorResponse(new NotFoundError(error.message), isDevelopment);
     }
     
-    if (error.message === 'Unauthorized') {
-      return createErrorResponse(new UnauthorizedError(), isDevelopment);
+    // Check for exact unauthorized message (case-sensitive for safety)
+    if (error.message === 'Unauthorized' || error.message === 'Authentication required') {
+      return createErrorResponse(new UnauthorizedError(error.message), isDevelopment);
     }
 
-    if (error.message.includes('Insufficient stock') || error.message.includes('Invalid')) {
+    // Check for specific validation/business rule errors
+    if (error.message.includes('Insufficient stock') || 
+        error.message.startsWith('Invalid ') ||
+        error.message.includes('is required')) {
       return createErrorResponse(new BadRequestError(error.message), isDevelopment);
     }
 

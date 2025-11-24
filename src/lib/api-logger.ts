@@ -89,7 +89,10 @@ export function withApiLogger<T = any>(
         statusCode,
       });
 
-      // Report to Sentry only for server errors (5xx) and non-operational errors
+      // Report to Sentry based on error severity:
+      // - All 5xx errors (server errors should always be investigated)
+      // - Non-operational errors (unexpected errors regardless of status code)
+      // - Skip operational 4xx errors (expected client errors like validation failures)
       const shouldReportToSentry = statusCode >= 500 || (error instanceof AppError && !error.isOperational);
       if (shouldReportToSentry) {
         Sentry.captureException(err, {
