@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { logApiRequest, logError } from './logger';
 import * as Sentry from '@sentry/nextjs';
 import { getCorrelationId, CORRELATION_ID_HEADER } from './correlation';
+import { AppError, handleApiError } from './errors';
 
 export interface ApiHandlerOptions {
   requireAuth?: boolean;
@@ -75,6 +76,9 @@ export function withApiLogger<T = any>(
       const duration = Date.now() - startTime;
       const err = error as Error;
 
+      // Determine status code (use AppError statusCode if available, otherwise 500)
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+
       // Log the error
       logError(err, {
         method,
@@ -82,43 +86,48 @@ export function withApiLogger<T = any>(
         duration,
         userId,
         correlationId,
+        statusCode,
       });
 
-      // Report to Sentry with full context
-      Sentry.captureException(err, {
-        extra: {
-          method,
-          path,
-          query: url.search,
-          correlationId,
-        },
-        tags: {
-          path,
-          method,
-          correlationId,
-        },
-        user: userId ? { id: userId } : undefined,
-      });
+      // Report to Sentry only for server errors (5xx) and non-operational errors
+      const shouldReportToSentry = statusCode >= 500 || (error instanceof AppError && !error.isOperational);
+      if (shouldReportToSentry) {
+        Sentry.captureException(err, {
+          extra: {
+            method,
+            path,
+            query: url.search,
+            correlationId,
+            statusCode,
+          },
+          tags: {
+            path,
+            method,
+            correlationId,
+          },
+          user: userId ? { id: userId } : undefined,
+        });
+      }
 
       // Log the failed request
       logApiRequest({
         method,
         path,
-        statusCode: 500,
+        statusCode,
         duration,
         userId,
         correlationId,
         error: err.message,
       });
 
-      // Return error response
-      return NextResponse.json(
-        {
-          error: 'Internal server error',
-          message: process.env.NODE_ENV === 'development' ? err.message : undefined,
-        },
-        { status: 500 }
-      );
+      // Use centralized error handling
+      const errorResponse = handleApiError(error, 'An error occurred');
+      
+      // Add performance and correlation headers
+      errorResponse.headers.set('X-Response-Time', `${duration}ms`);
+      errorResponse.headers.set(CORRELATION_ID_HEADER, correlationId);
+
+      return errorResponse;
     }
   };
 }
