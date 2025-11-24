@@ -107,5 +107,4 @@ Available functions:
 ## See Also
 
 - [Complete Error Handling Guide](../../ERROR_HANDLING_GUIDE.md)
-- [Example Routes](../../app/api/examples/)
 - [Tests](./errors.test.ts)
