@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import AdminProductManagement from "@/page-components/AdminProductManagement";
+import AdminTaxRatesManagement from "@/page-components/AdminTaxRatesManagement";
+import AdminCouponsManagement from "@/page-components/AdminCouponsManagement";
+import AdminShippingManagement from "@/page-components/AdminShippingManagement";
 import { 
   Users, 
   Store, 
@@ -379,12 +382,14 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6 lg:grid-cols-7">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="vendors">Vendors</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="management">Management</TabsTrigger>
+              <TabsTrigger value="coupons">Coupons</TabsTrigger>
+              <TabsTrigger value="shipping">Shipping</TabsTrigger>
+              <TabsTrigger value="taxes">Taxes</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -675,59 +680,16 @@ export default function AdminDashboard() {
               </div>
             </TabsContent>
 
-            <TabsContent value="management" className="space-y-6">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card className="bg-gradient-card shadow-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      System Settings
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4">
-                      Configure marketplace settings, payment methods, and integrations.
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      Manage Settings
-                    </Button>
-                  </CardContent>
-                </Card>
+            <TabsContent value="coupons" className="space-y-6">
+              <AdminCouponsManagement />
+            </TabsContent>
 
-                <Card className="bg-gradient-card shadow-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      User Management
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4">
-                      Manage user accounts, roles, and permissions across the platform.
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      Manage Users
-                    </Button>
-                  </CardContent>
-                </Card>
+            <TabsContent value="shipping" className="space-y-6">
+              <AdminShippingManagement />
+            </TabsContent>
 
-                <Card className="bg-gradient-card shadow-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Globe className="h-5 w-5" />
-                      Platform Health
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4">
-                      Monitor system performance, uptime, and platform health metrics.
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      View Health
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+            <TabsContent value="taxes" className="space-y-6">
+              <AdminTaxRatesManagement />
             </TabsContent>
           </Tabs>
         </Container>
