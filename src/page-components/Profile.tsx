@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +12,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
 import { Badge } from "@/components/ui/badge"
-import { Upload, User, Mail, Phone, MapPin, FileText } from "lucide-react"
+import { Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned } from "lucide-react"
 import { toast } from "sonner"
 
 export default function Profile() {
@@ -55,8 +56,54 @@ export default function Profile() {
         <Container>
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold">Profile</h1>
+              <div>
+                <h1 className="text-3xl font-bold">My Account</h1>
+                <p className="text-muted-foreground mt-1">Manage your profile, addresses, and orders</p>
+              </div>
               <Button variant="outline" onClick={handleLogout}>Logout</Button>
+            </div>
+
+            {/* Quick Links */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <Link href="/profile">
+                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="flex items-center gap-4 p-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Profile</h3>
+                      <p className="text-sm text-muted-foreground">Personal information</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/addresses">
+                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="flex items-center gap-4 p-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <MapPinned className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Addresses</h3>
+                      <p className="text-sm text-muted-foreground">Manage delivery addresses</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/orders">
+                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="flex items-center gap-4 p-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Package className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Orders</h3>
+                      <p className="text-sm text-muted-foreground">View order history</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

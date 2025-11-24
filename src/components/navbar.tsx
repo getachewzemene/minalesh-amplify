@@ -115,6 +115,8 @@ export function Navbar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => router.push('/profile')}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/addresses')}>Addresses</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/orders')}>Orders</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
                     {showWishlistAndCart && (
                       <>
