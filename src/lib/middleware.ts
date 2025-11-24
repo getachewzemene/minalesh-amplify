@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { UserRole } from '@prisma/client';
 import { getTokenFromRequest, getUserFromToken, hasRole } from './auth';
+import { UnauthorizedError, ForbiddenError } from './errors';
 
 /**
  * Middleware to verify authentication and extract user payload
@@ -59,4 +60,75 @@ export function withAdmin(request: Request) {
  */
 export function withVendorOrAdmin(request: Request) {
   return withRole(request, ['vendor', 'admin']);
+}
+
+/**
+ * Alternative middleware that throws errors instead of returning response objects.
+ * Use this with withApiLogger for cleaner error handling.
+ * 
+ * @example
+ * ```typescript
+ * import { withApiLogger } from '@/lib/api-logger';
+ * import { requireAuth } from '@/lib/middleware';
+ * 
+ * async function handler(request: Request) {
+ *   const payload = requireAuth(request);
+ *   // ... rest of handler
+ * }
+ * 
+ * export const GET = withApiLogger(handler);
+ * ```
+ */
+export function requireAuth(request: Request) {
+  const token = getTokenFromRequest(request);
+  const payload = getUserFromToken(token);
+
+  if (!payload) {
+    throw new UnauthorizedError('Authentication required');
+  }
+
+  return payload;
+}
+
+/**
+ * Alternative middleware that throws errors for role verification.
+ * Use this with withApiLogger for cleaner error handling.
+ * 
+ * @example
+ * ```typescript
+ * import { withApiLogger } from '@/lib/api-logger';
+ * import { requireRole } from '@/lib/middleware';
+ * 
+ * async function handler(request: Request) {
+ *   const payload = requireRole(request, 'admin');
+ *   // ... rest of handler
+ * }
+ * 
+ * export const GET = withApiLogger(handler);
+ * ```
+ */
+export function requireRole(request: Request, requiredRole: UserRole | UserRole[]) {
+  const payload = requireAuth(request);
+
+  if (!hasRole(payload.role, requiredRole)) {
+    throw new ForbiddenError('Insufficient permissions');
+  }
+
+  return payload;
+}
+
+/**
+ * Alternative middleware that throws errors for admin verification.
+ * Use this with withApiLogger for cleaner error handling.
+ */
+export function requireAdmin(request: Request) {
+  return requireRole(request, 'admin');
+}
+
+/**
+ * Alternative middleware that throws errors for vendor/admin verification.
+ * Use this with withApiLogger for cleaner error handling.
+ */
+export function requireVendorOrAdmin(request: Request) {
+  return requireRole(request, ['vendor', 'admin']);
 }
