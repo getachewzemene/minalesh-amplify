@@ -1,0 +1,45 @@
+name: Background Workers
+
+on:
+  schedule:
+    # Email queue - every 2 minutes
+    - cron: '*/2 * * * *'
+    # Webhook retry - every 10 minutes  
+    - cron: '*/10 * * * *'
+    # Inventory cleanup - every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  email-queue:
+    if: github.event.schedule == '*/2 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Email Queue
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f \
+            ${{ secrets.APP_URL }}/api/cron/process-email-queue
+
+  webhook-retry:
+    if: github.event.schedule == '*/10 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retry Failed Webhooks
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f \
+            ${{ secrets.APP_URL }}/api/cron/retry-webhooks
+
+  inventory-cleanup:
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup Inventory Reservations
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f \
+            ${{ secrets.APP_URL }}/api/cron/cleanup-reservations
