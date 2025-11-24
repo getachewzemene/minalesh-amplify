@@ -15,6 +15,11 @@ import { withApiLogger } from '@/lib/api-logger';
 import { requireAuth } from '@/lib/middleware';
 import { BadRequestError, NotFoundError, ForbiddenError } from '@/lib/errors';
 
+// =============================================================================
+// IMPORTANT: This is a DEMONSTRATION route only - uses mock data for examples
+// In production, replace this with actual database queries using Prisma
+// =============================================================================
+
 // Mock product database for demonstration
 const mockProducts = new Map([
   ['123', { id: '123', name: 'Example Product 1', price: 29.99, vendorId: 'vendor1' }],
@@ -81,12 +86,10 @@ async function patchHandler(
   }
 
   // Check if user is the vendor who owns this product
-  // NOTE: This is a mock example. In a real application, you would:
-  // 1. Get the user's profile to find their vendorId
-  // 2. Compare product.vendorId with user's actual vendorId
-  // Example: const profile = await prisma.profile.findUnique({ where: { userId: user.userId } });
-  //          const isOwner = profile?.id === product.vendorId;
-  const mockVendorId = 'vendor1'; // In real app: get from user profile
+  // ⚠️ MOCK CODE BELOW - Replace with actual implementation:
+  // const profile = await prisma.profile.findUnique({ where: { userId: user.userId } });
+  // const isOwner = profile?.id === product.vendorId;
+  const mockVendorId = 'vendor1'; // MOCK: In production, get from user's profile
   const isOwner = product.vendorId === mockVendorId;
 
   if (!isOwner) {
@@ -152,8 +155,9 @@ async function deleteHandler(
     throw new NotFoundError('Product not found', 'PRODUCT_NOT_FOUND', { productId: id });
   }
 
-  // Check ownership (see PATCH handler for explanation of mock data)
-  const mockVendorId = 'vendor1'; // In real app: get from user profile
+  // Check ownership
+  // ⚠️ MOCK CODE - See PATCH handler for production implementation example
+  const mockVendorId = 'vendor1'; // MOCK: In production, get from user's profile
   const isOwner = product.vendorId === mockVendorId;
 
   if (!isOwner) {
