@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cleanupExpiredReservations } from '@/lib/inventory';
+import { cleanupExpiredReservations } from '@/services/InventoryService';
 
 /**
  * GET /api/cron/cleanup-reservations

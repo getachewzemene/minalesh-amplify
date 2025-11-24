@@ -4,7 +4,7 @@ import {
   createReservation,
   getAvailableStock,
   releaseReservation,
-} from '@/lib/inventory';
+} from '@/services/InventoryService';
 import { z } from 'zod';
 
 const reserveSchema = z.object({

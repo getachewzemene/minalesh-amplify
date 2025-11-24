@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { withAdmin } from '@/lib/middleware';
 import { logApiRequest, logError, logEvent } from '@/lib/logger';
-import { invalidateCache } from '@/lib/cache';
+import * as ProductService from '@/services/ProductService';
 
 // Get all products for admin (with pagination and filtering)
 export async function GET(request: Request) {
@@ -10,7 +9,6 @@ export async function GET(request: Request) {
   if (error) return error;
 
   try {
-
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -18,63 +16,15 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') || '';
     const isActive = searchParams.get('isActive');
 
-    const skip = (page - 1) * limit;
-
-    // Build where clause
-    const where: any = {};
-    
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (category) {
-      where.category = { slug: category };
-    }
-
-    if (isActive !== null && isActive !== '') {
-      where.isActive = isActive === 'true';
-    }
-
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: {
-          vendor: {
-            select: {
-              displayName: true,
-              firstName: true,
-              lastName: true,
-              isVendor: true,
-              vendorStatus: true,
-            },
-          },
-          category: {
-            select: {
-              name: true,
-              slug: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.product.count({ where }),
-    ]);
-
-    return NextResponse.json({
-      products,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+    const result = await ProductService.getProducts({
+      page,
+      limit,
+      search,
+      category,
+      isActive: isActive !== null && isActive !== '' ? isActive === 'true' : null,
     });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
@@ -101,29 +51,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const product = await prisma.product.update({
-      where: { id },
-      data,
-      include: {
-        vendor: {
-          select: {
-            displayName: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        category: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
-      },
-    });
-
-    // Invalidate product caches
-    await invalidateCache(/^products:/, { prefix: 'products' });
-    await invalidateCache(/^search:/, { prefix: 'products' });
+    const product = await ProductService.updateProduct({ id, ...data });
 
     // Log the update event
     logEvent('product_updated', {
@@ -173,13 +101,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await prisma.product.delete({
-      where: { id },
-    });
-
-    // Invalidate product caches
-    await invalidateCache(/^products:/, { prefix: 'products' });
-    await invalidateCache(/^search:/, { prefix: 'products' });
+    await ProductService.deleteProduct(id);
 
     // Log the delete event
     logEvent('product_deleted', {
