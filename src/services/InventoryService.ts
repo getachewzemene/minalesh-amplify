@@ -5,7 +5,7 @@
  * Reservations expire after a configurable time period.
  */
 
-import prisma from './prisma';
+import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
 export const RESERVATION_TIMEOUT_MINUTES = 15;
