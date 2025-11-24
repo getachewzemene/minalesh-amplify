@@ -64,18 +64,21 @@ async function processWebhook(webhookEvent: {
       return { success: true };
     }
 
-    // For failed webhooks, we don't retry automatically
-    // They need manual intervention or the original payment provider to resend
-    // This worker is mainly for recovering from transient failures
+    // This worker primarily handles transient failures (network issues, service outages).
+    // For webhooks with business logic errors (amount mismatch, invalid data), 
+    // the original webhook handler should have already logged the error.
+    // These typically need manual review rather than automatic retry.
+    // This function can be extended to implement actual webhook reprocessing logic
+    // based on the webhook provider and type.
     
     logEvent('webhook_retry_skipped', {
       webhookId: webhookEvent.id,
       provider: webhookEvent.provider,
       orderId: webhookEvent.orderId,
-      reason: 'Manual retry required for failed payments',
+      reason: 'Webhook reprocessing requires provider-specific implementation',
     });
 
-    return { success: false, error: 'Manual retry required' };
+    return { success: false, error: 'Webhook reprocessing not implemented' };
   } catch (error) {
     logError(error, { operation: 'processWebhook', webhookId: webhookEvent.id });
     return {
@@ -147,9 +150,11 @@ export async function retryFailedWebhooks(batchSize = 10): Promise<{
  * Retry a specific webhook
  */
 async function retryWebhook(webhookId: string): Promise<boolean> {
+  let webhook: Awaited<ReturnType<typeof prisma.webhookEvent.findUnique>> | null = null;
+  
   try {
     // Get webhook event
-    const webhook = await prisma.webhookEvent.findUnique({
+    webhook = await prisma.webhookEvent.findUnique({
       where: { id: webhookId },
     });
 
@@ -229,14 +234,10 @@ async function retryWebhook(webhookId: string): Promise<boolean> {
       return false;
     }
   } catch (error) {
-    // Handle unexpected errors
+    // Handle unexpected errors - use webhook from outer scope if available
     logError(error, { operation: 'retryWebhook', webhookId });
     
-    // Update retry count and schedule next retry
-    const webhook = await prisma.webhookEvent.findUnique({
-      where: { id: webhookId },
-    });
-
+    // If we have the webhook from the initial fetch, use it to avoid duplicate query
     if (webhook) {
       const newRetryCount = webhook.retryCount + 1;
       const shouldRetry = newRetryCount < MAX_RETRY_ATTEMPTS;

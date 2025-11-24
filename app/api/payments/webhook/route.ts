@@ -319,22 +319,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, order: updated });
   } catch (err) {
     console.error('Webhook error:', err);
-    
-    // Try to update webhook event with error information if we have the ID
-    try {
-      // We need to get webhookEventId from the outer scope, but it might not be available
-      // Best effort to log the error
-      const body = await request.clone().json().catch(() => ({}));
-      const provider = body.provider || 'unknown';
-      
-      console.error('Failed webhook details:', {
-        provider,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    } catch (logError) {
-      // Ignore logging errors
-    }
-    
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
