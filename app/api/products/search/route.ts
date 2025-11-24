@@ -23,6 +23,11 @@ import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
  *           type: string
  *         description: Category slug
  *       - in: query
+ *         name: brand
+ *         schema:
+ *           type: string
+ *         description: Product brand
+ *       - in: query
  *         name: min_price
  *         schema:
  *           type: number
@@ -94,6 +99,7 @@ async function handler(request: Request) {
   const filters: SearchFilters = {
     query: searchParams.get('search') || undefined,
     categorySlug: searchParams.get('category') || undefined,
+    brand: searchParams.get('brand') || undefined,
     minPrice: searchParams.get('min_price') 
       ? parseFloat(searchParams.get('min_price')!)
       : undefined,
@@ -165,6 +171,7 @@ async function handler(request: Request) {
     filters: {
       query: filters.query,
       category: filters.categorySlug,
+      brand: filters.brand,
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
       rating: filters.minRating,
