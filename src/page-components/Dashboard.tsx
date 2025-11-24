@@ -70,6 +70,34 @@ import {
 import { formatCurrency } from "@/lib/utils"
 import heroImage from "@/assets/hero-marketplace.jpg"
 
+// TypeScript interfaces for API responses
+interface VendorStatement {
+  id: string;
+  statementNumber: string;
+  periodStart: string;
+  periodEnd: string;
+  totalSales: string | number;
+  commissionAmount: string | number;
+  payoutAmount: string | number;
+  createdAt: string;
+  payout?: {
+    status: string;
+    paidAt?: string;
+  } | null;
+}
+
+interface CommissionLedgerEntry {
+  id: string;
+  orderId: string;
+  saleAmount: string | number;
+  commissionRate: string | number;
+  commissionAmount: string | number;
+  vendorPayout: string | number;
+  status: string;
+  paidAt?: string | null;
+  createdAt: string;
+}
+
 const chartConfig = {
   sales: {
     label: "Sales",
@@ -144,8 +172,8 @@ export default function Dashboard() {
   })
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [statements, setStatements] = useState<any[]>([])
-  const [ledgerEntries, setLedgerEntries] = useState<any[]>([])
+  const [statements, setStatements] = useState<VendorStatement[]>([])
+  const [ledgerEntries, setLedgerEntries] = useState<CommissionLedgerEntry[]>([])
   const [loadingStatements, setLoadingStatements] = useState(false)
   const [loadingLedger, setLoadingLedger] = useState(false)
   const { toast } = useToast()
@@ -902,7 +930,7 @@ export default function Dashboard() {
                   ) : statements.length === 0 ? (
                     <EmptyState 
                       icon={FileText}
-                      message="No statements available"
+                      title="No statements available"
                       description="Your vendor statements will appear here once payouts are processed."
                     />
                   ) : (
@@ -920,7 +948,7 @@ export default function Dashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {statements.map((statement: any) => (
+                          {statements.map((statement: VendorStatement) => (
                             <tr key={statement.id} className="border-b hover:bg-muted/50">
                               <td className="py-3 font-mono text-sm">{statement.statementNumber}</td>
                               <td className="py-3 text-sm">
@@ -971,7 +999,7 @@ export default function Dashboard() {
                   ) : ledgerEntries.length === 0 ? (
                     <EmptyState 
                       icon={Receipt}
-                      message="No commission records"
+                      title="No commission records"
                       description="Your commission transactions will appear here when orders are completed."
                     />
                   ) : (
@@ -989,7 +1017,7 @@ export default function Dashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {ledgerEntries.map((entry: any) => (
+                          {ledgerEntries.map((entry: CommissionLedgerEntry) => (
                             <tr key={entry.id} className="border-b hover:bg-muted/50">
                               <td className="py-3 font-mono text-sm">{entry.orderId.slice(0, 8)}...</td>
                               <td className="text-right py-3">
