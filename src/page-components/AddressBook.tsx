@@ -10,6 +10,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { MapPin, Plus, Trash2, Edit, Check } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -402,12 +403,10 @@ export default function AddressBook() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id="isDefault"
                   checked={formData.isDefault}
-                  onChange={(e) => setFormData({...formData, isDefault: e.target.checked})}
-                  className="rounded border-gray-300"
+                  onCheckedChange={(checked) => setFormData({...formData, isDefault: checked === true})}
                 />
                 <Label htmlFor="isDefault" className="cursor-pointer">
                   Set as default address
