@@ -1021,7 +1021,7 @@ export default function Dashboard() {
                         <tbody>
                           {ledgerEntries.map((entry: CommissionLedgerEntry) => (
                             <tr key={entry.id} className="border-b hover:bg-muted/50">
-                              <td className="py-3 font-mono text-sm">{entry.orderId ? entry.orderId.slice(0, 8) : 'N/A'}...</td>
+                              <td className="py-3 font-mono text-sm">{entry.orderId ? entry.orderId.slice(0, 8) + '...' : 'N/A'}</td>
                               <td className="text-right py-3">
                                 {formatCurrency(Number(entry.saleAmount))}
                               </td>
