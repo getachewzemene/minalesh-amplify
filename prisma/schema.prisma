@@ -152,6 +152,7 @@ model Product {
   categoryId         String?           @map("category_id") @db.Uuid
   name               String
   slug               String            @unique
+  brand              String?
   description        String?
   shortDescription   String?           @map("short_description")
   price              Decimal           @db.Decimal(10, 2)

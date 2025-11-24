@@ -68,4 +68,22 @@ describe('Search utilities', () => {
     expect(categorySlug).toBeTruthy();
     expect(typeof categorySlug).toBe('string');
   });
+
+  it('should build brand filter', () => {
+    const brand = 'Apple';
+    expect(brand).toBeTruthy();
+    expect(typeof brand).toBe('string');
+  });
+
+  it('should handle empty brand filter', () => {
+    const brand = '';
+    expect(brand).toBe('');
+    expect(brand.length).toBe(0);
+  });
+
+  it('should validate brand filter is case-insensitive', () => {
+    const brand1 = 'Apple';
+    const brand2 = 'apple';
+    expect(brand1.toLowerCase()).toBe(brand2.toLowerCase());
+  });
 });

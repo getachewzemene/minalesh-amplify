@@ -25,6 +25,7 @@ import { formatCurrency } from "@/lib/utils";
 interface SearchFilters {
   query: string;
   category: string;
+  brand: string;
   priceRange: [number, number];
   rating: number;
   vendor: string;
@@ -38,6 +39,7 @@ interface SearchFilters {
 const defaultFilters: SearchFilters = {
   query: "",
   category: "all",
+  brand: "",
   priceRange: [0, 200000],
   rating: 0,
   vendor: "",
@@ -90,6 +92,7 @@ export function AdvancedSearch() {
   const countAppliedFilters = useCallback(() => {
     let count = 0;
     if (filters.category !== "all" && filters.category !== "") count++; // legacy + new pattern
+    if (filters.brand) count++;
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 200000) count++;
     if (filters.rating > 0) count++;
     if (filters.vendor) count++;
@@ -107,7 +110,7 @@ export function AdvancedSearch() {
 
 
   type FilterValue<K extends keyof SearchFilters> =
-    K extends 'query' | 'category' | 'vendor' | 'location' ? string :
+    K extends 'query' | 'category' | 'brand' | 'vendor' | 'location' ? string :
     K extends 'priceRange' ? [number, number] :
     K extends 'rating' ? number :
     K extends 'inStock' | 'hasAR' | 'isVerified' ? boolean :
@@ -123,6 +126,7 @@ export function AdvancedSearch() {
     
     if (filters.query) searchParams.set("search", filters.query);
     if (filters.category !== "all") searchParams.set("category", filters.category);
+    if (filters.brand) searchParams.set("brand", filters.brand);
     if (filters.priceRange[0] > 0) searchParams.set("min_price", filters.priceRange[0].toString());
     if (filters.priceRange[1] < 200000) searchParams.set("max_price", filters.priceRange[1].toString());
     if (filters.rating > 0) searchParams.set("rating", filters.rating.toString());
@@ -145,6 +149,9 @@ export function AdvancedSearch() {
     switch (filterKey) {
       case "category":
         updateFilter("category", "all");
+        break;
+      case "brand":
+        updateFilter("brand", "");
         break;
       case "priceRange":
         updateFilter("priceRange", [0, 200000]);
@@ -218,6 +225,16 @@ export function AdvancedSearch() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Brand */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Brand</label>
+                <Input
+                  placeholder="Search by brand name..."
+                  value={filters.brand}
+                  onChange={(e) => updateFilter("brand", e.target.value)}
+                />
               </div>
 
               {/* Price Range */}
@@ -356,6 +373,12 @@ export function AdvancedSearch() {
             <Badge variant="secondary" className="flex items-center gap-1">
               Category: {filters.category}
               <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter("category")} />
+            </Badge>
+          )}
+          {filters.brand && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Brand: {filters.brand}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter("brand")} />
             </Badge>
           )}
           {(filters.priceRange[0] > 0 || filters.priceRange[1] < 200000) && (

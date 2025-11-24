@@ -11,6 +11,7 @@ export interface SearchFilters {
   query?: string;
   categoryId?: string;
   categorySlug?: string;
+  brand?: string;
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
@@ -88,6 +89,14 @@ function buildWhereClause(filters: SearchFilters): Prisma.ProductWhereInput {
   } else if (filters.categorySlug) {
     where.category = {
       slug: filters.categorySlug,
+    };
+  }
+
+  // Brand filter
+  if (filters.brand) {
+    where.brand = {
+      contains: filters.brand,
+      mode: 'insensitive',
     };
   }
 
