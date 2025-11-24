@@ -9,7 +9,7 @@
  * scalability and CDN support.
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { 
   Package, 
   TrendingUp, 
@@ -26,7 +26,9 @@ import {
   Plus,
   Upload,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Receipt
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -142,6 +144,10 @@ export default function Dashboard() {
   })
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [statements, setStatements] = useState<any[]>([])
+  const [ledgerEntries, setLedgerEntries] = useState<any[]>([])
+  const [loadingStatements, setLoadingStatements] = useState(false)
+  const [loadingLedger, setLoadingLedger] = useState(false)
   const { toast } = useToast()
   const { user, profile, requestVendorVerification } = useAuth()
 
@@ -278,6 +284,76 @@ export default function Dashboard() {
       setUploadingImage(false);
     }
   };
+
+  // Fetch vendor statements
+  const fetchStatements = async () => {
+    if (!profile?.isVendor) return;
+    
+    setLoadingStatements(true);
+    try {
+      const response = await fetch('/api/vendors/statements?limit=20', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStatements(data.statements || []);
+      } else {
+        throw new Error('Failed to fetch statements');
+      }
+    } catch (error) {
+      console.error('Error fetching statements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load statements. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStatements(false);
+    }
+  };
+
+  // Fetch commission ledger
+  const fetchLedger = async () => {
+    if (!profile?.isVendor) return;
+    
+    setLoadingLedger(true);
+    try {
+      const response = await fetch('/api/vendors/ledger?limit=50', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setLedgerEntries(data.entries || []);
+      } else {
+        throw new Error('Failed to fetch ledger');
+      }
+    } catch (error) {
+      console.error('Error fetching ledger:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load commission ledger. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingLedger(false);
+    }
+  };
+
+  // Fetch data when switching tabs
+  useEffect(() => {
+    if (activeTab === 'statements' && statements.length === 0) {
+      fetchStatements();
+    }
+    if (activeTab === 'ledger' && ledgerEntries.length === 0) {
+      fetchLedger();
+    }
+  }, [activeTab]);
 
   // Show loading state
   if (loading) {
@@ -439,7 +515,7 @@ export default function Dashboard() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6 flex-wrap">
             <Button 
               variant={activeTab === 'overview' ? 'default' : 'outline'}
               onClick={() => setActiveTab('overview')}
@@ -462,6 +538,22 @@ export default function Dashboard() {
             >
               <Package className="h-4 w-4 mr-2" />
               Products
+            </Button>
+            <Button 
+              variant={activeTab === 'statements' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('statements')}
+              className={activeTab === 'statements' ? 'bg-primary hover:bg-primary/90' : ''}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Statements
+            </Button>
+            <Button 
+              variant={activeTab === 'ledger' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('ledger')}
+              className={activeTab === 'ledger' ? 'bg-primary hover:bg-primary/90' : ''}
+            >
+              <Receipt className="h-4 w-4 mr-2" />
+              Commission Ledger
             </Button>
           </div>
 
@@ -792,6 +884,148 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               )}
+            </div>
+          )}
+
+          {activeTab === 'statements' && (
+            <div className="space-y-6">
+              <Card className="bg-gradient-card shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Vendor Statements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loadingStatements ? (
+                    <LoadingState message="Loading statements..." />
+                  ) : statements.length === 0 ? (
+                    <EmptyState 
+                      icon={FileText}
+                      message="No statements available"
+                      description="Your vendor statements will appear here once payouts are processed."
+                    />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2">Statement #</th>
+                            <th className="text-left py-2">Period</th>
+                            <th className="text-right py-2">Total Sales</th>
+                            <th className="text-right py-2">Commission</th>
+                            <th className="text-right py-2">Payout Amount</th>
+                            <th className="text-center py-2">Status</th>
+                            <th className="text-center py-2">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {statements.map((statement: any) => (
+                            <tr key={statement.id} className="border-b hover:bg-muted/50">
+                              <td className="py-3 font-mono text-sm">{statement.statementNumber}</td>
+                              <td className="py-3 text-sm">
+                                {new Date(statement.periodStart).toLocaleDateString()} - {new Date(statement.periodEnd).toLocaleDateString()}
+                              </td>
+                              <td className="text-right py-3 font-medium">
+                                {formatCurrency(Number(statement.totalSales))}
+                              </td>
+                              <td className="text-right py-3 text-red-600">
+                                -{formatCurrency(Number(statement.commissionAmount))}
+                              </td>
+                              <td className="text-right py-3 font-bold text-green-600">
+                                {formatCurrency(Number(statement.payoutAmount))}
+                              </td>
+                              <td className="text-center py-3">
+                                <Badge 
+                                  className={statement.payout?.status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}
+                                >
+                                  {statement.payout?.status === 'paid' ? 'Paid' : 'Pending'}
+                                </Badge>
+                              </td>
+                              <td className="text-center py-3 text-sm text-muted-foreground">
+                                {new Date(statement.createdAt).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'ledger' && (
+            <div className="space-y-6">
+              <Card className="bg-gradient-card shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    Commission Ledger
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loadingLedger ? (
+                    <LoadingState message="Loading commission ledger..." />
+                  ) : ledgerEntries.length === 0 ? (
+                    <EmptyState 
+                      icon={Receipt}
+                      message="No commission records"
+                      description="Your commission transactions will appear here when orders are completed."
+                    />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2">Order ID</th>
+                            <th className="text-right py-2">Sale Amount</th>
+                            <th className="text-right py-2">Commission Rate</th>
+                            <th className="text-right py-2">Commission</th>
+                            <th className="text-right py-2">Your Payout</th>
+                            <th className="text-center py-2">Status</th>
+                            <th className="text-center py-2">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ledgerEntries.map((entry: any) => (
+                            <tr key={entry.id} className="border-b hover:bg-muted/50">
+                              <td className="py-3 font-mono text-sm">{entry.orderId.slice(0, 8)}...</td>
+                              <td className="text-right py-3">
+                                {formatCurrency(Number(entry.saleAmount))}
+                              </td>
+                              <td className="text-right py-3">
+                                {(Number(entry.commissionRate) * 100).toFixed(2)}%
+                              </td>
+                              <td className="text-right py-3 text-red-600">
+                                -{formatCurrency(Number(entry.commissionAmount))}
+                              </td>
+                              <td className="text-right py-3 font-bold text-green-600">
+                                {formatCurrency(Number(entry.vendorPayout))}
+                              </td>
+                              <td className="text-center py-3">
+                                <Badge 
+                                  className={
+                                    entry.status === 'paid' ? 'bg-green-500' : 
+                                    entry.status === 'recorded' ? 'bg-blue-500' : 
+                                    'bg-yellow-500'
+                                  }
+                                >
+                                  {entry.status}
+                                </Badge>
+                              </td>
+                              <td className="text-center py-3 text-sm text-muted-foreground">
+                                {entry.paidAt ? new Date(entry.paidAt).toLocaleDateString() : 'N/A'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
         </Container>
