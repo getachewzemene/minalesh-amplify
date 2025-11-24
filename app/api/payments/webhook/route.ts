@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { commitReservation } from '@/lib/inventory';
+import { commitReservation } from '@/services/InventoryService';
 import { createCommissionLedgerEntries } from '@/lib/vendor-payout';
 
 const schema = z.object({

@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/middleware';
-import { type PaymentMethod } from '@/types/payment';
 import { z } from 'zod';
-import { sendEmail, createOrderConfirmationEmail } from '@/lib/email';
+import * as OrderService from '@/services/OrderService';
 
 /**
  * @swagger
@@ -31,23 +29,7 @@ export async function GET(request: Request) {
   if (error) return error;
 
   try {
-
-    const orders = await prisma.order.findMany({
-      where: { userId: payload!.userId },
-      include: {
-        orderItems: {
-          select: {
-            id: true,
-            productName: true,
-            quantity: true,
-            price: true,
-            total: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const orders = await OrderService.getUserOrders(payload!.userId);
     return NextResponse.json(orders);
   } catch (error) {
     console.error('Error fetching orders:', error);
@@ -97,7 +79,6 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-
     const addressSchema = z.object({
       name: z.string().min(1).optional(),
       phone: z.string().min(7).optional(),
@@ -128,148 +109,25 @@ export async function POST(request: Request) {
     }
     const { items, paymentMethod, paymentMeta, shippingAddress, billingAddress } = parsed.data;
 
-    if (paymentMethod === 'TeleBirr') {
-      if (!paymentMeta?.phone || !paymentMeta?.reference) {
-        return NextResponse.json({ error: 'TeleBirr phone and reference required' }, { status: 400 });
-      }
-    }
-
-    // Fetch products to validate and get authoritative pricing/vendor
-    const productIds = items.map(i => i.id);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true, price: true, sku: true, vendorId: true }
-    });
-    if (products.length !== productIds.length) {
-      return NextResponse.json({ error: 'Some products were not found' }, { status: 400 });
-    }
-
-    // Build order totals and check inventory
-    let subtotal = 0;
-    const orderItemsData = items.map((ci) => {
-      const p = products.find(pp => pp.id === ci.id)!;
-      const qty = Math.max(1, Number(ci.quantity || 1));
-      const price = Number(p.price);
-      const lineTotal = price * qty;
-      subtotal += lineTotal;
-      return {
-        vendorId: p.vendorId,
-        productId: p.id,
-        productName: p.name,
-        productSku: p.sku ?? null,
-        quantity: qty,
-        price,
-        total: lineTotal,
-      };
+    // Call OrderService to create the order
+    const result = await OrderService.createOrder({
+      userId: payload!.userId,
+      items,
+      paymentMethod,
+      paymentMeta,
+      shippingAddress,
+      billingAddress,
     });
 
-    // Pre-check inventory availability to provide a helpful error before attempting transaction
-    const insufficient: { id: string; available: number; requested: number }[] = [];
-    for (const oi of orderItemsData) {
-      const prod = await prisma.product.findUnique({ where: { id: oi.productId }, select: { stockQuantity: true, name: true } });
-      const available = prod?.stockQuantity ?? 0;
-      if (oi.quantity > available) insufficient.push({ id: oi.productId, available, requested: oi.quantity });
+    if (!result.success) {
+      const statusCode = result.error?.includes('Insufficient stock') ? 409 : 400;
+      return NextResponse.json(
+        { error: result.error, details: result.details },
+        { status: statusCode }
+      );
     }
 
-    if (insufficient.length > 0) {
-      return NextResponse.json({ error: 'Insufficient stock', details: insufficient }, { status: 409 });
-    }
-
-    const orderNumber = `MIN-${Date.now()}`;
-
-    // Atomic transaction: decrement stock and create order. Use transaction callback to allow early abort.
-    // This provides immediate stock protection against overselling.
-    // For enhanced reservation system, use inventory reservation API before order creation.
-    try {
-      const result = await prisma.$transaction(async (tx) => {
-        // Decrement stock for each product conditionally
-        for (const oi of orderItemsData) {
-          const updateRes = await tx.product.updateMany({
-            where: { id: oi.productId, stockQuantity: { gte: oi.quantity } },
-            data: { stockQuantity: { decrement: oi.quantity } },
-          });
-          if (updateRes.count === 0) {
-            // Abort transaction if concurrent change caused insufficient stock
-            throw new Error(`Insufficient stock for product ${oi.productId}`);
-          }
-        }
-
-        const order = await tx.order.create({
-          data: {
-            userId: payload!.userId,
-            orderNumber,
-            status: 'pending',
-            paymentStatus: 'pending',
-            paymentMethod,
-            paymentReference: paymentMethod === 'TeleBirr' ? paymentMeta?.reference : undefined,
-            subtotal: subtotal.toFixed(2),
-            shippingAmount: '0.00',
-            taxAmount: '0.00',
-            discountAmount: '0.00',
-            totalAmount: subtotal.toFixed(2),
-            currency: 'ETB',
-            shippingAddress: shippingAddress || undefined,
-            billingAddress: billingAddress || undefined,
-            orderItems: {
-              create: orderItemsData.map(oi => ({
-                vendorId: oi.vendorId,
-                productId: oi.productId,
-                productName: oi.productName,
-                productSku: oi.productSku,
-                quantity: oi.quantity,
-                price: oi.price,
-                total: oi.total,
-              }))
-            },
-            notes: paymentMethod === 'TeleBirr' ? `TeleBirr Phone: ${paymentMeta?.phone}` : undefined,
-          },
-          include: { orderItems: true }
-        });
-
-        return order;
-      });
-
-      // Send order confirmation email
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: payload!.userId },
-          select: { email: true },
-        });
-
-        if (user) {
-          const orderItems = result.orderItems.map(item => ({
-            name: item.productName,
-            quantity: item.quantity,
-            price: Number(item.price),
-          }));
-
-          const emailTemplate = createOrderConfirmationEmail(
-            user.email,
-            result.orderNumber,
-            result.totalAmount.toString(),
-            orderItems
-          );
-          
-          // Send email asynchronously, don't block order creation
-          sendEmail(emailTemplate).catch(err => 
-            console.error('Failed to send order confirmation email:', err)
-          );
-        }
-      } catch (emailError) {
-        console.error('Error preparing order confirmation email:', emailError);
-        // Don't fail the order if email fails
-      }
-
-      return NextResponse.json({ success: true, order: result });
-    } catch (txErr: unknown) {
-      console.error('Transaction error creating order:', txErr);
-      const msg = txErr instanceof Error ? txErr.message : String(txErr);
-      // If transaction failed due to stock, return 409
-      if (msg.includes('Insufficient stock')) {
-        return NextResponse.json({ error: 'Insufficient stock (concurrent)', message: msg }, { status: 409 });
-      }
-      return NextResponse.json({ error: 'An error occurred' }, { status: 500 });
-    }
+    return NextResponse.json({ success: true, order: result.order });
   } catch (error) {
     console.error('Error creating order:', error);
     return NextResponse.json(

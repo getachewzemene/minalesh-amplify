@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import * as ProductService from '@/services/ProductService';
 
 /**
  * @swagger
@@ -49,10 +50,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const products = await prisma.product.findMany({
-      where: { vendorId: profile.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    const products = await ProductService.getVendorProducts(profile.id);
 
     return NextResponse.json(products);
   } catch (error) {
@@ -138,11 +136,9 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    const product = await prisma.product.create({
-      data: {
-        ...data,
-        vendorId: profile.id,
-      },
+    const product = await ProductService.createProduct({
+      ...data,
+      vendorId: profile.id,
     });
 
     return NextResponse.json(product);
@@ -225,25 +221,18 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Verify product ownership
-    const existingProduct = await prisma.product.findUnique({
-      where: { id },
-    });
-
-    if (!existingProduct || existingProduct.vendorId !== profile.id) {
-      return NextResponse.json(
-        { error: 'Product not found or not authorized' },
-        { status: 404 }
-      );
-    }
-
-    const product = await prisma.product.update({
-      where: { id },
-      data,
-    });
+    const product = await ProductService.updateProduct(
+      { id, ...data },
+      profile.id
+    );
 
     return NextResponse.json(product);
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'Product not found' || error.message.includes('not authorized')) {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+      }
+    }
     console.error('Error updating product:', error);
     return NextResponse.json(
       { error: 'An error occurred' },
@@ -312,24 +301,15 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Verify product ownership
-    const existingProduct = await prisma.product.findUnique({
-      where: { id },
-    });
-
-    if (!existingProduct || existingProduct.vendorId !== profile.id) {
-      return NextResponse.json(
-        { error: 'Product not found or not authorized' },
-        { status: 404 }
-      );
-    }
-
-    await prisma.product.delete({
-      where: { id },
-    });
+    await ProductService.deleteProduct(id, profile.id);
 
     return NextResponse.json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'Product not found' || error.message.includes('not authorized')) {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+      }
+    }
     console.error('Error deleting product:', error);
     return NextResponse.json(
       { error: 'An error occurred' },
