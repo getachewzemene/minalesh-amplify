@@ -2,11 +2,18 @@
  * Product Service
  * 
  * Handles product CRUD operations, vendor authorization,
- * and product queries.
+ * and product queries with Redis caching support.
  */
 
 import prisma from '@/lib/prisma';
-import { invalidateCache } from '@/lib/cache';
+import { invalidateCache, getOrSetCache } from '@/lib/cache';
+
+// Cache configuration constants
+const CACHE_PREFIX = 'products';
+const PRODUCT_TTL = 300; // 5 minutes
+const PRODUCT_STALE_TIME = 600; // 10 minutes stale-while-revalidate
+const VENDOR_PRODUCTS_TTL = 180; // 3 minutes
+const PRODUCT_LIST_TTL = 120; // 2 minutes
 
 export interface CreateProductRequest {
   name: string;
@@ -43,17 +50,30 @@ export interface ProductQueryOptions {
 }
 
 /**
- * Get vendor's products
+ * Get vendor's products with caching
  */
 export async function getVendorProducts(vendorId: string) {
-  return await prisma.product.findMany({
-    where: { vendorId },
-    orderBy: { createdAt: 'desc' },
-  });
+  const cacheKey = `vendor:${vendorId}:list`;
+  
+  return await getOrSetCache(
+    cacheKey,
+    async () => {
+      return await prisma.product.findMany({
+        where: { vendorId },
+        orderBy: { createdAt: 'desc' },
+      });
+    },
+    {
+      ttl: VENDOR_PRODUCTS_TTL,
+      staleTime: VENDOR_PRODUCTS_TTL * 2,
+      prefix: CACHE_PREFIX,
+      tags: ['products', `vendor:${vendorId}`],
+    }
+  );
 }
 
 /**
- * Get all products with pagination and filtering (admin)
+ * Get all products with pagination and filtering (admin) with caching
  */
 export async function getProducts(options: ProductQueryOptions) {
   const {
@@ -65,82 +85,98 @@ export async function getProducts(options: ProductQueryOptions) {
     vendorId,
   } = options;
 
-  const skip = (page - 1) * limit;
+  // Generate cache key based on query parameters
+  const cacheKey = `list:${JSON.stringify({ page, limit, search, category, isActive, vendorId })}`;
 
-  // Build where clause
-  const where: any = {};
-  
-  if (vendorId) {
-    where.vendorId = vendorId;
-  }
+  return await getOrSetCache(
+    cacheKey,
+    async () => {
+      const skip = (page - 1) * limit;
 
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
-      { sku: { contains: search, mode: 'insensitive' } },
-    ];
-  }
+      // Build where clause
+      const where: Record<string, unknown> = {};
+      
+      if (vendorId) {
+        where.vendorId = vendorId;
+      }
 
-  if (category) {
-    where.category = { slug: category };
-  }
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { sku: { contains: search, mode: 'insensitive' } },
+        ];
+      }
 
-  if (isActive !== null && isActive !== undefined) {
-    where.isActive = isActive;
-  }
+      if (category) {
+        where.category = { slug: category };
+      }
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: {
-        vendor: {
-          select: {
-            displayName: true,
-            firstName: true,
-            lastName: true,
-            isVendor: true,
-            vendorStatus: true,
+      if (isActive !== null && isActive !== undefined) {
+        where.isActive = isActive;
+      }
+
+      const [products, total] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          include: {
+            vendor: {
+              select: {
+                displayName: true,
+                firstName: true,
+                lastName: true,
+                isVendor: true,
+                vendorStatus: true,
+              },
+            },
+            category: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
           },
-        },
-        category: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit,
-    }),
-    prisma.product.count({ where }),
-  ]);
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+        prisma.product.count({ where }),
+      ]);
 
-  return {
-    products,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      return {
+        products,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     },
-  };
+    {
+      ttl: PRODUCT_LIST_TTL,
+      staleTime: PRODUCT_LIST_TTL * 2,
+      prefix: CACHE_PREFIX,
+      tags: ['products', 'list'],
+    }
+  );
 }
 
 /**
  * Create a new product
  */
 export async function createProduct(data: CreateProductRequest) {
-  // Note: Using type assertion here as Prisma types don't fully align with our request interface
-  // This is safe as the data structure matches the Product model
   const product = await prisma.product.create({
-    data: data as any,
+    // Type assertion needed as CreateProductRequest is a simplified interface
+    // that doesn't include all Prisma fields like slug generation
+    data: {
+      ...data,
+      slug: data.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+    },
   });
 
-  // Invalidate product caches
-  await invalidateCache(/^products:/, { prefix: 'products' });
-  await invalidateCache(/^search:/, { prefix: 'products' });
+  // Invalidate product list caches and vendor-specific caches
+  await invalidateProductCaches(data.vendorId);
 
   return product;
 }
@@ -185,9 +221,8 @@ export async function updateProduct(data: UpdateProductRequest, requestingVendor
     },
   });
 
-  // Invalidate product caches
-  await invalidateCache(/^products:/, { prefix: 'products' });
-  await invalidateCache(/^search:/, { prefix: 'products' });
+  // Invalidate product caches including specific product cache
+  await invalidateProductCaches(existingProduct.vendorId, id);
 
   return product;
 }
@@ -214,35 +249,68 @@ export async function deleteProduct(id: string, requestingVendorId?: string) {
     where: { id },
   });
 
-  // Invalidate product caches
-  await invalidateCache(/^products:/, { prefix: 'products' });
-  await invalidateCache(/^search:/, { prefix: 'products' });
+  // Invalidate product caches including specific product cache
+  await invalidateProductCaches(existingProduct.vendorId, id);
 
   return { success: true };
 }
 
 /**
- * Get product by ID
+ * Helper function to invalidate product-related caches
+ */
+async function invalidateProductCaches(vendorId?: string, productId?: string): Promise<void> {
+  // Invalidate all product list caches
+  await invalidateCache(/^products:list:/, { prefix: '' });
+  
+  // Invalidate search caches
+  await invalidateCache(/^products:search:/, { prefix: '' });
+  
+  // Invalidate vendor-specific product cache
+  if (vendorId) {
+    await invalidateCache(`vendor:${vendorId}:list`, { prefix: CACHE_PREFIX });
+  }
+  
+  // Invalidate specific product cache
+  if (productId) {
+    await invalidateCache(`id:${productId}`, { prefix: CACHE_PREFIX });
+  }
+}
+
+/**
+ * Get product by ID with caching
  */
 export async function getProductById(id: string) {
-  return await prisma.product.findUnique({
-    where: { id },
-    include: {
-      vendor: {
-        select: {
-          displayName: true,
-          firstName: true,
-          lastName: true,
+  const cacheKey = `id:${id}`;
+  
+  return await getOrSetCache(
+    cacheKey,
+    async () => {
+      return await prisma.product.findUnique({
+        where: { id },
+        include: {
+          vendor: {
+            select: {
+              displayName: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          category: {
+            select: {
+              name: true,
+              slug: true,
+            },
+          },
         },
-      },
-      category: {
-        select: {
-          name: true,
-          slug: true,
-        },
-      },
+      });
     },
-  });
+    {
+      ttl: PRODUCT_TTL,
+      staleTime: PRODUCT_STALE_TIME,
+      prefix: CACHE_PREFIX,
+      tags: ['products', `product:${id}`],
+    }
+  );
 }
 
 /**

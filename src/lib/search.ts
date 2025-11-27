@@ -6,6 +6,14 @@
 
 import prisma from './prisma';
 import { Prisma } from '@prisma/client';
+import { getOrSetCache } from './cache';
+
+// Cache configuration for search
+const SEARCH_CACHE_PREFIX = 'search';
+const SUGGESTIONS_TTL = 120; // 2 minutes
+const SUGGESTIONS_STALE_TIME = 300; // 5 minutes
+const FACETS_TTL = 180; // 3 minutes
+const FACETS_STALE_TIME = 360; // 6 minutes
 
 export interface SearchFilters {
   query?: string;
@@ -265,50 +273,64 @@ export async function searchProducts(options: SearchOptions): Promise<SearchResu
 }
 
 /**
- * Get search facets (aggregations for filters)
+ * Get search facets (aggregations for filters) with caching
  */
 export async function getSearchFacets(filters: SearchFilters) {
-  const where = buildWhereClause(filters);
+  // Generate cache key based on filters
+  const cacheKey = `facets:${JSON.stringify(filters)}`;
 
-  const [
-    priceRange,
-    categoryFacets,
-    ratingFacets,
-  ] = await Promise.all([
-    // Get price range
-    prisma.product.aggregate({
-      where,
-      _min: { price: true },
-      _max: { price: true },
-    }),
-    
-    // Get category counts
-    prisma.product.groupBy({
-      where,
-      by: ['categoryId'],
-      _count: true,
-    }),
-    
-    // Get rating distribution
-    prisma.product.groupBy({
-      where,
-      by: ['ratingAverage'],
-      _count: true,
-    }),
-  ]);
+  return await getOrSetCache(
+    cacheKey,
+    async () => {
+      const where = buildWhereClause(filters);
 
-  return {
-    priceRange: {
-      min: priceRange._min.price,
-      max: priceRange._max.price,
+      const [
+        priceRange,
+        categoryFacets,
+        ratingFacets,
+      ] = await Promise.all([
+        // Get price range
+        prisma.product.aggregate({
+          where,
+          _min: { price: true },
+          _max: { price: true },
+        }),
+        
+        // Get category counts
+        prisma.product.groupBy({
+          where,
+          by: ['categoryId'],
+          _count: true,
+        }),
+        
+        // Get rating distribution
+        prisma.product.groupBy({
+          where,
+          by: ['ratingAverage'],
+          _count: true,
+        }),
+      ]);
+
+      return {
+        priceRange: {
+          min: priceRange._min.price,
+          max: priceRange._max.price,
+        },
+        categories: categoryFacets,
+        ratings: ratingFacets,
+      };
     },
-    categories: categoryFacets,
-    ratings: ratingFacets,
-  };
+    {
+      ttl: FACETS_TTL,
+      staleTime: FACETS_STALE_TIME,
+      prefix: SEARCH_CACHE_PREFIX,
+      tags: ['search', 'facets'],
+    }
+  );
 }
 
 /**
- * Get search suggestions based on partial query
+ * Get search suggestions based on partial query with caching
  */
 export async function getSearchSuggestions(
   query: string,
@@ -318,22 +340,36 @@ export async function getSearchSuggestions(
     return [];
   }
 
-  const products = await prisma.product.findMany({
-    where: {
-      isActive: true,
-      name: {
-        contains: query,
-        mode: 'insensitive',
-      },
-    },
-    select: {
-      name: true,
-    },
-    take: limit,
-    orderBy: {
-      viewCount: 'desc',
-    },
-  });
+  const normalizedQuery = query.trim().toLowerCase();
+  const cacheKey = `suggestions:${normalizedQuery}:${limit}`;
 
-  return products.map((p) => p.name);
+  return await getOrSetCache(
+    cacheKey,
+    async () => {
+      const products = await prisma.product.findMany({
+        where: {
+          isActive: true,
+          name: {
+            contains: normalizedQuery,
+            mode: 'insensitive',
+          },
+        },
+        select: {
+          name: true,
+        },
+        take: limit,
+        orderBy: {
+          viewCount: 'desc',
+        },
+      });
+
+      return products.map((p) => p.name);
+    },
+    {
+      ttl: SUGGESTIONS_TTL,
+      staleTime: SUGGESTIONS_STALE_TIME,
+      prefix: SEARCH_CACHE_PREFIX,
+      tags: ['search', 'suggestions'],
+    }
+  );
 }
