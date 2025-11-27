@@ -65,12 +65,13 @@ const mockProduct = {
 
 export default function Product() {
   const params = useParams()
-  const productId = params?.id as string || mockProduct.id
+  const productId = params?.id as string
   
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isOffline, setIsOffline] = useState(false)
   const [isUsingCache, setIsUsingCache] = useState(false)
+  const [displayProduct, setDisplayProduct] = useState(mockProduct)
   const { addToCart, addToWishlist } = useShop()
 
   // Handle online/offline status
@@ -92,21 +93,21 @@ export default function Product() {
   // Cache product for offline viewing
   useEffect(() => {
     const cacheCurrentProduct = async () => {
-      // Cache the mock product (or fetched product) for offline use
+      // Cache the current product for offline use
       const productToCache: Omit<CachedProduct, 'cachedAt'> = {
-        id: mockProduct.id,
-        name: mockProduct.name,
-        price: mockProduct.price,
-        originalPrice: mockProduct.originalPrice,
-        rating: mockProduct.rating,
-        reviews: mockProduct.reviews,
-        image: mockProduct.images[0]?.src || '',
-        category: mockProduct.category,
-        vendor: mockProduct.vendor.name,
-        isVerifiedVendor: mockProduct.vendor.isVerified,
+        id: displayProduct.id,
+        name: displayProduct.name,
+        price: displayProduct.price,
+        originalPrice: displayProduct.originalPrice,
+        rating: displayProduct.rating,
+        reviews: displayProduct.reviews,
+        image: displayProduct.images[0]?.src || '',
+        category: displayProduct.category,
+        vendor: displayProduct.vendor.name,
+        isVerifiedVendor: displayProduct.vendor.isVerified,
         hasAR: true,
-        description: mockProduct.description,
-        stockQuantity: mockProduct.stockCount,
+        description: displayProduct.description,
+        stockQuantity: displayProduct.stockCount,
       }
       
       await cacheProduct(productToCache)
@@ -116,18 +117,33 @@ export default function Product() {
     if (isOnline()) {
       cacheCurrentProduct()
     }
-  }, [productId])
+  }, [displayProduct])
 
-  // Check if we need to load from cache when offline
+  // Load from cache when offline
   useEffect(() => {
     const loadCachedProduct = async () => {
-      if (!isOnline()) {
+      if (!isOnline() && productId) {
         const cached = await getCachedProduct(productId)
         if (cached) {
           setIsUsingCache(true)
-          // In a real implementation, we would update the product state
-          // with the cached data. Since we're using mock data here,
-          // we just show the indicator.
+          // Update display with cached data
+          setDisplayProduct(prev => ({
+            ...prev,
+            id: cached.id,
+            name: cached.name,
+            price: cached.price,
+            originalPrice: cached.originalPrice,
+            rating: cached.rating,
+            reviews: cached.reviews,
+            description: cached.description || prev.description,
+            stockCount: cached.stockQuantity || prev.stockCount,
+            category: cached.category,
+            vendor: {
+              ...prev.vendor,
+              name: cached.vendor,
+              isVerified: cached.isVerifiedVendor ?? prev.vendor.isVerified,
+            },
+          }))
         }
       } else {
         setIsUsingCache(false)
@@ -156,14 +172,14 @@ export default function Product() {
             <div className="space-y-4">
               <div className="aspect-square overflow-hidden rounded-lg bg-muted">
                 <img
-                  src={mockProduct.images[selectedImage].src}
-                  alt={mockProduct.name}
+                  src={displayProduct.images[selectedImage].src}
+                  alt={displayProduct.name}
                   className="w-full h-full object-cover"
                 />
               </div>
               
               <div className="grid grid-cols-4 gap-2">
-                {mockProduct.images.map((image: any, index: number) => (
+                {displayProduct.images.map((image: any, index: number) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -173,7 +189,7 @@ export default function Product() {
                   >
                     <img
                       src={image.src}
-                      alt={`${mockProduct.name} view ${index + 1}`}
+                      alt={`${displayProduct.name} view ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -185,9 +201,9 @@ export default function Product() {
             <div className="space-y-6">
               <div>
                 <Badge variant="outline" className="mb-2">
-                  {mockProduct.category}
+                  {displayProduct.category}
                 </Badge>
-                <h1 className="text-3xl font-bold mb-2">{mockProduct.name}</h1>
+                <h1 className="text-3xl font-bold mb-2">{displayProduct.name}</h1>
                 
                 {/* Rating */}
                 <div className="flex items-center gap-2 mb-4">
@@ -196,7 +212,7 @@ export default function Product() {
                       <Star
                         key={i}
                         className={`h-4 w-4 ${
-                          i < Math.floor(mockProduct.rating)
+                          i < Math.floor(displayProduct.rating)
                             ? "fill-yellow-400 text-yellow-400"
                             : "text-gray-300"
                         }`}
@@ -204,23 +220,23 @@ export default function Product() {
                     ))}
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {mockProduct.rating} ({mockProduct.reviews} reviews)
+                    {displayProduct.rating} ({displayProduct.reviews} reviews)
                   </span>
                 </div>
 
                 {/* Price */}
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-3xl font-bold text-primary">
-                    {formatCurrency(mockProduct.price)}
+                    {formatCurrency(displayProduct.price)}
                   </span>
-                  {mockProduct.originalPrice && (
+                  {displayProduct.originalPrice && (
                     <span className="text-xl text-muted-foreground line-through">
-                      {formatCurrency(mockProduct.originalPrice)}
+                      {formatCurrency(displayProduct.originalPrice)}
                     </span>
                   )}
-                  {mockProduct.originalPrice && (
+                  {displayProduct.originalPrice && (
                     <Badge variant="destructive">
-                      {Math.round(((mockProduct.originalPrice - mockProduct.price) / mockProduct.originalPrice) * 100)}% OFF
+                      {Math.round(((displayProduct.originalPrice - displayProduct.price) / displayProduct.originalPrice) * 100)}% OFF
                     </Badge>
                   )}
                 </div>
@@ -231,8 +247,8 @@ export default function Product() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{mockProduct.vendor.name}</h3>
-                      {mockProduct.vendor.isVerified && (
+                      <h3 className="font-semibold">{displayProduct.vendor.name}</h3>
+                      {displayProduct.vendor.isVerified && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                           Verified
                         </span>
@@ -240,7 +256,7 @@ export default function Product() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      {mockProduct.vendor.rating} • {mockProduct.vendor.totalSales} sales
+                      {displayProduct.vendor.rating} • {displayProduct.vendor.totalSales} sales
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
@@ -251,11 +267,11 @@ export default function Product() {
 
               {/* Stock Status */}
               <div className="flex items-center gap-2">
-                {mockProduct.inStock ? (
+                {displayProduct.inStock ? (
                   <>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-green-600">
-                      In Stock ({mockProduct.stockCount} available)
+                      In Stock ({displayProduct.stockCount} available)
                     </span>
                   </>
                 ) : (
@@ -295,12 +311,12 @@ export default function Product() {
                   <Button 
                     className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
                     size="lg"
-                    onClick={() => addToCart({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0].src, category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}
+                    onClick={() => addToCart({ id: displayProduct.id, name: displayProduct.name, price: displayProduct.price, image: displayProduct.images[0].src, category: displayProduct.category, vendor: displayProduct.vendor.name, hasAR: true })}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
                     Add to Cart
                   </Button>
-                  <Button variant="outline" size="lg" aria-label="Add to wishlist" onClick={() => addToWishlist({ id: mockProduct.id, name: mockProduct.name, price: mockProduct.price, image: mockProduct.images[0].src, category: mockProduct.category, vendor: mockProduct.vendor.name, hasAR: true })}>
+                  <Button variant="outline" size="lg" aria-label="Add to wishlist" onClick={() => addToWishlist({ id: displayProduct.id, name: displayProduct.name, price: displayProduct.price, image: displayProduct.images[0].src, category: displayProduct.category, vendor: displayProduct.vendor.name, hasAR: true })}>
                     <Heart className="h-5 w-5" />
                   </Button>
                   <Button variant="outline" size="lg">
@@ -331,8 +347,8 @@ export default function Product() {
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Try It On</h2>
             <ARViewer 
-              productType={mockProduct.productType}
-              productName={mockProduct.name}
+              productType={displayProduct.productType}
+              productName={displayProduct.name}
             />
           </div>
 
@@ -341,12 +357,12 @@ export default function Product() {
             <div>
               <h2 className="text-2xl font-bold mb-4">Description</h2>
               <p className="text-muted-foreground leading-relaxed">
-                {mockProduct.description}
+                {displayProduct.description}
               </p>
               
               <h3 className="text-lg font-semibold mt-6 mb-3">Key Features</h3>
               <ul className="space-y-2">
-                {mockProduct.features.map((feature, index) => (
+                {displayProduct.features.map((feature, index) => (
                   <li key={index} className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
                     <span className="text-sm">{feature}</span>
@@ -358,7 +374,7 @@ export default function Product() {
             <div>
               <h2 className="text-2xl font-bold mb-4">Specifications</h2>
               <div className="space-y-3">
-                {Object.entries(mockProduct.specifications).map(([key, value]) => (
+                {Object.entries(displayProduct.specifications).map(([key, value]) => (
                   <div key={key} className="flex justify-between py-2 border-b border-border last:border-0">
                     <span className="font-medium">{key}</span>
                     <span className="text-muted-foreground">{value}</span>
@@ -370,7 +386,7 @@ export default function Product() {
 
           {/* Reviews Section */}
           <div className="mt-12">
-            <ReviewsSection productId={mockProduct.id} />
+            <ReviewsSection productId={displayProduct.id} />
           </div>
         </Container>
       </main>

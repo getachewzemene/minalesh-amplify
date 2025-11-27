@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
+  cacheProduct,
   cacheProducts, 
   getAllCachedProducts, 
   getCachedProduct,
@@ -279,7 +280,7 @@ export function useOfflineProduct(
       setIsUsingCache(false);
       
       // Cache the product for offline use
-      await cacheProducts([transformedProduct]);
+      await cacheProduct(transformedProduct);
       
     } catch (err) {
       console.error('Failed to fetch product:', err);

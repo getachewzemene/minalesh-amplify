@@ -50,11 +50,46 @@ interface Product {
   originalPrice?: number
   rating: number
   reviews: number
-  image: any
+  image: { src: string } | typeof phoneImg
   category: string
   hasAR?: boolean
   vendor: string
   isVerifiedVendor?: boolean
+}
+
+// API response interfaces for better type safety
+interface ApiProduct {
+  id: string | number
+  name: string
+  price: string | number
+  salePrice?: string | number
+  ratingAverage?: string | number
+  ratingCount?: number
+  images?: string[]
+  category?: { name?: string }
+  vendor?: { displayName?: string; vendorStatus?: string }
+}
+
+/**
+ * Transforms API product data to the frontend Product interface
+ */
+function transformApiProduct(p: ApiProduct): Product {
+  const images = p.images || []
+  const firstImage = images.length > 0 ? images[0] : null
+  
+  return {
+    id: String(p.id),
+    name: String(p.name),
+    price: parseFloat(String(p.price)),
+    originalPrice: p.salePrice ? parseFloat(String(p.salePrice)) : undefined,
+    rating: parseFloat(String(p.ratingAverage || 0)),
+    reviews: p.ratingCount || 0,
+    image: firstImage ? { src: firstImage } : phoneImg,
+    category: p.category?.name || 'Uncategorized',
+    hasAR: false,
+    vendor: p.vendor?.displayName || 'Unknown',
+    isVerifiedVendor: p.vendor?.vendorStatus === 'approved'
+  }
 }
 
 const mockProducts: Product[] = [
@@ -311,19 +346,7 @@ function ProductsContent() {
             const data = await response.json()
             
             // Transform backend data to match Product interface
-            const transformedProducts = data.products.map((p: Record<string, unknown>) => ({
-              id: p.id,
-              name: p.name,
-              price: parseFloat(String(p.price)),
-              originalPrice: p.salePrice ? parseFloat(String(p.salePrice)) : undefined,
-              rating: parseFloat(String((p.ratingAverage as number) || 0)),
-              reviews: (p.ratingCount as number) || 0,
-              image: (p.images as string[])?.length > 0 && (p.images as string[])[0] ? { src: (p.images as string[])[0] } : phoneImg,
-              category: (p.category as { name?: string })?.name || 'Uncategorized',
-              hasAR: false, // TODO: Add hasAR field to backend
-              vendor: (p.vendor as { displayName?: string })?.displayName || 'Unknown',
-              isVerifiedVendor: (p.vendor as { vendorStatus?: string })?.vendorStatus === 'approved'
-            }))
+            const transformedProducts = data.products.map((p: ApiProduct) => transformApiProduct(p))
             
             const productsToSet = transformedProducts.length > 0 ? transformedProducts : mockProducts
             setProducts(productsToSet)
@@ -385,19 +408,7 @@ function ProductsContent() {
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        const transformedProducts = data.products.map((p: Record<string, unknown>) => ({
-          id: p.id,
-          name: p.name,
-          price: parseFloat(String(p.price)),
-          originalPrice: p.salePrice ? parseFloat(String(p.salePrice)) : undefined,
-          rating: parseFloat(String((p.ratingAverage as number) || 0)),
-          reviews: (p.ratingCount as number) || 0,
-          image: (p.images as string[])?.length > 0 && (p.images as string[])[0] ? { src: (p.images as string[])[0] } : phoneImg,
-          category: (p.category as { name?: string })?.name || 'Uncategorized',
-          hasAR: false,
-          vendor: (p.vendor as { displayName?: string })?.displayName || 'Unknown',
-          isVerifiedVendor: (p.vendor as { vendorStatus?: string })?.vendorStatus === 'approved'
-        }))
+        const transformedProducts = data.products.map((p: ApiProduct) => transformApiProduct(p))
         
         const productsToSet = transformedProducts.length > 0 ? transformedProducts : mockProducts
         setProducts(productsToSet)
