@@ -5,9 +5,10 @@
  * 
  * Implements server-side search and filtering through the /api/products/search endpoint.
  * Products are fetched dynamically based on URL parameters from the AdvancedSearch component.
+ * Supports offline viewing of previously fetched products using IndexedDB caching.
  */
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,13 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { LoadingState, ProductCardSkeleton } from "@/components/ui/loading-state"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { OfflineIndicator } from "@/components/ui/offline-indicator"
+import { 
+  cacheProducts, 
+  getAllCachedProducts, 
+  isOnline,
+  type CachedProduct 
+} from "@/lib/offline-cache"
 import phoneImg from "@/assets/products/phone.jpg"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 import earbudsImg from "@/assets/products/earbuds.jpg"
@@ -198,6 +206,77 @@ function ProductsContent() {
   const [products, setProducts] = useState<Product[]>(mockProducts)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isUsingCache, setIsUsingCache] = useState(false)
+  const [isOffline, setIsOffline] = useState(false)
+
+  // Handle online/offline status changes
+  useEffect(() => {
+    setIsOffline(!isOnline())
+    
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  // Load cached products for offline use
+  const loadCachedProducts = useCallback(async () => {
+    try {
+      const cachedProducts = await getAllCachedProducts()
+      if (cachedProducts.length > 0) {
+        // Transform cached products to match Product interface
+        const transformedProducts: Product[] = cachedProducts.map((p: CachedProduct) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          originalPrice: p.originalPrice,
+          rating: p.rating,
+          reviews: p.reviews,
+          image: p.image ? { src: p.image } : phoneImg,
+          category: p.category,
+          hasAR: p.hasAR,
+          vendor: p.vendor,
+          isVerifiedVendor: p.isVerifiedVendor
+        }))
+        setProducts(transformedProducts)
+        setIsUsingCache(true)
+        setError(null)
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('Failed to load cached products:', err)
+      return false
+    }
+  }, [])
+
+  // Cache products for offline use
+  const cacheProductsForOffline = useCallback(async (productsToCache: Product[]) => {
+    try {
+      const productsForCache = productsToCache.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        originalPrice: p.originalPrice,
+        rating: p.rating,
+        reviews: p.reviews,
+        image: typeof p.image === 'string' ? p.image : (p.image?.src || ''),
+        category: p.category,
+        vendor: p.vendor,
+        isVerifiedVendor: p.isVerifiedVendor,
+        hasAR: p.hasAR
+      }))
+      await cacheProducts(productsForCache)
+    } catch (err) {
+      console.error('Failed to cache products:', err)
+    }
+  }, [])
 
   // Fetch products when search parameters change
   useEffect(() => {
@@ -208,10 +287,23 @@ function ProductsContent() {
         params.append(key, value)
       })
       
+      // If offline, load from cache
+      if (!isOnline()) {
+        setLoading(true)
+        const loaded = await loadCachedProducts()
+        if (!loaded) {
+          setError('You are offline. No cached products available.')
+          setProducts([])
+        }
+        setLoading(false)
+        return
+      }
+      
       // Only fetch if there are search parameters, otherwise use mock data
       if (params.toString()) {
         setLoading(true)
         setError(null)
+        setIsUsingCache(false)
         
         try {
           const response = await fetch(`/api/products/search?${params.toString()}`)
@@ -219,40 +311,108 @@ function ProductsContent() {
             const data = await response.json()
             
             // Transform backend data to match Product interface
-            const transformedProducts = data.products.map((p: any) => ({
+            const transformedProducts = data.products.map((p: Record<string, unknown>) => ({
               id: p.id,
               name: p.name,
-              price: parseFloat(p.price),
-              originalPrice: p.salePrice ? parseFloat(p.salePrice) : undefined,
-              rating: parseFloat(p.ratingAverage || 0),
-              reviews: p.ratingCount || 0,
-              image: p.images && Array.isArray(p.images) && p.images[0] ? { src: p.images[0] } : phoneImg,
-              category: p.category?.name || 'Uncategorized',
+              price: parseFloat(String(p.price)),
+              originalPrice: p.salePrice ? parseFloat(String(p.salePrice)) : undefined,
+              rating: parseFloat(String((p.ratingAverage as number) || 0)),
+              reviews: (p.ratingCount as number) || 0,
+              image: (p.images as string[])?.length > 0 && (p.images as string[])[0] ? { src: (p.images as string[])[0] } : phoneImg,
+              category: (p.category as { name?: string })?.name || 'Uncategorized',
               hasAR: false, // TODO: Add hasAR field to backend
-              vendor: p.vendor?.displayName || 'Unknown',
-              isVerifiedVendor: p.vendor?.vendorStatus === 'approved'
+              vendor: (p.vendor as { displayName?: string })?.displayName || 'Unknown',
+              isVerifiedVendor: (p.vendor as { vendorStatus?: string })?.vendorStatus === 'approved'
             }))
             
-            setProducts(transformedProducts.length > 0 ? transformedProducts : mockProducts)
+            const productsToSet = transformedProducts.length > 0 ? transformedProducts : mockProducts
+            setProducts(productsToSet)
+            
+            // Cache products for offline use
+            await cacheProductsForOffline(productsToSet)
           } else {
-            setError('Failed to fetch products')
-            setProducts(mockProducts)
+            // If fetch fails, try to load from cache
+            const loaded = await loadCachedProducts()
+            if (!loaded) {
+              setError('Failed to fetch products')
+              setProducts(mockProducts)
+            }
           }
         } catch (err) {
           console.error('Error fetching products:', err)
-          setError('An error occurred while fetching products')
-          setProducts(mockProducts)
+          // If fetch fails, try to load from cache
+          const loaded = await loadCachedProducts()
+          if (!loaded) {
+            setError('An error occurred while fetching products')
+            setProducts(mockProducts)
+          } else {
+            setError('Unable to fetch latest products. Showing cached version.')
+          }
         } finally {
           setLoading(false)
         }
       } else {
-        // No search parameters, use mock data
+        // No search parameters, use mock data and cache it
         setProducts(mockProducts)
+        await cacheProductsForOffline(mockProducts)
       }
     }
     
     fetchProducts()
-  }, [searchParams])
+  }, [searchParams, loadCachedProducts, cacheProductsForOffline])
+
+  // Refresh products handler for OfflineIndicator
+  const handleRefresh = useCallback(async () => {
+    if (!isOnline()) {
+      toast.error("You're offline. Please connect to the internet to refresh.")
+      return
+    }
+    
+    setLoading(true)
+    setError(null)
+    setIsUsingCache(false)
+    
+    try {
+      const params = new URLSearchParams()
+      searchParams.forEach((value, key) => {
+        params.append(key, value)
+      })
+      
+      const url = params.toString() 
+        ? `/api/products/search?${params.toString()}` 
+        : '/api/products/search'
+      
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        const transformedProducts = data.products.map((p: Record<string, unknown>) => ({
+          id: p.id,
+          name: p.name,
+          price: parseFloat(String(p.price)),
+          originalPrice: p.salePrice ? parseFloat(String(p.salePrice)) : undefined,
+          rating: parseFloat(String((p.ratingAverage as number) || 0)),
+          reviews: (p.ratingCount as number) || 0,
+          image: (p.images as string[])?.length > 0 && (p.images as string[])[0] ? { src: (p.images as string[])[0] } : phoneImg,
+          category: (p.category as { name?: string })?.name || 'Uncategorized',
+          hasAR: false,
+          vendor: (p.vendor as { displayName?: string })?.displayName || 'Unknown',
+          isVerifiedVendor: (p.vendor as { vendorStatus?: string })?.vendorStatus === 'approved'
+        }))
+        
+        const productsToSet = transformedProducts.length > 0 ? transformedProducts : mockProducts
+        setProducts(productsToSet)
+        await cacheProductsForOffline(productsToSet)
+        toast.success("Products refreshed successfully!")
+      } else {
+        throw new Error('Failed to fetch products')
+      }
+    } catch (err) {
+      console.error('Error refreshing products:', err)
+      toast.error("Failed to refresh products.")
+    } finally {
+      setLoading(false)
+    }
+  }, [searchParams, cacheProductsForOffline])
 
   const handleAddToCart = (product: Product) => {
     addToCart({
@@ -289,24 +449,27 @@ function ProductsContent() {
             <AdvancedSearch />
           </div>
           
+          {/* Offline/Cache indicator */}
+          <OfflineIndicator 
+            isUsingCache={isUsingCache} 
+            onRefresh={handleRefresh}
+            className="mb-4"
+          />
+          
           {loading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <ProductCardSkeleton count={8} />
             </div>
           )}
           
-          {error && (
+          {error && !isUsingCache && (
             <ErrorState 
               message={error}
-              onRetry={() => {
-                setError(null);
-                setLoading(true);
-                // Retry logic here
-              }}
+              onRetry={handleRefresh}
             />
           )}
           
-          {!loading && !error && (
+          {!loading && (isUsingCache || !error) && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
             <div
@@ -394,7 +557,7 @@ function ProductsContent() {
           </div>
         )}
         
-        {!loading && !error && products.length === 0 && (
+        {!loading && products.length === 0 && !isOffline && (
           <EmptyState 
             variant="products"
             title="No products found"
@@ -403,6 +566,14 @@ function ProductsContent() {
               label: "Clear filters",
               onClick: () => router.push('/products')
             }}
+          />
+        )}
+        
+        {!loading && products.length === 0 && isOffline && (
+          <EmptyState 
+            variant="products"
+            title="No cached products available"
+            description="You're offline and no products have been cached yet. Please connect to the internet to browse products."
           />
         )}
       </Container>
