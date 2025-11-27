@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       items: z.array(z.object({
         id: z.string().uuid().or(z.string().min(1)), // allow uuid or legacy id
         quantity: z.number().int().positive().max(999)
-      })).min(1),
+      })).min(1) as z.ZodType<{ id: string; quantity: number; }[]>,
       paymentMethod: z.enum(['COD','TeleBirr','CBE','Awash','BankTransfer','Other']),
       paymentMeta: z.object({
         phone: z.string().min(7).max(20).optional(),
