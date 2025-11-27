@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { getOrSetCache, invalidateCache } from '@/lib/cache';
+
+// Cache configuration
+const REVIEWS_CACHE_PREFIX = 'reviews';
+const REVIEWS_TTL = 300; // 5 minutes
+const REVIEWS_STALE_TIME = 600; // 10 minutes
 
 /**
  * @swagger
@@ -34,24 +40,37 @@ export async function GET(request: Request) {
       );
     }
 
-    const reviews = await prisma.review.findMany({
-      where: {
-        productId,
-        isApproved: true,
-      },
-      include: {
-        user: {
-          select: {
-            profile: {
+    const cacheKey = `product:${productId}`;
+    
+    const reviews = await getOrSetCache(
+      cacheKey,
+      async () => {
+        return await prisma.review.findMany({
+          where: {
+            productId,
+            isApproved: true,
+          },
+          include: {
+            user: {
               select: {
-                displayName: true,
+                profile: {
+                  select: {
+                    displayName: true,
+                  },
+                },
               },
             },
           },
-        },
+          orderBy: { createdAt: 'desc' },
+        });
       },
-      orderBy: { createdAt: 'desc' },
-    });
+      {
+        ttl: REVIEWS_TTL,
+        staleTime: REVIEWS_STALE_TIME,
+        prefix: REVIEWS_CACHE_PREFIX,
+        tags: ['reviews', `product:${productId}`],
+      }
+    );
 
     return NextResponse.json(reviews);
   } catch (error) {
@@ -128,6 +147,9 @@ export async function POST(request: Request) {
         comment,
       },
     });
+
+    // Invalidate reviews cache for this product
+    await invalidateCache(`product:${productId}`, { prefix: REVIEWS_CACHE_PREFIX });
 
     return NextResponse.json(review);
   } catch (error) {

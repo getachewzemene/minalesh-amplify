@@ -1,4 +1,10 @@
 import prisma from './prisma';
+import { getOrSetCache } from './cache';
+
+// Cache configuration for shipping
+const SHIPPING_CACHE_PREFIX = 'shipping';
+const SHIPPING_ZONES_TTL = 600; // 10 minutes
+const SHIPPING_ZONES_STALE_TIME = 1200; // 20 minutes
 
 export interface ShippingAddress {
   country: string;
@@ -26,14 +32,26 @@ export interface ShippingCalculationResult {
 }
 
 /**
- * Find matching shipping zone for an address
+ * Find matching shipping zone for an address (with caching)
  */
 export async function findShippingZone(
   address: ShippingAddress
 ): Promise<string | null> {
-  const zones = await prisma.shippingZone.findMany({
-    where: { isActive: true },
-  });
+  // Cache all active zones
+  const zones = await getOrSetCache(
+    'zones:active',
+    async () => {
+      return await prisma.shippingZone.findMany({
+        where: { isActive: true },
+      });
+    },
+    {
+      ttl: SHIPPING_ZONES_TTL,
+      staleTime: SHIPPING_ZONES_STALE_TIME,
+      prefix: SHIPPING_CACHE_PREFIX,
+      tags: ['shipping', 'zones'],
+    }
+  );
 
   for (const zone of zones) {
     const countries = zone.countries as string[];
