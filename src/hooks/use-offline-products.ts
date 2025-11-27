@@ -252,8 +252,8 @@ export function useOfflineProduct(
       
       const data = await response.json();
       
-      // Transform product data
-      const transformedProduct: CachedProduct = {
+      // Transform product data (without cachedAt, which will be added when caching)
+      const transformedProduct: Omit<CachedProduct, 'cachedAt'> = {
         id: String(data.id),
         name: String(data.name),
         price: Number(data.price),
@@ -269,7 +269,13 @@ export function useOfflineProduct(
         stockQuantity: Number(data.stockQuantity || 0),
       };
       
-      setProduct(transformedProduct);
+      // Create the full cached product with timestamp for state
+      const productWithCache: CachedProduct = {
+        ...transformedProduct,
+        cachedAt: Date.now(),
+      };
+      
+      setProduct(productWithCache);
       setIsUsingCache(false);
       
       // Cache the product for offline use

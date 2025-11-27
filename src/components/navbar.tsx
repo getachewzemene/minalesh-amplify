@@ -7,6 +7,7 @@ import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
 import { NotificationCenter } from "./notifications/NotificationCenter"
 import { Container } from "./ui/container"
+import { OfflineBadge } from "./ui/offline-indicator"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
@@ -58,13 +59,16 @@ export function Navbar() {
       <Container>
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center cursor-pointer" onClick={() => router.push('/') }>
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Minalesh
-            </h1>
-            <span className="ml-2 text-sm text-muted-foreground hidden sm:block">
-              ምናለሽ
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center cursor-pointer" onClick={() => router.push('/') }>
+              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Minalesh
+              </h1>
+              <span className="ml-2 text-sm text-muted-foreground hidden sm:block">
+                ምናለሽ
+              </span>
+            </div>
+            <OfflineBadge />
           </div>
 
           {/* Search Bar - Hidden on mobile */}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { Star, Heart, Share2, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +12,13 @@ import { ARViewer } from "@/components/ar-viewer"
 import { ReviewsSection } from "@/components/reviews/ReviewsSection"
 import { useShop } from "@/context/shop-context"
 import { formatCurrency } from "@/lib/utils"
+import { OfflineIndicator } from "@/components/ui/offline-indicator"
+import { 
+  cacheProduct, 
+  getCachedProduct, 
+  isOnline,
+  type CachedProduct 
+} from "@/lib/offline-cache"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 
 
@@ -56,9 +64,78 @@ const mockProduct = {
 }
 
 export default function Product() {
+  const params = useParams()
+  const productId = params?.id as string || mockProduct.id
+  
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [isOffline, setIsOffline] = useState(false)
+  const [isUsingCache, setIsUsingCache] = useState(false)
   const { addToCart, addToWishlist } = useShop()
+
+  // Handle online/offline status
+  useEffect(() => {
+    setIsOffline(!isOnline())
+    
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  // Cache product for offline viewing
+  useEffect(() => {
+    const cacheCurrentProduct = async () => {
+      // Cache the mock product (or fetched product) for offline use
+      const productToCache: Omit<CachedProduct, 'cachedAt'> = {
+        id: mockProduct.id,
+        name: mockProduct.name,
+        price: mockProduct.price,
+        originalPrice: mockProduct.originalPrice,
+        rating: mockProduct.rating,
+        reviews: mockProduct.reviews,
+        image: mockProduct.images[0]?.src || '',
+        category: mockProduct.category,
+        vendor: mockProduct.vendor.name,
+        isVerifiedVendor: mockProduct.vendor.isVerified,
+        hasAR: true,
+        description: mockProduct.description,
+        stockQuantity: mockProduct.stockCount,
+      }
+      
+      await cacheProduct(productToCache)
+    }
+
+    // Only cache if online (we're viewing fresh data)
+    if (isOnline()) {
+      cacheCurrentProduct()
+    }
+  }, [productId])
+
+  // Check if we need to load from cache when offline
+  useEffect(() => {
+    const loadCachedProduct = async () => {
+      if (!isOnline()) {
+        const cached = await getCachedProduct(productId)
+        if (cached) {
+          setIsUsingCache(true)
+          // In a real implementation, we would update the product state
+          // with the cached data. Since we're using mock data here,
+          // we just show the indicator.
+        }
+      } else {
+        setIsUsingCache(false)
+      }
+    }
+
+    loadCachedProduct()
+  }, [productId, isOffline])
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,6 +143,14 @@ export default function Product() {
       
       <main className="py-8">
         <Container>
+          {/* Offline/Cache indicator */}
+          {(isOffline || isUsingCache) && (
+            <OfflineIndicator 
+              isUsingCache={isUsingCache}
+              className="mb-6"
+            />
+          )}
+          
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Product Images */}
             <div className="space-y-4">
