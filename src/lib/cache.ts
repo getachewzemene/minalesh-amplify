@@ -244,7 +244,7 @@ export async function invalidateCacheByTag(tag: string): Promise<number> {
 /**
  * Get or set cache with a loader function
  */
-export async function getOrSetCache<T = any>(
+export async function getOrSetCache<T = unknown>(
   key: string,
   loader: () => Promise<T>,
   options: CacheOptions = {}
@@ -270,7 +270,7 @@ export async function getOrSetCache<T = any>(
 /**
  * Cache wrapper for functions
  */
-export function withCache<TArgs extends any[], TResult>(
+export function withCache<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
   options: CacheOptions & {
     keyGenerator?: (...args: TArgs) => string;
