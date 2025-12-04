@@ -2,14 +2,24 @@ import bcrypt from 'bcryptjs';
 import jwt, { Secret } from 'jsonwebtoken';
 import { UserRole } from '@prisma/client';
 
-// Ensure JWT_SECRET is set in production
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable must be set in production');
+/**
+ * Get the JWT secret, checking for production requirements.
+ * Uses lazy evaluation to avoid errors during build time.
+ */
+function getJwtSecret(): Secret {
+  if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable must be set in production');
+  }
+  return process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
 }
 
-const JWT_SECRET: Secret = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+function getJwtExpiresIn(): string {
+  return process.env.JWT_EXPIRES_IN || '7d';
+}
+
+function getRefreshTokenExpiresIn(): string {
+  return process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+}
 
 // Max login attempts before lockout
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -31,18 +41,18 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export function generateToken(payload: JWTPayload): string {
-  const options: jwt.SignOptions = { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] };
-  return jwt.sign(payload, JWT_SECRET, options);
+  const options: jwt.SignOptions = { expiresIn: getJwtExpiresIn() as jwt.SignOptions['expiresIn'] };
+  return jwt.sign(payload, getJwtSecret(), options);
 }
 
 export function generateRefreshToken(payload: JWTPayload): string {
-  const options: jwt.SignOptions = { expiresIn: REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'] };
-  return jwt.sign(payload, JWT_SECRET, options);
+  const options: jwt.SignOptions = { expiresIn: getRefreshTokenExpiresIn() as jwt.SignOptions['expiresIn'] };
+  return jwt.sign(payload, getJwtSecret(), options);
 }
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    return jwt.verify(token, getJwtSecret()) as JWTPayload;
   } catch (error) {
     return null;
   }
