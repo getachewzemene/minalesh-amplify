@@ -9,10 +9,9 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Filter, Star, MapPin, Sliders, X } from "lucide-react";
+import { Filter, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +20,7 @@ import { NullableSelect, ALL } from "@/components/ui/nullable-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useRouter, usePathname } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { SearchWithAutocomplete } from "./SearchWithAutocomplete";
 
 interface SearchFilters {
   query: string;
@@ -173,20 +173,26 @@ export function AdvancedSearch() {
     }
   };
 
+  const handleSearchSubmit = (query: string) => {
+    updateFilter("query", query);
+    handleSearch();
+  };
+
   return (
     <div className="space-y-4">
-      {/* Main Search Bar */}
+      {/* Main Search Bar with Autocomplete */}
       <div className="flex gap-2">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search for products, brands, or categories..."
-            value={filters.query}
-            onChange={(e) => updateFilter("query", e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            className="pl-10 pr-4 h-12"
-          />
-        </div>
+        <SearchWithAutocomplete
+          value={filters.query}
+          onChange={(value) => updateFilter("query", value)}
+          onSearch={handleSearchSubmit}
+          onSuggestionSelect={handleSearchSubmit}
+          placeholder="Search for products, brands, or categories..."
+          className="flex-1"
+          inputClassName="h-12"
+          showButton={true}
+          buttonText="Search"
+        />
         <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" className="h-12 px-6 relative">
@@ -360,9 +366,6 @@ export function AdvancedSearch() {
             </div>
           </DialogContent>
         </Dialog>
-        <Button onClick={handleSearch} className="h-12 px-8 bg-primary hover:bg-primary/90">
-          Search
-        </Button>
       </div>
 
       {/* Applied Filters */}
