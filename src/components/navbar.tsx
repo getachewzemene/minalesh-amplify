@@ -1,13 +1,13 @@
 'use client'
 
-import { Search, ShoppingCart, User, Menu, Heart } from "lucide-react"
+import { ShoppingCart, User, Menu, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
 import { NotificationCenter } from "./notifications/NotificationCenter"
 import { Container } from "./ui/container"
 import { OfflineBadge } from "./ui/offline-indicator"
+import { SearchWithAutocomplete } from "./search/SearchWithAutocomplete"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
@@ -18,31 +18,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { toast } from "sonner"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [query, setQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
   const { cart, wishlist } = useShop()
   const { user, profile, logout } = useAuth()
 
-  const handleSearch = () => {
+  const handleSearch = (query: string) => {
     const q = query.trim()
     if (q) {
       router.push(`/products?search=${encodeURIComponent(q)}`)
     } else {
       router.push('/products')
     }
-  }
-
-  const handleSearchChange = (value: string) => {
-    setQuery(value)
-    if (value.trim()) {
-      router.push(`/products?search=${encodeURIComponent(value.trim())}`)
-    } else {
-      router.push('/products')
-    }
+    setIsMenuOpen(false)
   }
 
   const goDashboard = () => {
@@ -73,17 +64,14 @@ export function Navbar() {
 
           {/* Search Bar - Hidden on mobile */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Search for electronics, fashion, and more..."
-                className="pl-10 pr-4 w-full"
-                value={query}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </div>
+            <SearchWithAutocomplete
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSearch={handleSearch}
+              onSuggestionSelect={handleSearch}
+              placeholder="Search for electronics, fashion, and more..."
+              className="w-full"
+            />
           </div>
 
           {/* Right side actions */}
@@ -153,15 +141,14 @@ export function Navbar() {
         {/* Mobile search and menu */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                type="search"
+            <div className="mb-4">
+              <SearchWithAutocomplete
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+                onSuggestionSelect={handleSearch}
                 placeholder="Search products..."
-                className="pl-10 pr-4 w-full"
-                value={query}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (setIsMenuOpen(false), handleSearch())}
+                className="w-full"
               />
             </div>
             <div className="flex justify-around">
