@@ -8,7 +8,7 @@
  * as the user types.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Search, Loader2, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -91,6 +91,8 @@ export function SearchWithAutocomplete({
         const data = await response.json()
         setSuggestions(data.suggestions || [])
       } else {
+        // Log non-OK responses for debugging
+        console.warn(`Search suggestions API returned status ${response.status}`)
         setSuggestions([])
       }
     } catch (error) {
@@ -216,13 +218,24 @@ export function SearchWithAutocomplete({
     }
   }
 
+  // Memoize the regex for highlighting to avoid repeated compilation
+  const highlightRegex = useMemo(() => {
+    if (!inputValue.trim()) return null
+    try {
+      const escaped = inputValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      return new RegExp(`(${escaped})`, 'gi')
+    } catch {
+      return null
+    }
+  }, [inputValue])
+
   // Highlight matching text in suggestions
-  const highlightMatch = (text: string, query: string) => {
-    if (!query.trim()) return text
+  const highlightMatch = useCallback((text: string) => {
+    if (!highlightRegex) return text
     
-    const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
+    const parts = text.split(highlightRegex)
     return parts.map((part, i) =>
-      part.toLowerCase() === query.toLowerCase() ? (
+      part.toLowerCase() === inputValue.toLowerCase() ? (
         <span key={i} className="font-semibold text-primary">
           {part}
         </span>
@@ -230,7 +243,7 @@ export function SearchWithAutocomplete({
         part
       )
     )
-  }
+  }, [highlightRegex, inputValue])
 
   return (
     <div ref={containerRef} className={cn('relative', className)}>
@@ -304,7 +317,7 @@ export function SearchWithAutocomplete({
             >
               <Search className="h-3 w-3 text-muted-foreground flex-shrink-0" />
               <span className="truncate">
-                {highlightMatch(suggestion, inputValue)}
+                {highlightMatch(suggestion)}
               </span>
             </button>
           ))}
