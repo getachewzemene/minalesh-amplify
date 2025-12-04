@@ -11,7 +11,7 @@ declare global {
 /**
  * Get the Prisma client instance.
  * Uses lazy initialization to avoid errors during build time when DATABASE_URL is not set.
- * In development, the client is cached in globalThis to survive hot reloads.
+ * The client is cached in globalThis to ensure a single instance across all imports.
  */
 function getPrismaClient(): PrismaClient {
   // Check if DATABASE_URL is set
@@ -27,17 +27,14 @@ function getPrismaClient(): PrismaClient {
   }
 
   const client = prismaClientSingleton()
-  
-  if (process.env.NODE_ENV !== 'production') {
-    globalThis.prismaGlobal = client
-  }
+  globalThis.prismaGlobal = client
 
   return client
 }
 
 // Export a proxy that lazily initializes the Prisma client on first access
 const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop) {
+  get(_, prop) {
     const client = getPrismaClient()
     const value = client[prop as keyof PrismaClient]
     // If it's a function, bind it to the client
