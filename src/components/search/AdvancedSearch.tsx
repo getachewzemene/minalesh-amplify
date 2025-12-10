@@ -145,23 +145,28 @@ export function AdvancedSearch() {
     setFilters(prev => ({ ...prev, [key]: value } as SearchFilters));
   };
 
-  const handleSearch = () => {
+  // Helper function to build search URL from filters
+  const buildSearchUrl = (filtersToUse: SearchFilters): string => {
     const searchParams = new URLSearchParams();
     
-    if (filters.query) searchParams.set("search", filters.query);
-    if (filters.category !== "all") searchParams.set("category", filters.category);
-    if (filters.brand) searchParams.set("brand", filters.brand);
-    if (filters.priceRange[0] > 0) searchParams.set("min_price", filters.priceRange[0].toString());
-    if (filters.priceRange[1] < 200000) searchParams.set("max_price", filters.priceRange[1].toString());
-    if (filters.rating > 0) searchParams.set("rating", filters.rating.toString());
-    if (filters.vendor) searchParams.set("vendor", filters.vendor);
-    if (filters.location) searchParams.set("location", filters.location);
-    if (filters.inStock) searchParams.set("in_stock", "true");
-    if (filters.hasAR) searchParams.set("has_ar", "true");
-    if (filters.isVerified) searchParams.set("verified", "true");
-    if (filters.sortBy !== "relevance") searchParams.set("sort", filters.sortBy);
+    if (filtersToUse.query) searchParams.set("search", filtersToUse.query);
+    if (filtersToUse.category !== "all") searchParams.set("category", filtersToUse.category);
+    if (filtersToUse.brand) searchParams.set("brand", filtersToUse.brand);
+    if (filtersToUse.priceRange[0] > 0) searchParams.set("min_price", filtersToUse.priceRange[0].toString());
+    if (filtersToUse.priceRange[1] < 200000) searchParams.set("max_price", filtersToUse.priceRange[1].toString());
+    if (filtersToUse.rating > 0) searchParams.set("rating", filtersToUse.rating.toString());
+    if (filtersToUse.vendor) searchParams.set("vendor", filtersToUse.vendor);
+    if (filtersToUse.location) searchParams.set("location", filtersToUse.location);
+    if (filtersToUse.inStock) searchParams.set("in_stock", "true");
+    if (filtersToUse.hasAR) searchParams.set("has_ar", "true");
+    if (filtersToUse.isVerified) searchParams.set("verified", "true");
+    if (filtersToUse.sortBy !== "relevance") searchParams.set("sort", filtersToUse.sortBy);
 
-    router.push(`/products?${searchParams.toString()}`);
+    return `/products?${searchParams.toString()}`;
+  };
+
+  const handleSearch = () => {
+    router.push(buildSearchUrl(filters));
     setIsFilterOpen(false);
   };
 
@@ -195,51 +200,30 @@ export function AdvancedSearch() {
       case "sortBy":
         updatedFilters.sortBy = "relevance";
         break;
-      default:
-        updatedFilters[filterKey] = false as any;
+      case "inStock":
+        updatedFilters.inStock = false;
+        break;
+      case "hasAR":
+        updatedFilters.hasAR = false;
+        break;
+      case "isVerified":
+        updatedFilters.isVerified = false;
+        break;
     }
 
     // Update the state
     setFilters(updatedFilters);
 
     // Build and navigate to new URL with updated filters
-    const searchParams = new URLSearchParams();
-    
-    if (updatedFilters.query) searchParams.set("search", updatedFilters.query);
-    if (updatedFilters.category !== "all") searchParams.set("category", updatedFilters.category);
-    if (updatedFilters.brand) searchParams.set("brand", updatedFilters.brand);
-    if (updatedFilters.priceRange[0] > 0) searchParams.set("min_price", updatedFilters.priceRange[0].toString());
-    if (updatedFilters.priceRange[1] < 200000) searchParams.set("max_price", updatedFilters.priceRange[1].toString());
-    if (updatedFilters.rating > 0) searchParams.set("rating", updatedFilters.rating.toString());
-    if (updatedFilters.vendor) searchParams.set("vendor", updatedFilters.vendor);
-    if (updatedFilters.location) searchParams.set("location", updatedFilters.location);
-    if (updatedFilters.inStock) searchParams.set("in_stock", "true");
-    if (updatedFilters.hasAR) searchParams.set("has_ar", "true");
-    if (updatedFilters.isVerified) searchParams.set("verified", "true");
-    if (updatedFilters.sortBy !== "relevance") searchParams.set("sort", updatedFilters.sortBy);
-
-    router.push(`/products?${searchParams.toString()}`);
+    router.push(buildSearchUrl(updatedFilters));
   };
 
   const handleSearchSubmit = (query: string) => {
     // Update the query and trigger search with the new value
-    const searchParams = new URLSearchParams();
+    const updatedFilters = { ...filters, query };
     
-    if (query) searchParams.set("search", query);
-    if (filters.category !== "all") searchParams.set("category", filters.category);
-    if (filters.brand) searchParams.set("brand", filters.brand);
-    if (filters.priceRange[0] > 0) searchParams.set("min_price", filters.priceRange[0].toString());
-    if (filters.priceRange[1] < 200000) searchParams.set("max_price", filters.priceRange[1].toString());
-    if (filters.rating > 0) searchParams.set("rating", filters.rating.toString());
-    if (filters.vendor) searchParams.set("vendor", filters.vendor);
-    if (filters.location) searchParams.set("location", filters.location);
-    if (filters.inStock) searchParams.set("in_stock", "true");
-    if (filters.hasAR) searchParams.set("has_ar", "true");
-    if (filters.isVerified) searchParams.set("verified", "true");
-    if (filters.sortBy !== "relevance") searchParams.set("sort", filters.sortBy);
-
     updateFilter("query", query);
-    router.push(`/products?${searchParams.toString()}`);
+    router.push(buildSearchUrl(updatedFilters));
     setIsFilterOpen(false);
   };
 
