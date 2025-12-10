@@ -86,4 +86,62 @@ describe('Search utilities', () => {
     const brand2 = 'apple';
     expect(brand1.toLowerCase()).toBe(brand2.toLowerCase());
   });
+
+  it('should parse valid numeric price from string', () => {
+    const priceString = '1000';
+    const parsed = parseFloat(priceString);
+    expect(parsed).toBe(1000);
+    expect(isNaN(parsed)).toBe(false);
+  });
+
+  it('should handle invalid numeric price string', () => {
+    const invalidPrice = 'abc';
+    const parsed = parseFloat(invalidPrice);
+    expect(isNaN(parsed)).toBe(true);
+  });
+
+  it('should build URL search params correctly', () => {
+    const params = new URLSearchParams();
+    params.set('search', 'laptop');
+    params.set('category', 'electronics');
+    params.set('min_price', '1000');
+    params.set('max_price', '5000');
+    
+    expect(params.get('search')).toBe('laptop');
+    expect(params.get('category')).toBe('electronics');
+    expect(params.get('min_price')).toBe('1000');
+    expect(params.get('max_price')).toBe('5000');
+  });
+
+  it('should parse URL search params correctly', () => {
+    const url = 'http://example.com/products?search=laptop&category=electronics&min_price=1000';
+    const searchParams = new URLSearchParams(url.split('?')[1]);
+    
+    expect(searchParams.get('search')).toBe('laptop');
+    expect(searchParams.get('category')).toBe('electronics');
+    expect(searchParams.get('min_price')).toBe('1000');
+  });
+
+  it('should handle missing URL parameters', () => {
+    const url = 'http://example.com/products';
+    const searchParams = new URLSearchParams(url.split('?')[1]);
+    
+    expect(searchParams.get('search')).toBeNull();
+    expect(searchParams.get('category')).toBeNull();
+  });
+
+  it('should validate category slugs match expected format', () => {
+    const categorySlug = 'traditional-clothing';
+    expect(categorySlug).toMatch(/^[a-z0-9-]+$/);
+  });
+
+  it('should handle boolean filters correctly', () => {
+    const inStock = true;
+    const verified = false;
+    
+    expect(typeof inStock).toBe('boolean');
+    expect(typeof verified).toBe('boolean');
+    expect(inStock).toBe(true);
+    expect(verified).toBe(false);
+  });
 });

@@ -51,15 +51,22 @@ const defaultFilters: SearchFilters = {
 };
 
 const categories = [
-  "All Categories",
-  "Smartphones",
-  "Audio",
-  "Computers",
-  "Fashion",
-  "Footwear",
-  "Home & Garden",
-  "Sports & Fitness",
-  "Beauty & Health"
+  { name: "All Categories", slug: "all" },
+  { name: "Traditional Clothing", slug: "traditional-clothing" },
+  { name: "Coffee & Tea", slug: "coffee-tea" },
+  { name: "Spices & Ingredients", slug: "spices-ingredients" },
+  { name: "Handicrafts & Art", slug: "handicrafts-art" },
+  { name: "Jewelry & Accessories", slug: "jewelry-accessories" },
+  { name: "Electronics", slug: "electronics" },
+  { name: "Home & Kitchen", slug: "home-kitchen" },
+  { name: "Fashion & Beauty", slug: "fashion-beauty" },
+  { name: "Books & Education", slug: "books-education" },
+  { name: "Health & Wellness", slug: "health-wellness" },
+  { name: "Sports & Outdoor", slug: "sports-outdoor" },
+  { name: "Baby & Kids", slug: "baby-kids" },
+  { name: "Automotive", slug: "automotive" },
+  { name: "Agriculture & Farming", slug: "agriculture-farming" },
+  { name: "Religious Items", slug: "religious-items" }
 ];
 
 const locations = [
@@ -84,8 +91,32 @@ export function AdvancedSearch() {
     // Parse URL parameters on component mount (client-side only)
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
-      const query = searchParams.get("search") || "";
-      setFilters(prev => ({ ...prev, query }));
+      
+      // Helper to safely parse numeric values from URL params
+      const parseNumber = (value: string | null, defaultValue: number): number => {
+        if (!value) return defaultValue;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? defaultValue : parsed;
+      };
+
+      const parsedFilters: SearchFilters = {
+        query: searchParams.get("search") || "",
+        category: searchParams.get("category") || "all",
+        brand: searchParams.get("brand") || "",
+        priceRange: [
+          parseNumber(searchParams.get("min_price"), 0),
+          parseNumber(searchParams.get("max_price"), 200000)
+        ],
+        rating: parseNumber(searchParams.get("rating"), 0),
+        vendor: searchParams.get("vendor") || "",
+        location: searchParams.get("location") || "",
+        inStock: searchParams.get("in_stock") === "true",
+        hasAR: searchParams.get("has_ar") === "true",
+        isVerified: searchParams.get("verified") === "true",
+        sortBy: (searchParams.get("sort") as SearchFilters['sortBy']) || "relevance"
+      };
+      
+      setFilters(parsedFilters);
     }
   }, []);
 
@@ -121,23 +152,28 @@ export function AdvancedSearch() {
     setFilters(prev => ({ ...prev, [key]: value } as SearchFilters));
   };
 
-  const handleSearch = () => {
+  // Helper function to build search URL from filters
+  const buildSearchUrl = (filtersToUse: SearchFilters): string => {
     const searchParams = new URLSearchParams();
     
-    if (filters.query) searchParams.set("search", filters.query);
-    if (filters.category !== "all") searchParams.set("category", filters.category);
-    if (filters.brand) searchParams.set("brand", filters.brand);
-    if (filters.priceRange[0] > 0) searchParams.set("min_price", filters.priceRange[0].toString());
-    if (filters.priceRange[1] < 200000) searchParams.set("max_price", filters.priceRange[1].toString());
-    if (filters.rating > 0) searchParams.set("rating", filters.rating.toString());
-    if (filters.vendor) searchParams.set("vendor", filters.vendor);
-    if (filters.location) searchParams.set("location", filters.location);
-    if (filters.inStock) searchParams.set("in_stock", "true");
-    if (filters.hasAR) searchParams.set("has_ar", "true");
-    if (filters.isVerified) searchParams.set("verified", "true");
-    if (filters.sortBy !== "relevance") searchParams.set("sort", filters.sortBy);
+    if (filtersToUse.query) searchParams.set("search", filtersToUse.query);
+    if (filtersToUse.category !== "all") searchParams.set("category", filtersToUse.category);
+    if (filtersToUse.brand) searchParams.set("brand", filtersToUse.brand);
+    if (filtersToUse.priceRange[0] > 0) searchParams.set("min_price", filtersToUse.priceRange[0].toString());
+    if (filtersToUse.priceRange[1] < 200000) searchParams.set("max_price", filtersToUse.priceRange[1].toString());
+    if (filtersToUse.rating > 0) searchParams.set("rating", filtersToUse.rating.toString());
+    if (filtersToUse.vendor) searchParams.set("vendor", filtersToUse.vendor);
+    if (filtersToUse.location) searchParams.set("location", filtersToUse.location);
+    if (filtersToUse.inStock) searchParams.set("in_stock", "true");
+    if (filtersToUse.hasAR) searchParams.set("has_ar", "true");
+    if (filtersToUse.isVerified) searchParams.set("verified", "true");
+    if (filtersToUse.sortBy !== "relevance") searchParams.set("sort", filtersToUse.sortBy);
 
-    router.push(`/products?${searchParams.toString()}`);
+    return `/products?${searchParams.toString()}`;
+  };
+
+  const handleSearch = () => {
+    router.push(buildSearchUrl(filters));
     setIsFilterOpen(false);
   };
 
@@ -146,36 +182,57 @@ export function AdvancedSearch() {
   };
 
   const removeFilter = (filterKey: keyof SearchFilters) => {
+    // Create updated filters based on which filter is being removed
+    const updatedFilters = { ...filters };
+    
     switch (filterKey) {
       case "category":
-        updateFilter("category", "all");
+        updatedFilters.category = "all";
         break;
       case "brand":
-        updateFilter("brand", "");
+        updatedFilters.brand = "";
         break;
       case "priceRange":
-        updateFilter("priceRange", [0, 200000]);
+        updatedFilters.priceRange = [0, 200000];
         break;
       case "rating":
-        updateFilter("rating", 0);
+        updatedFilters.rating = 0;
         break;
       case "vendor":
-        updateFilter("vendor", "");
+        updatedFilters.vendor = "";
         break;
       case "location":
-        updateFilter("location", "");
+        updatedFilters.location = "";
         break;
       case "sortBy":
-        updateFilter("sortBy", "relevance");
+        updatedFilters.sortBy = "relevance";
         break;
-      default:
-        updateFilter(filterKey, false);
+      case "inStock":
+        updatedFilters.inStock = false;
+        break;
+      case "hasAR":
+        updatedFilters.hasAR = false;
+        break;
+      case "isVerified":
+        updatedFilters.isVerified = false;
+        break;
     }
+
+    // Update the state
+    setFilters(updatedFilters);
+
+    // Build and navigate to new URL with updated filters
+    router.push(buildSearchUrl(updatedFilters));
   };
 
   const handleSearchSubmit = (query: string) => {
-    updateFilter("query", query);
-    handleSearch();
+    // Update the query and trigger search with the new value
+    const updatedFilters = { ...filters, query };
+    
+    // Update local state for UI consistency
+    setFilters(updatedFilters);
+    router.push(buildSearchUrl(updatedFilters));
+    setIsFilterOpen(false);
   };
 
   return (
@@ -225,8 +282,8 @@ export function AdvancedSearch() {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem key={category} value={category === "All Categories" ? "all" : category.toLowerCase()}>
-                        {category}
+                      <SelectItem key={category.slug} value={category.slug}>
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -374,7 +431,7 @@ export function AdvancedSearch() {
           <span className="text-sm text-muted-foreground">Applied filters:</span>
           {filters.category !== "all" && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Category: {filters.category}
+              Category: {categories.find(c => c.slug === filters.category)?.name || filters.category}
               <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter("category")} />
             </Badge>
           )}
