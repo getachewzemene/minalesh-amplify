@@ -51,15 +51,22 @@ const defaultFilters: SearchFilters = {
 };
 
 const categories = [
-  "All Categories",
-  "Smartphones",
-  "Audio",
-  "Computers",
-  "Fashion",
-  "Footwear",
-  "Home & Garden",
-  "Sports & Fitness",
-  "Beauty & Health"
+  { name: "All Categories", slug: "all" },
+  { name: "Traditional Clothing", slug: "traditional-clothing" },
+  { name: "Coffee & Tea", slug: "coffee-tea" },
+  { name: "Spices & Ingredients", slug: "spices-ingredients" },
+  { name: "Handicrafts & Art", slug: "handicrafts-art" },
+  { name: "Jewelry & Accessories", slug: "jewelry-accessories" },
+  { name: "Electronics", slug: "electronics" },
+  { name: "Home & Kitchen", slug: "home-kitchen" },
+  { name: "Fashion & Beauty", slug: "fashion-beauty" },
+  { name: "Books & Education", slug: "books-education" },
+  { name: "Health & Wellness", slug: "health-wellness" },
+  { name: "Sports & Outdoor", slug: "sports-outdoor" },
+  { name: "Baby & Kids", slug: "baby-kids" },
+  { name: "Automotive", slug: "automotive" },
+  { name: "Agriculture & Farming", slug: "agriculture-farming" },
+  { name: "Religious Items", slug: "religious-items" }
 ];
 
 const locations = [
@@ -283,8 +290,8 @@ export function AdvancedSearch() {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem key={category} value={category === "All Categories" ? "all" : category.toLowerCase()}>
-                        {category}
+                      <SelectItem key={category.slug} value={category.slug}>
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -432,7 +439,7 @@ export function AdvancedSearch() {
           <span className="text-sm text-muted-foreground">Applied filters:</span>
           {filters.category !== "all" && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Category: {filters.category}
+              Category: {categories.find(c => c.slug === filters.category)?.name || filters.category}
               <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter("category")} />
             </Badge>
           )}
