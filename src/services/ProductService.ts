@@ -60,6 +60,17 @@ export async function getVendorProducts(vendorId: string) {
     async () => {
       return await prisma.product.findMany({
         where: { vendorId },
+        include: {
+          vendor: {
+            select: {
+              displayName: true,
+              firstName: true,
+              lastName: true,
+              isVendor: true,
+              vendorStatus: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       });
     },
@@ -293,6 +304,8 @@ export async function getProductById(id: string) {
               displayName: true,
               firstName: true,
               lastName: true,
+              isVendor: true,
+              vendorStatus: true,
             },
           },
           category: {

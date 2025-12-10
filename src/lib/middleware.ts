@@ -132,3 +132,34 @@ export function requireAdmin(request: Request) {
 export function requireVendorOrAdmin(request: Request) {
   return requireRole(request, ['vendor', 'admin']);
 }
+
+/**
+ * Higher-order function that wraps an async handler with role checking.
+ * Use this to protect route handlers that require specific roles.
+ * 
+ * @example
+ * ```typescript
+ * import { withApiLogger } from '@/lib/api-logger';
+ * import { withRoleCheck } from '@/lib/middleware';
+ * 
+ * async function handler(request: Request) {
+ *   // Handler code - user is guaranteed to have required role
+ * }
+ * 
+ * export const GET = withApiLogger(withRoleCheck(handler, ['admin']));
+ * ```
+ */
+export function withRoleCheck<T extends any[]>(
+  handler: (request: Request, ...args: T) => Promise<NextResponse>,
+  requiredRole: UserRole | UserRole[]
+) {
+  return async (request: Request, ...args: T): Promise<NextResponse> => {
+    const authResult = withRole(request, requiredRole);
+    
+    if (authResult.error) {
+      return authResult.error;
+    }
+    
+    return handler(request, ...args);
+  };
+}

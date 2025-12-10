@@ -224,7 +224,16 @@ export default function AuthRegister() {
               )}
             </Button>
 
-            <div className="text-center">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Want to sell on our marketplace?{" "}
+                <Link 
+                  href="/auth/register-vendor" 
+                  className="text-primary hover:text-primary/80 font-medium underline"
+                >
+                  Register as a vendor
+                </Link>
+              </p>
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 

@@ -159,6 +159,16 @@ export const authSchemas = {
     lastName: z.string().min(1, 'Last name is required'),
   }),
   
+  registerVendor: z.object({
+    email: commonSchemas.email,
+    password: commonSchemas.password,
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    tradeLicense: z.string().min(1, 'Trade license is required'),
+    tinNumber: z.string().min(1, 'TIN number is required'),
+    phone: z.string().optional(),
+  }),
+  
   passwordReset: z.object({
     email: commonSchemas.email,
   }),

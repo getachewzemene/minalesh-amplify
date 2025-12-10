@@ -15,6 +15,7 @@ import AdminTaxRatesManagement from "@/page-components/AdminTaxRatesManagement";
 import AdminCouponsManagement from "@/page-components/AdminCouponsManagement";
 import AdminShippingManagement from "@/page-components/AdminShippingManagement";
 import AdminOrdersManagement from "@/page-components/AdminOrdersManagement";
+import AdminVendorVerification from "@/page-components/AdminVendorVerification";
 import { 
   Users, 
   Store, 
@@ -505,111 +506,7 @@ export default function AdminDashboard() {
             </TabsContent>
 
             <TabsContent value="vendors" className="space-y-6">
-              {/* Pending Vendor Verifications */}
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
-                    Pending Vendor Verifications ({mock.pendingVendors.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {mock.pendingVendors.map((vendor) => (
-                      <div key={vendor.id} className="border rounded-lg p-4 space-y-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div>
-                            <h3 className="font-semibold text-base">{vendor.businessName}</h3>
-                            <p className="text-sm text-muted-foreground">Owner: {vendor.ownerName}</p>
-                            <p className="text-sm text-muted-foreground">Email: {vendor.email}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={vendor.status === 'pending' ? 'secondary' : 'outline'}>
-                              {vendor.status.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="font-medium text-muted-foreground">Business Details</p>
-                            <p>Category: {vendor.category}</p>
-                            <p>Trade License: {vendor.tradeLicense}</p>
-                            <p>TIN Number: {vendor.tinNumber}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium text-muted-foreground">Application Info</p>
-                            <p>Submit Date: {vendor.submitDate}</p>
-                            <p>Vendor ID: {vendor.id}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            onClick={() => handleApproveVendor(vendor.id, vendor.businessName)}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                          >
-                            <UserCheck className="h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            onClick={() => handleRejectVendor(vendor.id, vendor.businessName)}
-                            variant="destructive"
-                            className="flex items-center gap-2"
-                          >
-                            <UserX className="h-4 w-4" />
-                            Reject
-                          </Button>
-                          <Button variant="outline" className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            Review Documents
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Vendor Performance */}
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Vendor Performance Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={mock.vendorPerformance}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          dataKey="count"
-                          nameKey="name"
-                          label={({ name, percentage }) => `${name}: ${percentage}%`}
-                        >
-                          {mock.vendorPerformance.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip 
-                          content={<ChartTooltipContent 
-                            formatter={(value, name, props) => [
-                              `${value} vendors (${props.payload?.percentage}%)`,
-                              name
-                            ]}
-                          />} 
-                        />
-                        <ChartLegend content={<ChartLegendContent />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
+              <AdminVendorVerification />
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
