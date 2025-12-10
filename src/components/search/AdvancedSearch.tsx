@@ -92,15 +92,22 @@ export function AdvancedSearch() {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       
+      // Helper to safely parse numeric values from URL params
+      const parseNumber = (value: string | null, defaultValue: number): number => {
+        if (!value) return defaultValue;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? defaultValue : parsed;
+      };
+
       const parsedFilters: SearchFilters = {
         query: searchParams.get("search") || "",
         category: searchParams.get("category") || "all",
         brand: searchParams.get("brand") || "",
         priceRange: [
-          searchParams.get("min_price") ? parseFloat(searchParams.get("min_price")!) : 0,
-          searchParams.get("max_price") ? parseFloat(searchParams.get("max_price")!) : 200000
+          parseNumber(searchParams.get("min_price"), 0),
+          parseNumber(searchParams.get("max_price"), 200000)
         ],
-        rating: searchParams.get("rating") ? parseFloat(searchParams.get("rating")!) : 0,
+        rating: parseNumber(searchParams.get("rating"), 0),
         vendor: searchParams.get("vendor") || "",
         location: searchParams.get("location") || "",
         inStock: searchParams.get("in_stock") === "true",
@@ -222,7 +229,8 @@ export function AdvancedSearch() {
     // Update the query and trigger search with the new value
     const updatedFilters = { ...filters, query };
     
-    updateFilter("query", query);
+    // Update local state for UI consistency
+    setFilters(updatedFilters);
     router.push(buildSearchUrl(updatedFilters));
     setIsFilterOpen(false);
   };
