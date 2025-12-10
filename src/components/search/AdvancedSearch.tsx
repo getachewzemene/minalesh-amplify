@@ -84,8 +84,25 @@ export function AdvancedSearch() {
     // Parse URL parameters on component mount (client-side only)
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
-      const query = searchParams.get("search") || "";
-      setFilters(prev => ({ ...prev, query }));
+      
+      const parsedFilters: SearchFilters = {
+        query: searchParams.get("search") || "",
+        category: searchParams.get("category") || "all",
+        brand: searchParams.get("brand") || "",
+        priceRange: [
+          searchParams.get("min_price") ? parseFloat(searchParams.get("min_price")!) : 0,
+          searchParams.get("max_price") ? parseFloat(searchParams.get("max_price")!) : 200000
+        ],
+        rating: searchParams.get("rating") ? parseFloat(searchParams.get("rating")!) : 0,
+        vendor: searchParams.get("vendor") || "",
+        location: searchParams.get("location") || "",
+        inStock: searchParams.get("in_stock") === "true",
+        hasAR: searchParams.get("has_ar") === "true",
+        isVerified: searchParams.get("verified") === "true",
+        sortBy: (searchParams.get("sort") as SearchFilters['sortBy']) || "relevance"
+      };
+      
+      setFilters(parsedFilters);
     }
   }, []);
 
@@ -146,36 +163,77 @@ export function AdvancedSearch() {
   };
 
   const removeFilter = (filterKey: keyof SearchFilters) => {
+    // Create updated filters based on which filter is being removed
+    const updatedFilters = { ...filters };
+    
     switch (filterKey) {
       case "category":
-        updateFilter("category", "all");
+        updatedFilters.category = "all";
         break;
       case "brand":
-        updateFilter("brand", "");
+        updatedFilters.brand = "";
         break;
       case "priceRange":
-        updateFilter("priceRange", [0, 200000]);
+        updatedFilters.priceRange = [0, 200000];
         break;
       case "rating":
-        updateFilter("rating", 0);
+        updatedFilters.rating = 0;
         break;
       case "vendor":
-        updateFilter("vendor", "");
+        updatedFilters.vendor = "";
         break;
       case "location":
-        updateFilter("location", "");
+        updatedFilters.location = "";
         break;
       case "sortBy":
-        updateFilter("sortBy", "relevance");
+        updatedFilters.sortBy = "relevance";
         break;
       default:
-        updateFilter(filterKey, false);
+        updatedFilters[filterKey] = false as any;
     }
+
+    // Update the state
+    setFilters(updatedFilters);
+
+    // Build and navigate to new URL with updated filters
+    const searchParams = new URLSearchParams();
+    
+    if (updatedFilters.query) searchParams.set("search", updatedFilters.query);
+    if (updatedFilters.category !== "all") searchParams.set("category", updatedFilters.category);
+    if (updatedFilters.brand) searchParams.set("brand", updatedFilters.brand);
+    if (updatedFilters.priceRange[0] > 0) searchParams.set("min_price", updatedFilters.priceRange[0].toString());
+    if (updatedFilters.priceRange[1] < 200000) searchParams.set("max_price", updatedFilters.priceRange[1].toString());
+    if (updatedFilters.rating > 0) searchParams.set("rating", updatedFilters.rating.toString());
+    if (updatedFilters.vendor) searchParams.set("vendor", updatedFilters.vendor);
+    if (updatedFilters.location) searchParams.set("location", updatedFilters.location);
+    if (updatedFilters.inStock) searchParams.set("in_stock", "true");
+    if (updatedFilters.hasAR) searchParams.set("has_ar", "true");
+    if (updatedFilters.isVerified) searchParams.set("verified", "true");
+    if (updatedFilters.sortBy !== "relevance") searchParams.set("sort", updatedFilters.sortBy);
+
+    router.push(`/products?${searchParams.toString()}`);
   };
 
   const handleSearchSubmit = (query: string) => {
+    // Update the query and trigger search with the new value
+    const searchParams = new URLSearchParams();
+    
+    if (query) searchParams.set("search", query);
+    if (filters.category !== "all") searchParams.set("category", filters.category);
+    if (filters.brand) searchParams.set("brand", filters.brand);
+    if (filters.priceRange[0] > 0) searchParams.set("min_price", filters.priceRange[0].toString());
+    if (filters.priceRange[1] < 200000) searchParams.set("max_price", filters.priceRange[1].toString());
+    if (filters.rating > 0) searchParams.set("rating", filters.rating.toString());
+    if (filters.vendor) searchParams.set("vendor", filters.vendor);
+    if (filters.location) searchParams.set("location", filters.location);
+    if (filters.inStock) searchParams.set("in_stock", "true");
+    if (filters.hasAR) searchParams.set("has_ar", "true");
+    if (filters.isVerified) searchParams.set("verified", "true");
+    if (filters.sortBy !== "relevance") searchParams.set("sort", filters.sortBy);
+
     updateFilter("query", query);
-    handleSearch();
+    router.push(`/products?${searchParams.toString()}`);
+    setIsFilterOpen(false);
   };
 
   return (
