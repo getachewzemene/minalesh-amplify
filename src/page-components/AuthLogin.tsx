@@ -110,13 +110,6 @@ export default function AuthLogin() {
                   Sign up
                 </Link>
               </p>
-              
-              <div className="pt-4 border-t">
-                <p className="text-xs text-muted-foreground">
-                  Demo accounts: Use "admin@test.com", "vendor@test.com", or "user@test.com" 
-                  with password "password123" to explore different roles.
-                </p>
-              </div>
             </div>
           </form>
         </Container>

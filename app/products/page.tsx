@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
+import { Star, ShoppingCart, Eye, Heart, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
@@ -456,7 +456,19 @@ function ProductsContent() {
         <Navbar />
         <Container className="py-8">
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">All Products</h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold">All Products</h1>
+              <Button
+                onClick={handleRefresh}
+                disabled={loading}
+                variant="outline"
+                size="default"
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
             <AdvancedSearch />
           </div>
           
