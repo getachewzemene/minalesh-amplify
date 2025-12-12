@@ -33,15 +33,6 @@ import {
   type CachedProduct 
 } from "@/lib/offline-cache"
 import phoneImg from "@/assets/products/phone.jpg"
-import sunglassesImg from "@/assets/products/sunglasses.jpg"
-import earbudsImg from "@/assets/products/earbuds.jpg"
-import capImg from "@/assets/products/cap.jpg"
-import laptopImg from "@/assets/products/laptop.jpg"
-import headphonesImg from "@/assets/products/headphones.jpg"
-import shoesImg from "@/assets/products/shoes.jpg"
-import jeansImg from "@/assets/products/jeans.jpg"
-import cctvImg from "@/assets/products/cctv.jpg"
-import nightlightImg from "@/assets/products/nightlight.jpg"
 
 interface Product {
   id: string
@@ -92,145 +83,7 @@ function transformApiProduct(p: ApiProduct): Product {
   }
 }
 
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "iPhone 15 Pro Max",
-    price: 89999,
-    originalPrice: 94999,
-    rating: 4.8,
-    reviews: 256,
-    image: phoneImg,
-    category: "Smartphones",
-    vendor: "TechStore ET",
-    isVerifiedVendor: true
-  },
-  {
-    id: "2",
-    name: "Ray-Ban Aviator",
-    price: 4299,
-    rating: 4.5,
-    reviews: 128,
-    image: sunglassesImg,
-    category: "Accessories",
-    vendor: "Fashion Hub",
-    isVerifiedVendor: true,
-    hasAR: true
-  },
-  {
-    id: "3",
-    name: "AirPods Pro",
-    price: 7999,
-    originalPrice: 8999,
-    rating: 4.7,
-    reviews: 312,
-    image: earbudsImg,
-    category: "Electronics",
-    vendor: "TechStore ET",
-    isVerifiedVendor: true
-  },
-  {
-    id: "4",
-    name: "Nike Sport Cap",
-    price: 899,
-    rating: 4.3,
-    reviews: 89,
-    image: capImg,
-    category: "Sports",
-    vendor: "Sports Corner"
-  },
-  {
-    id: "5",
-    name: "MacBook Pro 16\"",
-    price: 129999,
-    rating: 4.9,
-    reviews: 421,
-    image: laptopImg,
-    category: "Computers",
-    vendor: "TechStore ET",
-    isVerifiedVendor: true
-  },
-  {
-    id: "6",
-    name: "Sony WH-1000XM5",
-    price: 12999,
-    rating: 4.8,
-    reviews: 267,
-    image: headphonesImg,
-    category: "Electronics",
-    vendor: "AudioMax"
-  },
-  {
-    id: "7",
-    name: "Nike Air Max",
-    price: 5999,
-    rating: 4.6,
-    reviews: 189,
-    image: shoesImg,
-    category: "Shoes",
-    vendor: "Sports Corner",
-    hasAR: true
-  },
-  {
-    id: "8",
-    name: "Levi's 501 Jeans",
-    price: 2499,
-    originalPrice: 3299,
-    rating: 4.4,
-    reviews: 156,
-    image: jeansImg,
-    category: "Clothing",
-    vendor: "Fashion Hub"
-  },
-  {
-    id: "9",
-    name: "4K CCTV Security Camera System",
-    price: 8999,
-    originalPrice: 9999,
-    rating: 4.7,
-    reviews: 142,
-    image: cctvImg,
-    category: "Security & Surveillance",
-    vendor: "SecureTech ET",
-    isVerifiedVendor: true
-  },
-  {
-    id: "10",
-    name: "Wireless Security Camera Set",
-    price: 12499,
-    rating: 4.8,
-    reviews: 98,
-    image: cctvImg,
-    category: "Security & Surveillance",
-    vendor: "SecureTech ET",
-    isVerifiedVendor: true
-  },
-  {
-    id: "11",
-    name: "3D LED Night Light Moon Lamp",
-    price: 599,
-    rating: 4.8,
-    reviews: 215,
-    image: nightlightImg,
-    category: "Gifts & Decor",
-    hasAR: true,
-    vendor: "Gift Haven",
-    isVerifiedVendor: false
-  },
-  {
-    id: "12",
-    name: "3D Galaxy Night Light Projector",
-    price: 899,
-    originalPrice: 1199,
-    rating: 4.6,
-    reviews: 167,
-    image: nightlightImg,
-    category: "Gifts & Decor",
-    hasAR: true,
-    vendor: "Gift Haven",
-    isVerifiedVendor: false
-  }
-]
+// Mock products removed - products will be fetched from the API
 
 function ProductsContent() {
   const router = useRouter()
@@ -238,7 +91,7 @@ function ProductsContent() {
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
   
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isUsingCache, setIsUsingCache] = useState(false)
@@ -334,50 +187,49 @@ function ProductsContent() {
         return
       }
       
-      // Only fetch if there are search parameters, otherwise use mock data
-      if (params.toString()) {
-        setLoading(true)
-        setError(null)
-        setIsUsingCache(false)
+      // Always fetch from API
+      setLoading(true)
+      setError(null)
+      setIsUsingCache(false)
+      
+      try {
+        const url = params.toString() 
+          ? `/api/products/search?${params.toString()}` 
+          : '/api/products/search'
         
-        try {
-          const response = await fetch(`/api/products/search?${params.toString()}`)
-          if (response.ok) {
-            const data = await response.json()
-            
-            // Transform backend data to match Product interface
-            const transformedProducts = data.products.map((p: ApiProduct) => transformApiProduct(p))
-            
-            const productsToSet = transformedProducts.length > 0 ? transformedProducts : mockProducts
-            setProducts(productsToSet)
-            
-            // Cache products for offline use
-            await cacheProductsForOffline(productsToSet)
-          } else {
-            // If fetch fails, try to load from cache
-            const loaded = await loadCachedProducts()
-            if (!loaded) {
-              setError('Failed to fetch products')
-              setProducts(mockProducts)
-            }
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          
+          // Transform backend data to match Product interface
+          const transformedProducts = data.products.map((p: ApiProduct) => transformApiProduct(p))
+          
+          setProducts(transformedProducts)
+          
+          // Cache products for offline use
+          if (transformedProducts.length > 0) {
+            await cacheProductsForOffline(transformedProducts)
           }
-        } catch (err) {
-          console.error('Error fetching products:', err)
+        } else {
           // If fetch fails, try to load from cache
           const loaded = await loadCachedProducts()
           if (!loaded) {
-            setError('An error occurred while fetching products')
-            setProducts(mockProducts)
-          } else {
-            setError('Unable to fetch latest products. Showing cached version.')
+            setError('Failed to fetch products')
+            setProducts([])
           }
-        } finally {
-          setLoading(false)
         }
-      } else {
-        // No search parameters, use mock data and cache it
-        setProducts(mockProducts)
-        await cacheProductsForOffline(mockProducts)
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        // If fetch fails, try to load from cache
+        const loaded = await loadCachedProducts()
+        if (!loaded) {
+          setError('An error occurred while fetching products')
+          setProducts([])
+        } else {
+          setError('Unable to fetch latest products. Showing cached version.')
+        }
+      } finally {
+        setLoading(false)
       }
     }
     
@@ -410,9 +262,10 @@ function ProductsContent() {
         const data = await response.json()
         const transformedProducts = data.products.map((p: ApiProduct) => transformApiProduct(p))
         
-        const productsToSet = transformedProducts.length > 0 ? transformedProducts : mockProducts
-        setProducts(productsToSet)
-        await cacheProductsForOffline(productsToSet)
+        setProducts(transformedProducts)
+        if (transformedProducts.length > 0) {
+          await cacheProductsForOffline(transformedProducts)
+        }
         toast.success("Products refreshed successfully!")
       } else {
         throw new Error('Failed to fetch products')
@@ -580,7 +433,15 @@ function ProductsContent() {
           </div>
         )}
         
-        {!loading && products.length === 0 && !isOffline && (
+        {!loading && products.length === 0 && !isOffline && !error && (
+          <EmptyState 
+            variant="products"
+            title="Products Available Soon"
+            description="Our vendors are currently uploading their products. Check back soon for amazing deals!"
+          />
+        )}
+        
+        {!loading && products.length === 0 && !isOffline && error && (
           <EmptyState 
             variant="products"
             title="No products found"
