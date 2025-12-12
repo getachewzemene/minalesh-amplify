@@ -157,29 +157,32 @@ const mockMetrics = {
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
+// Initial product form state
+const INITIAL_PRODUCT_FORM = {
+  name: "",
+  brand: "",
+  price: "",
+  salePrice: "",
+  description: "",
+  shortDescription: "",
+  category: "",
+  sku: "",
+  stockQuantity: "",
+  lowStockThreshold: "5",
+  weight: "",
+  image: "",
+  features: [] as string[],
+  isDigital: false,
+  isFeatured: false
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('7d')
   const [showAddProductForm, setShowAddProductForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    brand: "",
-    price: "",
-    salePrice: "",
-    description: "",
-    shortDescription: "",
-    category: "",
-    sku: "",
-    stockQuantity: "",
-    lowStockThreshold: "5",
-    weight: "",
-    image: "",
-    features: [] as string[],
-    isDigital: false,
-    isFeatured: false
-  })
+  const [newProduct, setNewProduct] = useState(INITIAL_PRODUCT_FORM)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [statements, setStatements] = useState<VendorStatement[]>([])
@@ -275,23 +278,7 @@ export default function Dashboard() {
       });
       
       // Reset form
-      setNewProduct({
-        name: "",
-        brand: "",
-        price: "",
-        salePrice: "",
-        description: "",
-        shortDescription: "",
-        category: "",
-        sku: "",
-        stockQuantity: "",
-        lowStockThreshold: "5",
-        weight: "",
-        image: "",
-        features: [],
-        isDigital: false,
-        isFeatured: false
-      });
+      setNewProduct(INITIAL_PRODUCT_FORM);
       setImagePreview(null);
       setShowAddProductForm(false);
     } catch (error) {
@@ -1044,23 +1031,7 @@ export default function Dashboard() {
                         variant="outline"
                         onClick={() => {
                           setShowAddProductForm(false);
-                          setNewProduct({
-                            name: "",
-                            brand: "",
-                            price: "",
-                            salePrice: "",
-                            description: "",
-                            shortDescription: "",
-                            category: "",
-                            sku: "",
-                            stockQuantity: "",
-                            lowStockThreshold: "5",
-                            weight: "",
-                            image: "",
-                            features: [],
-                            isDigital: false,
-                            isFeatured: false
-                          });
+                          setNewProduct(INITIAL_PRODUCT_FORM);
                           setImagePreview(null);
                         }}
                       >
