@@ -101,6 +101,7 @@ const nextConfig = {
       // Mark logging packages as external to prevent bundling worker threads
       config.externals = config.externals || [];
       config.externals.push({
+        'pino': 'commonjs pino',
         'pino-pretty': 'commonjs pino-pretty',
         'thread-stream': 'commonjs thread-stream',
       });
