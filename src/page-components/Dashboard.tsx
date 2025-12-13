@@ -157,19 +157,32 @@ const mockMetrics = {
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
+// Initial product form state
+const INITIAL_PRODUCT_FORM = {
+  name: "",
+  brand: "",
+  price: "",
+  salePrice: "",
+  description: "",
+  shortDescription: "",
+  category: "",
+  sku: "",
+  stockQuantity: "",
+  lowStockThreshold: "5",
+  weight: "",
+  image: "",
+  features: [] as string[],
+  isDigital: false,
+  isFeatured: false
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('7d')
   const [showAddProductForm, setShowAddProductForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    price: "",
-    description: "",
-    category: "",
-    image: ""
-  })
+  const [newProduct, setNewProduct] = useState(INITIAL_PRODUCT_FORM)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [statements, setStatements] = useState<VendorStatement[]>([])
@@ -197,7 +210,7 @@ export default function Dashboard() {
     }
   }
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     // Check if vendor is verified
     if (!profile?.isVendor || profile?.vendorStatus !== 'approved') {
       toast({
@@ -208,21 +221,76 @@ export default function Dashboard() {
       return;
     }
     
-    // In a real app, this would send data to a backend
-    toast({
-      title: "Product Added",
-      description: "Your product has been successfully added to the marketplace."
-    });
+    // Validate required fields
+    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.stockQuantity || !newProduct.description) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in all required fields marked with *",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // Reset form
-    setNewProduct({
-      name: "",
-      price: "",
-      description: "",
-      category: "",
-      image: ""
-    });
-    setShowAddProductForm(false);
+    if (!newProduct.image) {
+      toast({
+        title: "Image Required",
+        description: "Please upload at least one product image.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Call the API to create the product
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newProduct.name,
+          brand: newProduct.brand || undefined,
+          price: parseFloat(newProduct.price),
+          salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
+          description: newProduct.description,
+          shortDescription: newProduct.shortDescription || undefined,
+          categoryName: newProduct.category,
+          sku: newProduct.sku || undefined,
+          stockQuantity: parseInt(newProduct.stockQuantity),
+          lowStockThreshold: parseInt(newProduct.lowStockThreshold) || 5,
+          weight: newProduct.weight ? parseFloat(newProduct.weight) : undefined,
+          images: [newProduct.image],
+          isDigital: newProduct.isDigital,
+          isFeatured: newProduct.isFeatured,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add product');
+      }
+      
+      toast({
+        title: "Product Added",
+        description: "Your product has been successfully added to the marketplace."
+      });
+      
+      // Reset form
+      setNewProduct(INITIAL_PRODUCT_FORM);
+      setImagePreview(null);
+      setShowAddProductForm(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add product. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerifyVendor = () => {
@@ -772,37 +840,124 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="productName">Product Name</Label>
+                          <Label htmlFor="productName">Product Name *</Label>
                           <Input 
                             id="productName" 
                             value={newProduct.name} 
                             onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} 
                             placeholder="Enter product name"
+                            required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="productPrice">Price (ETB)</Label>
+                          <Label htmlFor="productBrand">Brand</Label>
+                          <Input 
+                            id="productBrand" 
+                            value={newProduct.brand} 
+                            onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} 
+                            placeholder="Enter brand name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productPrice">Price (ETB) *</Label>
                           <Input 
                             id="productPrice" 
                             type="number" 
+                            step="0.01"
                             value={newProduct.price} 
                             onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} 
                             placeholder="Enter price"
+                            required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="productCategory">Category</Label>
+                          <Label htmlFor="productSalePrice">Sale Price (ETB)</Label>
+                          <Input 
+                            id="productSalePrice" 
+                            type="number" 
+                            step="0.01"
+                            value={newProduct.salePrice} 
+                            onChange={(e) => setNewProduct({...newProduct, salePrice: e.target.value})} 
+                            placeholder="Enter sale price (optional)"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productCategory">Category *</Label>
                           <Input 
                             id="productCategory" 
                             value={newProduct.category} 
                             onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} 
                             placeholder="Enter category"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productSku">SKU</Label>
+                          <Input 
+                            id="productSku" 
+                            value={newProduct.sku} 
+                            onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})} 
+                            placeholder="Enter SKU (optional)"
                           />
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="productImage">Product Image</Label>
+                          <Label htmlFor="productStockQuantity">Stock Quantity *</Label>
+                          <Input 
+                            id="productStockQuantity" 
+                            type="number" 
+                            value={newProduct.stockQuantity} 
+                            onChange={(e) => setNewProduct({...newProduct, stockQuantity: e.target.value})} 
+                            placeholder="Enter stock quantity"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productLowStockThreshold">Low Stock Alert Threshold</Label>
+                          <Input 
+                            id="productLowStockThreshold" 
+                            type="number" 
+                            value={newProduct.lowStockThreshold} 
+                            onChange={(e) => setNewProduct({...newProduct, lowStockThreshold: e.target.value})} 
+                            placeholder="Alert when stock is below (default: 5)"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="productWeight">Weight (kg)</Label>
+                          <Input 
+                            id="productWeight" 
+                            type="number" 
+                            step="0.01"
+                            value={newProduct.weight} 
+                            onChange={(e) => setNewProduct({...newProduct, weight: e.target.value})} 
+                            placeholder="Enter product weight"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="isDigital"
+                              checked={newProduct.isDigital}
+                              onChange={(e) => setNewProduct({...newProduct, isDigital: e.target.checked})}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor="isDigital" className="cursor-pointer">Digital Product</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="isFeatured"
+                              checked={newProduct.isFeatured}
+                              onChange={(e) => setNewProduct({...newProduct, isFeatured: e.target.checked})}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor="isFeatured" className="cursor-pointer">Featured Product</Label>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="productImage">Product Image *</Label>
                           <input
                             type="file"
                             id="productImage"
@@ -841,15 +996,29 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="mt-4">
-                      <Label htmlFor="productDescription">Description</Label>
-                      <Textarea 
-                        id="productDescription" 
-                        value={newProduct.description} 
-                        onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} 
-                        placeholder="Enter product description"
-                        rows={4}
-                      />
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <Label htmlFor="productShortDescription">Short Description</Label>
+                        <Textarea 
+                          id="productShortDescription" 
+                          value={newProduct.shortDescription} 
+                          onChange={(e) => setNewProduct({...newProduct, shortDescription: e.target.value})} 
+                          placeholder="Brief product summary (max 160 characters)"
+                          rows={2}
+                          maxLength={160}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="productDescription">Full Description *</Label>
+                        <Textarea 
+                          id="productDescription" 
+                          value={newProduct.description} 
+                          onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} 
+                          placeholder="Enter detailed product description"
+                          rows={4}
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-3 mt-6">
                       <Button 
@@ -860,7 +1029,11 @@ export default function Dashboard() {
                       </Button>
                       <Button 
                         variant="outline"
-                        onClick={() => setShowAddProductForm(false)}
+                        onClick={() => {
+                          setShowAddProductForm(false);
+                          setNewProduct(INITIAL_PRODUCT_FORM);
+                          setImagePreview(null);
+                        }}
                       >
                         Cancel
                       </Button>
