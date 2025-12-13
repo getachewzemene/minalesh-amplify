@@ -90,6 +90,23 @@ const nextConfig = {
   experimental: {
     // Enable optimizations
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Exclude logging packages from bundling to avoid worker thread issues
+    // This fixes the "Cannot find module worker.js" error with pino-pretty
+    serverComponentsExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
+  },
+  
+  // Webpack configuration to prevent bundling of worker threads
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Mark logging packages as external to prevent bundling worker threads
+      config.externals = config.externals || [];
+      config.externals.push({
+        'pino': 'commonjs pino',
+        'pino-pretty': 'commonjs pino-pretty',
+        'thread-stream': 'commonjs thread-stream',
+      });
+    }
+    return config;
   },
 };
 
