@@ -234,7 +234,7 @@ async function main() {
       weight: 0.85,
       categoryId: securityCategory.id,
       images: JSON.stringify([
-        '/uploads/cctv/hikvision-4k.jpg',
+        '/uploads/cctv/hikvision-4k.png',
       ]),
       features: JSON.stringify([
         '4K Ultra HD (3840×2160)',

@@ -1,3 +1,11 @@
+# Ignore user-generated upload files, keep demo assets
+# All runtime uploads should be ignored to avoid bloating the repo
+public/uploads/**
+
+# But allow committed demo/seed images and placeholders
+!public/uploads/.keep
+!public/uploads/demo/**
+
 # Logs
 logs
 *.log
