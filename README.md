@@ -96,6 +96,9 @@ npx prisma generate
 # (Optional) Seed Ethiopian categories
 npx tsx prisma/seeds/categories.ts
 
+# (Optional) Seed demo products (Phones, CCTV, Alarms, Storage, etc.)
+npx tsx prisma/seeds/demo-products.ts
+
 # Start the development server
 npm run dev
 ```
