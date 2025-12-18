@@ -9,6 +9,7 @@ import { useShop } from "@/context/shop-context"
 import { toast } from "sonner"
 import { formatCurrency } from "@/lib/utils"
 import { ProductCardSkeleton } from "@/components/ui/loading-state"
+import { parsePrimaryImage, getEffectivePrice } from "@/lib/image-utils"
 
 interface Product {
   id: string
@@ -59,30 +60,6 @@ export function ProductSection({
   const [loading, setLoading] = useState(true)
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
 
-  const parsePrimaryImage = (p: Product) => {
-    if (Array.isArray(p.images)) {
-      const first = p.images[0]
-      const url = typeof first === 'string' ? first : first?.url || first?.src
-      return url && url.startsWith('/') ? url : url ? `/${url}` : null
-    }
-    if (typeof p.images === 'string') {
-      try {
-        const parsed = JSON.parse(p.images)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const first = parsed[0]
-          const url = typeof first === 'string' ? first : first?.url || first?.src
-          return url && url.startsWith('/') ? url : url ? `/${url}` : null
-        }
-      } catch {
-        const url = p.images
-        return url && url.startsWith('/') ? url : `/${url}`
-      }
-    }
-    const obj = (p as any).images
-    const url = obj?.url || obj?.src
-    return url && url.startsWith('/') ? url : url ? `/${url}` : null
-  }
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -108,13 +85,14 @@ export function ProductSection({
   }, [endpoint, limit, categorySlug, productId])
 
   const handleAddToCart = (product: Product) => {
-    const imageUrl = parsePrimaryImage(product)
+    const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
+    const price = getEffectivePrice(product)
 
     addToCart({ 
       id: product.id, 
       name: product.name, 
-      price: product.salePrice ? Number(product.salePrice) : Number(product.price), 
-      image: imageUrl || undefined,
+      price, 
+      image: imageUrl,
       category: product.category?.name || 'Uncategorized',
       vendor: product.vendor?.displayName || 
               `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
@@ -124,13 +102,14 @@ export function ProductSection({
   }
 
   const handleAddToWishlist = (product: Product) => {
-    const imageUrl = parsePrimaryImage(product)
+    const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
+    const price = getEffectivePrice(product)
 
     addToWishlist({ 
       id: product.id, 
       name: product.name, 
-      price: product.salePrice ? Number(product.salePrice) : Number(product.price),
-      image: imageUrl || undefined,
+      price,
+      image: imageUrl,
       category: product.category?.name || 'Uncategorized',
       vendor: product.vendor?.displayName || 
               `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
@@ -173,7 +152,8 @@ export function ProductSection({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => {
-            const imageUrl = parsePrimaryImage(product) || '/placeholder-product.jpg'
+            const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
+            const effectivePrice = getEffectivePrice(product)
             const vendorName = product.vendor?.displayName || 
                                `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
                                'Unknown Vendor'
@@ -263,7 +243,7 @@ export function ProductSection({
                   <div className="mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-primary">
-                        {formatCurrency(product.salePrice || product.price)}
+                        {formatCurrency(effectivePrice)}
                       </span>
                       {product.salePrice && product.salePrice < product.price && (
                         <span className="text-sm text-muted-foreground line-through">

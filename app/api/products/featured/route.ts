@@ -39,7 +39,8 @@ import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 async function handler(request: Request) {
   const { searchParams } = new URL(request.url);
   
-  const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+  const limitParam = parseInt(searchParams.get('limit') || '10');
+  const limit = Math.min(isNaN(limitParam) ? 10 : limitParam, 50);
   const categorySlug = searchParams.get('category');
 
   const cacheKey = `featured-products:${limit}:${categorySlug || 'all'}`;

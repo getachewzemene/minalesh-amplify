@@ -19,48 +19,37 @@ import {
   isOnline,
   type CachedProduct 
 } from "@/lib/offline-cache"
-import sunglassesImg from "@/assets/products/sunglasses.jpg"
+import { parseAllImages, getEffectivePrice } from "@/lib/image-utils"
 
-
-const mockProduct = {
-  id: "1",
-  name: "Ray-Ban Aviator Classic Sunglasses",
-  price: 2499,
-  originalPrice: 2999,
-  rating: 4.6,
-  reviews: 128,
-  images: [
-    sunglassesImg,
-    sunglassesImg,
-    sunglassesImg,
-    sunglassesImg
-  ],
-  category: "Fashion",
-  productType: "sunglasses" as const,
-  vendor: {
-    name: "Fashion Hub Ethiopia",
-    rating: 4.8,
-    totalSales: 1200,
-    isVerified: true
-  },
-  inStock: true,
-  stockCount: 15,
-  description: `Classic aviator sunglasses with premium UV protection. These timeless shades feature a durable metal frame and high-quality lenses that provide 100% UV protection. Perfect for any occasion, from casual outings to formal events.`,
-  specifications: {
-    "Frame Material": "Metal Alloy",
-    "Lens Material": "Polycarbonate",
-    "UV Protection": "100% UV400",
-    "Frame Width": "140mm",
-    "Lens Width": "58mm",
-    "Bridge Width": "14mm"
-  },
-  features: [
-    "100% UV Protection",
-    "Anti-Reflective Coating",
-    "Scratch Resistant",
-    "Lightweight Design",
-    "Classic Aviator Style"
-  ]
+interface ProductData {
+  id: string
+  name: string
+  price: number
+  salePrice?: number | null
+  ratingAverage: number
+  ratingCount: number
+  images: any
+  category?: {
+    id: string
+    name: string
+    slug: string
+  }
+  vendor?: {
+    id: string
+    displayName?: string
+    firstName?: string
+    lastName?: string
+    isVendor?: boolean
+    city?: string
+    vendorStatus?: string
+  }
+  stockQuantity: number
+  description?: string
+  shortDescription?: string
+  features?: string | string[]
+  specifications?: string | Record<string, string>
+  brand?: string
+  sku?: string
 }
 
 export default function Product() {
@@ -71,7 +60,7 @@ export default function Product() {
   const [quantity, setQuantity] = useState(1)
   const [isOffline, setIsOffline] = useState(false)
   const [isUsingCache, setIsUsingCache] = useState(false)
-  const [displayProduct, setDisplayProduct] = useState<any>(null)
+  const [displayProduct, setDisplayProduct] = useState<ProductData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { addToCart, addToWishlist } = useShop()
@@ -121,116 +110,38 @@ export default function Product() {
     }
   }, [])
 
-  // Cache product for offline viewing
+  // Cache product for offline viewing - only if displayProduct is loaded
   useEffect(() => {
     const cacheCurrentProduct = async () => {
+      if (!displayProduct) return
+      
+      const productImages = parseAllImages(displayProduct.images)
       // Cache the current product for offline use
       const productToCache: Omit<CachedProduct, 'cachedAt'> = {
         id: displayProduct.id,
         name: displayProduct.name,
         price: displayProduct.price,
-        originalPrice: displayProduct.originalPrice,
-        rating: displayProduct.rating,
-        reviews: displayProduct.reviews,
-        image: displayProduct.images[0]?.src || '',
-        category: displayProduct.category,
-        vendor: displayProduct.vendor.name,
-        isVerifiedVendor: displayProduct.vendor.isVerified,
+        originalPrice: displayProduct.salePrice ? displayProduct.price : undefined,
+        rating: displayProduct.ratingAverage,
+        reviews: displayProduct.ratingCount,
+        image: productImages[0] || '',
+        category: displayProduct.category?.name || '',
+        vendor: displayProduct.vendor?.displayName || 
+                `${displayProduct.vendor?.firstName || ''} ${displayProduct.vendor?.lastName || ''}`.trim(),
+        isVerifiedVendor: displayProduct.vendor?.vendorStatus === 'approved',
         hasAR: true,
         description: displayProduct.description,
-        stockQuantity: displayProduct.stockCount,
+        stockQuantity: displayProduct.stockQuantity,
       }
       
       await cacheProduct(productToCache)
     }
 
     // Only cache if online (we're viewing fresh data)
-    if (isOnline()) {
+    if (isOnline() && displayProduct) {
       cacheCurrentProduct()
     }
   }, [displayProduct])
-
-  // Load from cache when offline
-  useEffect(() => {
-    const loadCachedProduct = async () => {
-      if (!isOnline() && productId) {
-        const cached = await getCachedProduct(productId)
-        if (cached) {
-          setIsUsingCache(true)
-          // Update display with cached data
-          setDisplayProduct(prev => ({
-            ...prev,
-            id: cached.id,
-            name: cached.name,
-            price: cached.price,
-            originalPrice: cached.originalPrice,
-            rating: cached.rating,
-            reviews: cached.reviews,
-            description: cached.description || prev.description,
-            stockCount: cached.stockQuantity || prev.stockCount,
-            category: cached.category,
-            vendor: {
-              ...prev.vendor,
-              name: cached.vendor,
-              isVerified: cached.isVerifiedVendor ?? prev.vendor.isVerified,
-            },
-          }))
-        }
-      } else {
-        setIsUsingCache(false)
-      }
-    }
-
-    loadCachedProduct()
-  }, [productId, isOffline])
-
-  const parsePrimaryImage = (images: any) => {
-    if (Array.isArray(images)) {
-      const first = images[0]
-      const url = typeof first === 'string' ? first : first?.url || first?.src
-      return url && url.startsWith('/') ? url : url ? `/${url}` : null
-    }
-    if (typeof images === 'string') {
-      try {
-        const parsed = JSON.parse(images)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const first = parsed[0]
-          const url = typeof first === 'string' ? first : first?.url || first?.src
-          return url && url.startsWith('/') ? url : url ? `/${url}` : null
-        }
-      } catch {
-        const url = images
-        return url && url.startsWith('/') ? url : `/${url}`
-      }
-    }
-    const obj = images
-    const url = obj?.url || obj?.src
-    return url && url.startsWith('/') ? url : url ? `/${url}` : null
-  }
-
-  const parseAllImages = (images: any): string[] => {
-    if (Array.isArray(images)) {
-      return images.map(img => {
-        const url = typeof img === 'string' ? img : img?.url || img?.src
-        return url && url.startsWith('/') ? url : url ? `/${url}` : '/placeholder-product.jpg'
-      })
-    }
-    if (typeof images === 'string') {
-      try {
-        const parsed = JSON.parse(images)
-        if (Array.isArray(parsed)) {
-          return parsed.map(img => {
-            const url = typeof img === 'string' ? img : img?.url || img?.src
-            return url && url.startsWith('/') ? url : url ? `/${url}` : '/placeholder-product.jpg'
-          })
-        }
-      } catch {
-        const url = images
-        return [url && url.startsWith('/') ? url : `/${url}`]
-      }
-    }
-    return ['/placeholder-product.jpg']
-  }
 
   if (loading) {
     return (
@@ -272,11 +183,12 @@ export default function Product() {
   }
 
   const productImages = parseAllImages(displayProduct.images)
+  const firstImage = productImages[0] || '/placeholder-product.jpg'
   const vendorName = displayProduct.vendor?.displayName || 
                      `${displayProduct.vendor?.firstName || ''} ${displayProduct.vendor?.lastName || ''}`.trim() || 
                      'Unknown Vendor'
   const isVendorVerified = displayProduct.vendor?.vendorStatus === 'approved'
-  const currentPrice = displayProduct.salePrice || displayProduct.price
+  const currentPrice = getEffectivePrice(displayProduct)
   const originalPrice = displayProduct.salePrice ? displayProduct.price : null
 
   // Parse features and specifications
@@ -473,7 +385,7 @@ export default function Product() {
                       id: displayProduct.id, 
                       name: displayProduct.name, 
                       price: currentPrice, 
-                      image: productImages[0], 
+                      image: firstImage, 
                       category: displayProduct.category?.name || 'Uncategorized', 
                       vendor: vendorName
                     })}
@@ -489,7 +401,7 @@ export default function Product() {
                       id: displayProduct.id, 
                       name: displayProduct.name, 
                       price: currentPrice, 
-                      image: productImages[0], 
+                      image: firstImage, 
                       category: displayProduct.category?.name || 'Uncategorized', 
                       vendor: vendorName
                     })}
