@@ -19,7 +19,7 @@ import {
   isOnline,
   type CachedProduct 
 } from "@/lib/offline-cache"
-import { parseAllImages, getEffectivePrice } from "@/lib/image-utils"
+import { parseAllImages, getEffectivePrice, parseJsonField } from "@/lib/image-utils"
 
 interface ProductData {
   id: string
@@ -191,29 +191,9 @@ export default function Product() {
   const currentPrice = getEffectivePrice(displayProduct)
   const originalPrice = displayProduct.salePrice ? displayProduct.price : null
 
-  // Parse features and specifications
-  let features: string[] = []
-  let specifications: Record<string, string> = {}
-  
-  try {
-    if (typeof displayProduct.features === 'string') {
-      features = JSON.parse(displayProduct.features)
-    } else if (Array.isArray(displayProduct.features)) {
-      features = displayProduct.features
-    }
-  } catch {
-    features = []
-  }
-
-  try {
-    if (typeof displayProduct.specifications === 'string') {
-      specifications = JSON.parse(displayProduct.specifications)
-    } else if (typeof displayProduct.specifications === 'object') {
-      specifications = displayProduct.specifications
-    }
-  } catch {
-    specifications = {}
-  }
+  // Parse features and specifications using shared utility
+  const features = parseJsonField<string[]>(displayProduct.features, [])
+  const specifications = parseJsonField<Record<string, string>>(displayProduct.specifications, {})
 
   return (
     <div className="min-h-screen bg-background">

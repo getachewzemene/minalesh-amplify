@@ -3,10 +3,14 @@
  */
 
 /**
- * Normalize image URL to ensure it starts with /
+ * Normalize image URL to ensure it starts with / for local paths
+ * Handles external URLs (http/https) correctly
  */
 export function normalizeImageUrl(url: string | null | undefined): string | null {
   if (!url) return null
+  // Don't modify external URLs
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  // Add leading slash for local paths
   return url.startsWith('/') ? url : `/${url}`
 }
 
@@ -71,4 +75,27 @@ export function parseAllImages(images: any): string[] {
  */
 export function getEffectivePrice(product: { price: number; salePrice?: number | null }): number {
   return product.salePrice ? Number(product.salePrice) : Number(product.price)
+}
+
+/**
+ * Parse a JSON field with a fallback value
+ * Handles both JSON strings and already-parsed objects
+ */
+export function parseJsonField<T>(field: string | T | null | undefined, fallback: T): T {
+  if (!field) return fallback
+  
+  if (typeof field === 'string') {
+    try {
+      return JSON.parse(field) as T
+    } catch {
+      return fallback
+    }
+  }
+  
+  // If it's already parsed (array or object), return as-is
+  if (typeof field === 'object') {
+    return field as T
+  }
+  
+  return fallback
 }
