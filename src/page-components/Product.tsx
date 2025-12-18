@@ -71,8 +71,39 @@ export default function Product() {
   const [quantity, setQuantity] = useState(1)
   const [isOffline, setIsOffline] = useState(false)
   const [isUsingCache, setIsUsingCache] = useState(false)
-  const [displayProduct, setDisplayProduct] = useState(mockProduct)
+  const [displayProduct, setDisplayProduct] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { addToCart, addToWishlist } = useShop()
+
+  // Fetch product data from API
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!productId) return
+
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetch(`/api/products/${productId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setDisplayProduct(data.product)
+        } else if (response.status === 404) {
+          setError('Product not found')
+        } else {
+          setError('Failed to load product')
+        }
+      } catch (err) {
+        console.error('Error fetching product:', err)
+        setError('Failed to load product')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProduct()
+  }, [productId])
 
   // Handle online/offline status
   useEffect(() => {
@@ -153,6 +184,125 @@ export default function Product() {
     loadCachedProduct()
   }, [productId, isOffline])
 
+  const parsePrimaryImage = (images: any) => {
+    if (Array.isArray(images)) {
+      const first = images[0]
+      const url = typeof first === 'string' ? first : first?.url || first?.src
+      return url && url.startsWith('/') ? url : url ? `/${url}` : null
+    }
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const first = parsed[0]
+          const url = typeof first === 'string' ? first : first?.url || first?.src
+          return url && url.startsWith('/') ? url : url ? `/${url}` : null
+        }
+      } catch {
+        const url = images
+        return url && url.startsWith('/') ? url : `/${url}`
+      }
+    }
+    const obj = images
+    const url = obj?.url || obj?.src
+    return url && url.startsWith('/') ? url : url ? `/${url}` : null
+  }
+
+  const parseAllImages = (images: any): string[] => {
+    if (Array.isArray(images)) {
+      return images.map(img => {
+        const url = typeof img === 'string' ? img : img?.url || img?.src
+        return url && url.startsWith('/') ? url : url ? `/${url}` : '/placeholder-product.jpg'
+      })
+    }
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images)
+        if (Array.isArray(parsed)) {
+          return parsed.map(img => {
+            const url = typeof img === 'string' ? img : img?.url || img?.src
+            return url && url.startsWith('/') ? url : url ? `/${url}` : '/placeholder-product.jpg'
+          })
+        }
+      } catch {
+        const url = images
+        return [url && url.startsWith('/') ? url : `/${url}`]
+      }
+    }
+    return ['/placeholder-product.jpg']
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-8">
+          <Container>
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <div className="mx-auto h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-muted-foreground">Loading product...</p>
+              </div>
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (error || !displayProduct) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="py-8">
+          <Container>
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">{error || 'Product not found'}</h2>
+                <p className="text-muted-foreground mb-4">The product you're looking for doesn't exist or has been removed.</p>
+                <Button onClick={() => window.history.back()}>Go Back</Button>
+              </div>
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  const productImages = parseAllImages(displayProduct.images)
+  const vendorName = displayProduct.vendor?.displayName || 
+                     `${displayProduct.vendor?.firstName || ''} ${displayProduct.vendor?.lastName || ''}`.trim() || 
+                     'Unknown Vendor'
+  const isVendorVerified = displayProduct.vendor?.vendorStatus === 'approved'
+  const currentPrice = displayProduct.salePrice || displayProduct.price
+  const originalPrice = displayProduct.salePrice ? displayProduct.price : null
+
+  // Parse features and specifications
+  let features: string[] = []
+  let specifications: Record<string, string> = {}
+  
+  try {
+    if (typeof displayProduct.features === 'string') {
+      features = JSON.parse(displayProduct.features)
+    } else if (Array.isArray(displayProduct.features)) {
+      features = displayProduct.features
+    }
+  } catch {
+    features = []
+  }
+
+  try {
+    if (typeof displayProduct.specifications === 'string') {
+      specifications = JSON.parse(displayProduct.specifications)
+    } else if (typeof displayProduct.specifications === 'object') {
+      specifications = displayProduct.specifications
+    }
+  } catch {
+    specifications = {}
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -172,37 +322,41 @@ export default function Product() {
             <div className="space-y-4">
               <div className="aspect-square overflow-hidden rounded-lg bg-muted">
                 <img
-                  src={displayProduct.images[selectedImage].src}
+                  src={productImages[selectedImage]}
                   alt={displayProduct.name}
                   className="w-full h-full object-cover"
                 />
               </div>
               
-              <div className="grid grid-cols-4 gap-2">
-                {displayProduct.images.map((image: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                      selectedImage === index ? 'border-primary' : 'border-transparent'
-                    }`}
-                  >
-                    <img
-                      src={image.src}
-                      alt={`${displayProduct.name} view ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
+              {productImages.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {productImages.map((image: string, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
+                        selectedImage === index ? 'border-primary' : 'border-transparent'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${displayProduct.name} view ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Product Info */}
             <div className="space-y-6">
               <div>
-                <Badge variant="outline" className="mb-2">
-                  {displayProduct.category}
-                </Badge>
+                {displayProduct.category && (
+                  <Badge variant="outline" className="mb-2">
+                    {displayProduct.category.name}
+                  </Badge>
+                )}
                 <h1 className="text-3xl font-bold mb-2">{displayProduct.name}</h1>
                 
                 {/* Rating */}
@@ -212,7 +366,7 @@ export default function Product() {
                       <Star
                         key={i}
                         className={`h-4 w-4 ${
-                          i < Math.floor(displayProduct.rating)
+                          i < Math.floor(Number(displayProduct.ratingAverage || 0))
                             ? "fill-yellow-400 text-yellow-400"
                             : "text-gray-300"
                         }`}
@@ -220,23 +374,23 @@ export default function Product() {
                     ))}
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {displayProduct.rating} ({displayProduct.reviews} reviews)
+                    {Number(displayProduct.ratingAverage || 0).toFixed(1)} ({displayProduct.ratingCount || 0} reviews)
                   </span>
                 </div>
 
                 {/* Price */}
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-3xl font-bold text-primary">
-                    {formatCurrency(displayProduct.price)}
+                    {formatCurrency(currentPrice)}
                   </span>
-                  {displayProduct.originalPrice && (
+                  {originalPrice && (
                     <span className="text-xl text-muted-foreground line-through">
-                      {formatCurrency(displayProduct.originalPrice)}
+                      {formatCurrency(originalPrice)}
                     </span>
                   )}
-                  {displayProduct.originalPrice && (
+                  {originalPrice && (
                     <Badge variant="destructive">
-                      {Math.round(((displayProduct.originalPrice - displayProduct.price) / displayProduct.originalPrice) * 100)}% OFF
+                      {Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% OFF
                     </Badge>
                   )}
                 </div>
@@ -247,17 +401,18 @@ export default function Product() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{displayProduct.vendor.name}</h3>
-                      {displayProduct.vendor.isVerified && (
+                      <h3 className="font-semibold">{vendorName}</h3>
+                      {isVendorVerified && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                           Verified
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      {displayProduct.vendor.rating} • {displayProduct.vendor.totalSales} sales
-                    </div>
+                    {displayProduct.vendor?.city && (
+                      <div className="text-sm text-muted-foreground">
+                        {displayProduct.vendor.city}
+                      </div>
+                    )}
                   </div>
                   <Button variant="outline" size="sm">
                     View Store
@@ -267,11 +422,11 @@ export default function Product() {
 
               {/* Stock Status */}
               <div className="flex items-center gap-2">
-                {displayProduct.inStock ? (
+                {displayProduct.stockQuantity > 0 ? (
                   <>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-green-600">
-                      In Stock ({displayProduct.stockCount} available)
+                      In Stock ({displayProduct.stockQuantity} available)
                     </span>
                   </>
                 ) : (
@@ -292,6 +447,7 @@ export default function Product() {
                       size="sm"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="px-3"
+                      disabled={displayProduct.stockQuantity <= 0}
                     >
                       -
                     </Button>
@@ -299,8 +455,9 @@ export default function Product() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => setQuantity(Math.min(displayProduct.stockQuantity, quantity + 1))}
                       className="px-3"
+                      disabled={displayProduct.stockQuantity <= 0}
                     >
                       +
                     </Button>
@@ -311,12 +468,32 @@ export default function Product() {
                   <Button 
                     className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
                     size="lg"
-                    onClick={() => addToCart({ id: displayProduct.id, name: displayProduct.name, price: displayProduct.price, image: displayProduct.images[0].src, category: displayProduct.category, vendor: displayProduct.vendor.name, hasAR: true })}
+                    disabled={displayProduct.stockQuantity <= 0}
+                    onClick={() => addToCart({ 
+                      id: displayProduct.id, 
+                      name: displayProduct.name, 
+                      price: currentPrice, 
+                      image: productImages[0], 
+                      category: displayProduct.category?.name || 'Uncategorized', 
+                      vendor: vendorName
+                    })}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    Add to Cart
+                    {displayProduct.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
                   </Button>
-                  <Button variant="outline" size="lg" aria-label="Add to wishlist" onClick={() => addToWishlist({ id: displayProduct.id, name: displayProduct.name, price: displayProduct.price, image: displayProduct.images[0].src, category: displayProduct.category, vendor: displayProduct.vendor.name, hasAR: true })}>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    aria-label="Add to wishlist" 
+                    onClick={() => addToWishlist({ 
+                      id: displayProduct.id, 
+                      name: displayProduct.name, 
+                      price: currentPrice, 
+                      image: productImages[0], 
+                      category: displayProduct.category?.name || 'Uncategorized', 
+                      vendor: vendorName
+                    })}
+                  >
                     <Heart className="h-5 w-5" />
                   </Button>
                   <Button variant="outline" size="lg">
@@ -343,44 +520,57 @@ export default function Product() {
             </div>
           </div>
 
-          {/* AR Viewer */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Try It On</h2>
-            <ARViewer 
-              productType={displayProduct.productType}
-              productName={displayProduct.name}
-            />
-          </div>
-
           {/* Product Details */}
           <div className="mt-12 grid lg:grid-cols-2 gap-8">
             <div>
               <h2 className="text-2xl font-bold mb-4">Description</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {displayProduct.description}
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                {displayProduct.description || displayProduct.shortDescription || 'No description available.'}
               </p>
               
-              <h3 className="text-lg font-semibold mt-6 mb-3">Key Features</h3>
-              <ul className="space-y-2">
-                {displayProduct.features.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              {features.length > 0 && (
+                <>
+                  <h3 className="text-lg font-semibold mt-6 mb-3">Key Features</h3>
+                  <ul className="space-y-2">
+                    {features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-4">Specifications</h2>
-              <div className="space-y-3">
-                {Object.entries(displayProduct.specifications).map(([key, value]) => (
-                  <div key={key} className="flex justify-between py-2 border-b border-border last:border-0">
-                    <span className="font-medium">{key}</span>
-                    <span className="text-muted-foreground">{value}</span>
+              {Object.keys(specifications).length > 0 && (
+                <>
+                  <h2 className="text-2xl font-bold mb-4">Specifications</h2>
+                  <div className="space-y-3">
+                    {Object.entries(specifications).map(([key, value]) => (
+                      <div key={key} className="flex justify-between py-2 border-b border-border last:border-0">
+                        <span className="font-medium">{key}</span>
+                        <span className="text-muted-foreground">{value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
+              
+              {displayProduct.brand && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-2">Brand</h3>
+                  <p className="text-muted-foreground">{displayProduct.brand}</p>
+                </div>
+              )}
+              
+              {displayProduct.sku && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">SKU</h3>
+                  <p className="text-muted-foreground font-mono">{displayProduct.sku}</p>
+                </div>
+              )}
             </div>
           </div>
 
