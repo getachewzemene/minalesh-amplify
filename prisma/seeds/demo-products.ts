@@ -121,10 +121,10 @@ async function main() {
       stockQuantity: 25,
       weight: 0.233,
       categoryId: electronicsCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/phones/samsung-s24-ultra.jpg',
         '/uploads/phones/samsung-s24-ultra-back.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '6.8" QHD+ Dynamic AMOLED Display',
         '200MP Main Camera with AI',
@@ -158,10 +158,10 @@ async function main() {
       stockQuantity: 18,
       weight: 0.221,
       categoryId: electronicsCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/phones/iphone-15-pro-max.jpg',
         '/uploads/phones/iphone-15-pro-max-camera.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '6.7" Super Retina XDR Display',
         'A17 Pro Chip',
@@ -194,9 +194,9 @@ async function main() {
       stockQuantity: 30,
       weight: 0.213,
       categoryId: electronicsCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/phones/pixel-8-pro.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '6.7" LTPO OLED Display',
         'Google Tensor G3',
@@ -233,9 +233,9 @@ async function main() {
       stockQuantity: 45,
       weight: 0.85,
       categoryId: securityCategory.id,
-      images: JSON.stringify([
-        '/uploads/cctv/hikvision-4k.png',
-      ]),
+      images: [
+        '/uploads/cctv/hikvision-4k.jpg',
+      ],
       features: JSON.stringify([
         '4K Ultra HD (3840×2160)',
         '30m Infrared Night Vision',
@@ -267,9 +267,9 @@ async function main() {
       stockQuantity: 60,
       weight: 0.55,
       categoryId: securityCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/cctv/dahua-dome.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '1080p Full HD',
         'Vandal-Proof Design',
@@ -301,9 +301,9 @@ async function main() {
       stockQuantity: 75,
       weight: 0.35,
       categoryId: securityCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/cctv/tplink-tapo.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '1080p Full HD Video',
         '360° Horizontal Rotation',
@@ -339,9 +339,9 @@ async function main() {
       stockQuantity: 120,
       weight: 0.15,
       categoryId: securityCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/alarms/ring-door-sensor.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'Wireless Installation',
         'Instant Mobile Alerts',
@@ -373,9 +373,9 @@ async function main() {
       stockQuantity: 35,
       weight: 1.2,
       categoryId: securityCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/alarms/simplisafe-lock.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'Keyless Entry',
         'Built-in Alarm (95dB)',
@@ -407,9 +407,9 @@ async function main() {
       stockQuantity: 50,
       weight: 0.8,
       categoryId: securityCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/alarms/yale-kit.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '4 Door/Window Sensors',
         '90dB Siren',
@@ -445,9 +445,9 @@ async function main() {
       stockQuantity: 40,
       weight: 0.08,
       categoryId: storageCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/storage/sandisk-extreme-1tb.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '1TB Storage Capacity',
         '420MB/s Read Speed',
@@ -480,9 +480,9 @@ async function main() {
       stockQuantity: 65,
       weight: 0.03,
       categoryId: storageCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/storage/samsung-bar-512gb.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '512GB Capacity',
         '400MB/s Transfer Speed',
@@ -513,9 +513,9 @@ async function main() {
       stockQuantity: 28,
       weight: 0.11,
       categoryId: storageCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/storage/kingston-max-1tb.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '1TB Storage',
         'USB 3.2 Gen 2',
@@ -552,9 +552,9 @@ async function main() {
       stockQuantity: 32,
       weight: 0.12,
       categoryId: electronicsCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/dashcam/garmin-67w.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '1440p Video Quality',
         '180° Wide-Angle View',
@@ -587,9 +587,9 @@ async function main() {
       stockQuantity: 25,
       weight: 0.35,
       categoryId: electronicsCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/dashcam/viofo-a129.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '4K Front Camera',
         '1080p Rear Camera',
@@ -621,9 +621,9 @@ async function main() {
       stockQuantity: 20,
       weight: 0.25,
       categoryId: electronicsCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/dashcam/nextbase-622gw.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '4K Ultra HD Recording',
         '3" Touchscreen',
@@ -659,9 +659,9 @@ async function main() {
       stockQuantity: 42,
       weight: 0.72,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/routers/tplink-ax73.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'WiFi 6 (802.11ax)',
         '5400Mbps Total Speed',
@@ -694,9 +694,9 @@ async function main() {
       stockQuantity: 28,
       weight: 0.81,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/routers/asus-ax86u.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'WiFi 6 Gaming Router',
         'Mobile Game Mode',
@@ -728,9 +728,9 @@ async function main() {
       stockQuantity: 18,
       weight: 1.2,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/routers/netgear-ax12.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         '12-Stream WiFi 6',
         '6Gbps Total Speed',
@@ -766,9 +766,9 @@ async function main() {
       stockQuantity: 35,
       weight: 1.8,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/wifi/tplink-deco-x60.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'WiFi 6 Mesh System',
         '3-Pack (7000 sq ft)',
@@ -801,9 +801,9 @@ async function main() {
       stockQuantity: 24,
       weight: 2.1,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/wifi/google-nest-pro.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'WiFi 6E with 6GHz Band',
         'Tri-Band Technology',
@@ -835,9 +835,9 @@ async function main() {
       stockQuantity: 16,
       weight: 2.5,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/wifi/netgear-orbi.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'Tri-Band WiFi 6',
         'Dedicated Backhaul',
@@ -869,9 +869,9 @@ async function main() {
       stockQuantity: 48,
       weight: 0.45,
       categoryId: networkingCategory.id,
-      images: JSON.stringify([
+      images: [
         '/uploads/wifi/tplink-extender.jpg',
-      ]),
+      ],
       features: JSON.stringify([
         'WiFi 6E Tri-Band',
         '6000Mbps Speed',
@@ -908,7 +908,9 @@ async function main() {
   for (const productData of allProducts) {
     await prisma.product.upsert({
       where: { slug: productData.slug },
-      update: {},
+      update: {
+        images: productData.images as any,
+      },
       create: {
         ...productData,
         vendorId,

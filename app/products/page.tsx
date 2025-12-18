@@ -65,7 +65,15 @@ interface ApiProduct {
  * Transforms API product data to the frontend Product interface
  */
 function transformApiProduct(p: ApiProduct): Product {
-  const images = p.images || []
+  let images: string[] = []
+  if (Array.isArray(p.images)) {
+    images = p.images as string[]
+  } else if (typeof p.images === 'string') {
+    try {
+      const parsed = JSON.parse(p.images)
+      if (Array.isArray(parsed)) images = parsed
+    } catch {}
+  }
   const firstImage = images.length > 0 ? images[0] : null
   
   return {
@@ -75,7 +83,7 @@ function transformApiProduct(p: ApiProduct): Product {
     originalPrice: p.salePrice ? parseFloat(String(p.salePrice)) : undefined,
     rating: parseFloat(String(p.ratingAverage || 0)),
     reviews: p.ratingCount || 0,
-    image: firstImage ? { src: firstImage } : phoneImg,
+    image: firstImage ? { src: firstImage.startsWith('/') ? firstImage : `/${firstImage}` } : phoneImg,
     category: p.category?.name || 'Uncategorized',
     hasAR: false,
     vendor: p.vendor?.displayName || 'Unknown',
