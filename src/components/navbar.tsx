@@ -1,6 +1,6 @@
 'use client'
 
-import { ShoppingCart, User, Menu, Heart } from "lucide-react"
+import { ShoppingCart, User, Menu, Heart, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
