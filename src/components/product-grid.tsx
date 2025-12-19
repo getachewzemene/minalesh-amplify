@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Star, ShoppingCart, Eye, Heart, ShieldCheck, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,101 +10,30 @@ import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
 import { formatCurrency } from "@/lib/utils"
-import phoneImg from "@/assets/products/phone.jpg"
-import sunglassesImg from "@/assets/products/sunglasses.jpg"
-import earbudsImg from "@/assets/products/earbuds.jpg"
-import capImg from "@/assets/products/cap.jpg"
-import cctvImg from "@/assets/products/cctv.jpg"
-import nightlightImg from "@/assets/products/nightlight.jpg"
+import { ProductCardSkeleton } from "@/components/ui/loading-state"
+import { parsePrimaryImage, getEffectivePrice } from "@/lib/image-utils"
 
 interface Product {
   id: string
   name: string
   price: number
-  originalPrice?: number
-  rating: number
-  reviews: number
-  image: any
-  category: string
-  hasAR?: boolean
-  vendor: string
-  vendorVerified: boolean
-}
-
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "iPhone 15 Pro Max",
-    price: 89999,
-    originalPrice: 94999,
-    rating: 4.8,
-    reviews: 256,
-    image: phoneImg,
-    category: "Smartphones",
-    vendor: "TechStore ET",
-    vendorVerified: true
-  },
-  {
-    id: "2",
-    name: "Ray-Ban Aviator Sunglasses",
-    price: 2499,
-    rating: 4.6,
-    reviews: 128,
-    image: sunglassesImg,
-    category: "Fashion",
-    hasAR: true,
-    vendor: "Fashion Hub",
-    vendorVerified: false
-  },
-  {
-    id: "3",
-    name: "Samsung Galaxy Buds Pro",
-    price: 3299,
-    originalPrice: 3799,
-    rating: 4.7,
-    reviews: 342,
-    image: earbudsImg,
-    category: "Audio",
-    vendor: "Audio World",
-    vendorVerified: true
-  },
-  {
-    id: "4",
-    name: "Nike Baseball Cap",
-    price: 899,
-    rating: 4.5,
-    reviews: 89,
-    image: capImg,
-    category: "Fashion",
-    hasAR: true,
-    vendor: "Sports Zone",
-    vendorVerified: false
-  },
-  {
-    id: "5",
-    name: "4K CCTV Security Camera System",
-    price: 8999,
-    originalPrice: 9999,
-    rating: 4.7,
-    reviews: 142,
-    image: cctvImg,
-    category: "Security & Surveillance",
-    vendor: "SecureTech ET",
-    vendorVerified: true
-  },
-  {
-    id: "6",
-    name: "3D LED Night Light Moon Lamp",
-    price: 599,
-    rating: 4.8,
-    reviews: 215,
-    image: nightlightImg,
-    category: "Gifts & Decor",
-    hasAR: true,
-    vendor: "Gift Haven",
-    vendorVerified: false
+  salePrice?: number | null
+  ratingAverage: number
+  ratingCount: number
+  images: any
+  category?: {
+    name: string
+    slug: string
   }
-]
+  vendor?: {
+    displayName?: string
+    firstName?: string
+    lastName?: string
+    isVendor?: boolean
+    city?: string
+  }
+  stockQuantity: number
+}
 
 export function ProductGrid() {
   const router = useRouter()
@@ -112,33 +41,106 @@ export function ProductGrid() {
   const { user } = useAuth()
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [category, setCategory] = useState<string>("All")
-  const categories = ["All", ...Array.from(new Set(mockProducts.map(p => p.category)))]
-  const products = category === "All" ? mockProducts : mockProducts.filter(p => p.category === category)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState<string[]>(["All"])
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        setLoading(true)
+        const params = new URLSearchParams()
+        params.append('limit', '12')
+        if (category !== 'All') {
+          params.append('category', category)
+        }
+
+        const response = await fetch(`/api/products/featured?${params.toString()}`)
+        if (response.ok) {
+          const data = await response.json()
+          setProducts(data.products || [])
+          
+          // Extract unique categories
+          const uniqueCategories = Array.from(
+            new Set(data.products.map((p: Product) => p.category?.name).filter(Boolean))
+          ) as string[]
+          setCategories(['All', ...uniqueCategories])
+        }
+      } catch (error) {
+        console.error('Error fetching featured products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedProducts()
+  }, [category])
 
   const handleAddToCart = (product: Product) => {
+    const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
+    const price = getEffectivePrice(product)
+
     addToCart({ 
       id: product.id, 
       name: product.name, 
-      price: product.price, 
-      image: product.image, 
-      category: product.category, 
-      vendor: product.vendor, 
-      hasAR: product.hasAR 
+      price, 
+      image: imageUrl,
+      category: product.category?.name || 'Uncategorized',
+      vendor: product.vendor?.displayName || 
+              `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
+              'Unknown Vendor',
     })
     toast.success("Item added to cart")
   }
 
   const handleAddToWishlist = (product: Product) => {
+    const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
+    const price = getEffectivePrice(product)
+
     addToWishlist({ 
       id: product.id, 
       name: product.name, 
-      price: product.price, 
-      image: product.image, 
-      category: product.category, 
-      vendor: product.vendor, 
-      hasAR: product.hasAR 
+      price,
+      image: imageUrl,
+      category: product.category?.name || 'Uncategorized',
+      vendor: product.vendor?.displayName || 
+              `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
+              'Unknown Vendor',
     })
     toast.success("Item added to wishlist")
+  }
+
+  if (loading) {
+    return (
+      <section id="products" className="py-16 bg-background">
+        <Container>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Discover the latest electronics and trending items from verified vendors across Ethiopia
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <ProductCardSkeleton count={8} />
+          </div>
+        </Container>
+      </section>
+    )
+  }
+
+  if (!products.length) {
+    return (
+      <section id="products" className="py-16 bg-background">
+        <Container>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              No featured products available at the moment. Check back soon!
+            </p>
+          </div>
+        </Container>
+      </section>
+    )
   }
 
   return (
@@ -166,36 +168,43 @@ export function ProductGrid() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
-              onMouseEnter={() => setHoveredProduct(product.id)}
-              onMouseLeave={() => setHoveredProduct(null)}
-              onClick={() => router.push(`/product/${product.id}`)}
-            >
-              <div className="relative overflow-hidden rounded-t-lg">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
-                />
-                
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex gap-2">
-                  {product.hasAR && (
-                    <Badge className="bg-primary text-primary-foreground">
-                      AR Try-On
-                    </Badge>
-                  )}
-                  {product.originalPrice && (
-                    <Badge variant="destructive">
-                      Sale
-                    </Badge>
-                  )}
-                </div>
+          {products.map((product) => {
+            const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
+            const effectivePrice = getEffectivePrice(product)
+            const vendorName = product.vendor?.displayName || 
+                               `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
+                               'Unknown Vendor'
 
-                {/* Hover actions */}
+            return (
+              <div
+                key={product.id}
+                className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
+                onMouseEnter={() => setHoveredProduct(product.id)}
+                onMouseLeave={() => setHoveredProduct(null)}
+                onClick={() => router.push(`/product/${product.id}`)}
+              >
+                <div className="relative overflow-hidden rounded-t-lg">
+                  <img
+                    src={imageUrl}
+                    alt={product.name}
+                    className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
+                  />
+                  
+                  {/* Badges */}
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    {product.salePrice && product.salePrice < product.price && (
+                      <Badge variant="destructive">
+                        Sale
+                      </Badge>
+                    )}
+                    {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
+                      <Badge className="bg-orange-500">
+                        Low Stock
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Hover actions */}
                   {hoveredProduct === product.id && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
                       <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
@@ -215,87 +224,89 @@ export function ProductGrid() {
                       </Button>
                     </div>
                   )}
-              </div>
-
-              <div className="p-4">
-                <div className="mb-2">
-                  <Badge variant="outline" className="text-xs">
-                    {product.category}
-                  </Badge>
-                </div>
-                
-                <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2">
-                  {product.name}
-                </h3>
-                
-                <div className="flex items-center gap-1 mb-2">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3 w-3 ${
-                          i < Math.floor(product.rating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    ({product.reviews})
-                  </span>
                 </div>
 
-                <div className="mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-primary">
-                      {formatCurrency(product.price)}
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-muted-foreground line-through">
-                        {formatCurrency(product.originalPrice)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center mt-1">
+                <div className="p-4">
+                  {product.category && (
+                    <div className="mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        {product.category.name}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2">
+                    {product.name}
+                  </h3>
+                  
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${
+                            i < Math.floor(Number(product.ratingAverage))
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
                     <span className="text-xs text-muted-foreground">
-                      by {product.vendor}
+                      ({product.ratingCount})
                     </span>
-                    {product.vendorVerified ? (
-                      <ShieldCheck className="h-3 w-3 text-green-500 ml-1" />
-                    ) : (
-                      <AlertCircle className="h-3 w-3 text-yellow-500 ml-1" />
-                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-primary">
+                        {formatCurrency(effectivePrice)}
+                      </span>
+                      {product.salePrice && product.salePrice < product.price && (
+                        <span className="text-sm text-muted-foreground line-through">
+                          {formatCurrency(product.price)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <span className="text-xs text-muted-foreground">
+                        by {vendorName}
+                      </span>
+                      {product.vendor?.isVendor && (
+                        <ShieldCheck className="h-3 w-3 text-green-500 ml-1" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddToCart(product);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddToWishlist(product);
+                      }}
+                      aria-label="Add to wishlist"
+                    >
+                      <Heart className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleAddToCart(product);
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleAddToWishlist(product);
-                    }}
-                    aria-label="Add to wishlist"
-                  >
-                    <Heart className="h-4 w-4 mr-1" /> Wishlist
-                  </Button>
-                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="text-center mt-12">
