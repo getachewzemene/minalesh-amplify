@@ -54,6 +54,55 @@ async function main() {
 
   console.log('✅ Demo vendor created');
 
+  // Create demo customers for default reviews
+  const customerPassword = await hash('DemoCustomer123!', 10);
+
+  const customer1 = await prisma.user.upsert({
+    where: { email: 'john.doe@minalesh.com' },
+    update: {},
+    create: {
+      email: 'john.doe@minalesh.com',
+      password: customerPassword,
+      role: 'customer',
+      emailVerified: new Date(),
+      profile: {
+        create: {
+          displayName: 'John Doe',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '+251911000001',
+          city: 'Addis Ababa',
+          country: 'Ethiopia',
+        },
+      },
+    },
+    include: { profile: true },
+  });
+
+  const customer2 = await prisma.user.upsert({
+    where: { email: 'jane.smith@minalesh.com' },
+    update: {},
+    create: {
+      email: 'jane.smith@minalesh.com',
+      password: customerPassword,
+      role: 'customer',
+      emailVerified: new Date(),
+      profile: {
+        create: {
+          displayName: 'Jane Smith',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          phone: '+251911000002',
+          city: 'Addis Ababa',
+          country: 'Ethiopia',
+        },
+      },
+    },
+    include: { profile: true },
+  });
+
+  console.log('✅ Demo customers created');
+
   // Create categories
   const electronicsCategory = await prisma.category.upsert({
     where: { slug: 'electronics' },
@@ -918,6 +967,53 @@ async function main() {
     });
     console.log(`✅ Created product: ${productData.name}`);
   }
+
+  // Add default reviews for each product (idempotent per demo user)
+  console.log('\n📝 Adding default reviews for products...');
+  const products = await prisma.product.findMany({
+    select: { id: true, name: true, slug: true },
+  });
+
+  for (const product of products) {
+    const reviewPairs = [
+      {
+        userId: customer1.id,
+        rating: 5,
+        title: 'Excellent quality!',
+        comment: `Really impressed with the ${product.name}. Fast delivery and great packaging.`,
+      },
+      {
+        userId: customer2.id,
+        rating: 4,
+        title: 'Good value for money',
+        comment: `The ${product.name} meets expectations and is worth the price.`,
+      },
+    ];
+
+    for (const r of reviewPairs) {
+      const exists = await prisma.review.findFirst({
+        where: { productId: product.id, userId: r.userId },
+        select: { id: true },
+      });
+
+      if (!exists) {
+        await prisma.review.create({
+          data: {
+            userId: r.userId,
+            productId: product.id,
+            rating: r.rating,
+            title: r.title,
+            comment: r.comment,
+            images: [] as any,
+            isVerified: true,
+            isApproved: true,
+            helpfulCount: 0,
+          },
+        });
+      }
+    }
+  }
+  console.log('✅ Default reviews added (skipped existing)');
 
   console.log('\n🎉 Demo product seeding completed successfully!');
   console.log(`\n📊 Summary:`);
