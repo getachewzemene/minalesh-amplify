@@ -13,6 +13,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { AdvancedSearch } from "@/components/search/AdvancedSearch"
 import { formatCurrency } from "@/lib/utils"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 import phoneImg from "@/assets/products/phone.jpg"
 import sunglassesImg from "@/assets/products/sunglasses.jpg"
 import earbudsImg from "@/assets/products/earbuds.jpg"
@@ -257,52 +258,105 @@ export default function Products() {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
+                className="group bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
                 onClick={() => router.push(`/product/${product.id}`)}
               >
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
-                  />
-                  
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    {product.hasAR && (
-                      <Badge className="bg-primary text-primary-foreground">
-                        AR Try-On
-                      </Badge>
-                    )}
-                    {product.originalPrice && (
-                      <Badge variant="destructive">
-                        Sale
-                      </Badge>
-                    )}
-                  </div>
+                {/* Mobile: 4:3 ratio */}
+                <div className="block md:hidden">
+                  <AspectRatio ratio={4 / 3}>
+                    <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      
+                      {/* Badges */}
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        {product.hasAR && (
+                          <Badge className="bg-primary text-primary-foreground">
+                            AR Try-On
+                          </Badge>
+                        )}
+                        {product.originalPrice && (
+                          <Badge variant="destructive">
+                            Sale
+                          </Badge>
+                        )}
+                      </div>
 
-                  {/* Hover actions */}
-                  {hoveredProduct === product.id && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
-                    <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      className="bg-primary hover:bg-primary/90" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleAddToCart(product);
-                      }}
-                      aria-label="Add to cart"
-                    >
-                      <ShoppingCart className="h-4 w-4" />
-                    </Button>
+                      {/* Hover actions */}
+                      {hoveredProduct === product.id && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
+                          <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            className="bg-primary hover:bg-primary/90" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddToCart(product);
+                            }}
+                            aria-label="Add to cart"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </AspectRatio>
+                </div>
+
+                {/* Desktop: square ratio */}
+                <div className="hidden md:block">
+                  <AspectRatio ratio={1}>
+                    <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                      />
+                      
+                      {/* Badges */}
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        {product.hasAR && (
+                          <Badge className="bg-primary text-primary-foreground">
+                            AR Try-On
+                          </Badge>
+                        )}
+                        {product.originalPrice && (
+                          <Badge variant="destructive">
+                            Sale
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Hover actions */}
+                      {hoveredProduct === product.id && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
+                          <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            className="bg-primary hover:bg-primary/90" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddToCart(product);
+                            }}
+                            aria-label="Add to cart"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </AspectRatio>
                 </div>
 
                 <div className="p-4">

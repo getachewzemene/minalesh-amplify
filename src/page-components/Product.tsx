@@ -212,11 +212,11 @@ export default function Product() {
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Product Images */}
             <div className="space-y-4">
-              <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+              <div className="aspect-square overflow-hidden rounded-lg bg-muted flex items-center justify-center">
                 <img
                   src={productImages[selectedImage]}
                   alt={displayProduct.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
               
@@ -226,14 +226,14 @@ export default function Product() {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
+                      className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors bg-muted flex items-center justify-center ${
                         selectedImage === index ? 'border-primary' : 'border-transparent'
                       }`}
                     >
                       <img
                         src={image}
                         alt={`${displayProduct.name} view ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </button>
                   ))}
