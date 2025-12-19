@@ -38,7 +38,8 @@ export function Navbar() {
 
   const goDashboard = () => {
     // Role-based routing using profile
-    if (profile?.isVendor) router.push('/dashboard')
+    if (profile?.isAdmin) router.push('/admin/dashboard')
+    else if (profile?.isVendor) router.push('/vendor/dashboard')
     else router.push('/')
   }
 
@@ -110,6 +111,9 @@ export function Navbar() {
                     <DropdownMenuItem onClick={() => router.push('/addresses')}>Addresses</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/orders')}>Orders</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
+                    {profile?.isAdmin && (
+                      <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>Admin Dashboard</DropdownMenuItem>
+                    )}
                     {showWishlistAndCart && (
                       <>
                         <DropdownMenuItem onClick={() => router.push('/wishlist')}>Wishlist</DropdownMenuItem>
@@ -171,10 +175,18 @@ export function Navbar() {
                 </>
               ) : null}
               {user ? (
-                <Button variant="ghost" className="flex flex-col items-center p-2" onClick={goDashboard}>
-                  <User className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Account</span>
-                </Button>
+                <>
+                  <Button variant="ghost" className="flex flex-col items-center p-2" onClick={goDashboard}>
+                    <User className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Account</span>
+                  </Button>
+                  {profile?.isAdmin && (
+                    <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => router.push('/admin/dashboard')}>
+                      <ShieldCheck className="h-5 w-5 mb-1" />
+                      <span className="text-xs">Admin</span>
+                    </Button>
+                  )}
+                </>
               ) : (
                 <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => router.push('/auth/login')}>
                   <User className="h-5 w-5 mb-1" />

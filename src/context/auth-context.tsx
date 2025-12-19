@@ -22,6 +22,7 @@ export interface UserProfile {
   avatarUrl?: string;
   bio?: string;
   isVendor: boolean;
+  isAdmin?: boolean;
   vendorStatus: 'pending' | 'approved' | 'rejected' | 'suspended';
   tradeLicense?: string;
   tinNumber?: string;
@@ -154,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async (): Promise<void> => {
     try {
+      // Clear server cookie
+      await fetch('/api/auth/logout', { method: 'POST' });
       // Clear token
       localStorage.removeItem('auth_token');
       

@@ -99,3 +99,23 @@ export function parseJsonField<T>(field: string | T | null | undefined, fallback
   
   return fallback
 }
+
+/**
+ * Generate a small SVG-based blur placeholder for Next Image.
+ * Returns a base64 data URL that works both server-side and client-side.
+ */
+export function getBlurDataURL(width = 16, height = 12): string {
+  const svg = `\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n  <defs>\n    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">\n      <stop offset="0%" stop-color="#e5e7eb"/>\n      <stop offset="50%" stop-color="#f3f4f6"/>\n      <stop offset="100%" stop-color="#e5e7eb"/>\n    </linearGradient>\n    <filter id="b" x="-20%" y="-20%" width="140%" height="140%">\n      <feGaussianBlur stdDeviation="2"/>\n    </filter>\n  </defs>\n  <rect x="0" y="0" width="${width}" height="${height}" fill="url(#g)" filter="url(#b)"/>\n</svg>`
+
+  const toBase64 = (str: string) => {
+    try {
+      // Server-side
+      return Buffer.from(str).toString('base64')
+    } catch {
+      // Client-side
+      return typeof window !== 'undefined' ? btoa(str) : str
+    }
+  }
+
+  return `data:image/svg+xml;base64,${toBase64(svg)}`
+}

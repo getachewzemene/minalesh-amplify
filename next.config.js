@@ -105,6 +105,13 @@ const nextConfig = {
         'pino-pretty': 'commonjs pino-pretty',
         'thread-stream': 'commonjs thread-stream',
       });
+
+      // Ignore noisy warnings from instrumentation packages on the server
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings || []),
+        { module: /node_modules\/require-in-the-middle/ },
+        { module: /node_modules\/@opentelemetry/ },
+      ];
     }
     return config;
   },

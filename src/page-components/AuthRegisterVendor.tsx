@@ -79,7 +79,7 @@ export default function AuthRegisterVendor() {
       }
 
       toast.success(data.message || 'Vendor registration successful! Your account is pending verification.');
-      router.push("/dashboard");
+      router.push("/vendor/dashboard");
     } catch (error) {
       console.error('Registration error:', error);
       toast.error('An error occurred during registration');

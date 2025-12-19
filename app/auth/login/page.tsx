@@ -110,6 +110,11 @@ export default function AuthLogin() {
                   Sign up
                 </Link>
               </p>
+              <div className="text-xs text-muted-foreground">
+                <p className="font-medium">Demo Vendor:</p>
+                <p>Email: demo.vendor@minalesh.com</p>
+                <p>Password: DemoVendor123!</p>
+              </div>
             </div>
           </form>
         </Container>

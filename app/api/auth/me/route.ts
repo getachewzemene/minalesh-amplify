@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
+
+function getTokenFromCookiesHeader(request: Request): string | null {
+  const cookieHeader = request.headers.get('cookie') || ''
+  const cookies = cookieHeader.split(';').map(c => c.trim())
+  for (const c of cookies) {
+    if (c.startsWith('auth_token=')) return decodeURIComponent(c.substring('auth_token='.length))
+  }
+  return null
+}
 
 /**
  * @swagger
@@ -32,7 +41,10 @@ import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
  */
 export async function GET(request: Request) {
   try {
-    const token = getTokenFromRequest(request);
+    let token = getTokenFromRequest(request);
+    if (!token) {
+      token = getTokenFromCookiesHeader(request);
+    }
     const payload = getUserFromToken(token);
 
     if (!payload) {
@@ -59,7 +71,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       id: user.id,
       email: user.email,
-      profile: user.profile,
+      role: user.role,
+      profile: user.profile ? { ...user.profile, isAdmin: isAdmin(user.role) } : { isAdmin: isAdmin(user.role) },
     });
   } catch (error) {
     console.error('Get user error:', error);

@@ -159,18 +159,31 @@ async function loginHandler(request: Request): Promise<NextResponse> {
       role: user.role
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: 'Login successful',
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
         emailVerified: user.emailVerified,
-        profile: user.profile,
+        profile: user.profile ? { ...user.profile, isAdmin: user.role === 'admin' } : { isAdmin: user.role === 'admin' },
       },
       token,
       refreshToken,
     });
+
+    // Set HttpOnly auth cookie for SSR/middleware
+    const isProd = process.env.NODE_ENV === 'production';
+    response.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      // Max-Age will be managed by JWT expiry; set a reasonable default (7d)
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   } catch (error) {
     // Error is caught and logged by withApiLogger wrapper
     throw error;

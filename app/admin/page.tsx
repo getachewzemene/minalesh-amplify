@@ -1,5 +1,7 @@
 'use client'
 
-import AdminDashboard from "@/page-components/AdminDashboard"
+import { redirect } from "next/navigation"
 
-export default AdminDashboard
+export default function Page() {
+	redirect('/admin/dashboard')
+}

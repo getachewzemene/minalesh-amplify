@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
 import { toast } from "sonner"
@@ -33,6 +35,7 @@ import {
   type CachedProduct 
 } from "@/lib/offline-cache"
 import phoneImg from "@/assets/products/phone.jpg"
+import { getBlurDataURL } from "@/lib/image-utils"
 
 interface Product {
   id: string
@@ -358,24 +361,63 @@ function ProductsContent() {
             {products.map((product) => (
             <div
               key={product.id}
-              className="group relative border rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-card"
+              className="group relative border rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-card cursor-pointer"
+              onClick={() => router.push(`/product/${product.id}`)}
             >
-              <div className="relative aspect-square overflow-hidden bg-muted">
-                <img
-                  src={product.image.src}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                {product.originalPrice && (
-                  <Badge className="absolute top-2 left-2 bg-red-500">
-                    -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                  </Badge>
-                )}
-                {product.hasAR && (
-                  <Badge className="absolute top-2 right-2 bg-purple-500">
-                    AR View
-                  </Badge>
-                )}
+              {/* Mobile: 4:3 ratio */}
+              <div className="block md:hidden">
+                <AspectRatio ratio={4 / 3}>
+                  <div className="relative w-full h-full overflow-hidden bg-muted">
+                    <Image
+                      src={typeof product.image === 'string' ? product.image : product.image.src}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                      placeholder="blur"
+                      blurDataURL={getBlurDataURL()}
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {product.originalPrice && (
+                      <Badge className="absolute top-2 left-2 bg-red-500">
+                        -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+                      </Badge>
+                    )}
+                    {product.hasAR && (
+                      <Badge className="absolute top-2 right-2 bg-purple-500">
+                        AR View
+                      </Badge>
+                    )}
+                  </div>
+                </AspectRatio>
+              </div>
+
+              {/* Desktop: square ratio */}
+              <div className="hidden md:block">
+                <AspectRatio ratio={1}>
+                  <div className="relative w-full h-full overflow-hidden bg-muted">
+                    <Image
+                      src={typeof product.image === 'string' ? product.image : product.image.src}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                      placeholder="blur"
+                      blurDataURL={getBlurDataURL()}
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {product.originalPrice && (
+                      <Badge className="absolute top-2 left-2 bg-red-500">
+                        -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+                      </Badge>
+                    )}
+                    {product.hasAR && (
+                      <Badge className="absolute top-2 right-2 bg-purple-500">
+                        AR View
+                      </Badge>
+                    )}
+                  </div>
+                </AspectRatio>
               </div>
 
               <div className="p-4 space-y-3">
@@ -413,7 +455,7 @@ function ProductsContent() {
 
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleAddToCart(product)}
+                    onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
                     className="flex-1"
                     size="sm"
                   >
@@ -421,14 +463,14 @@ function ProductsContent() {
                     Add to Cart
                   </Button>
                   <Button
-                    onClick={() => handleAddToWishlist(product)}
+                    onClick={(e) => { e.stopPropagation(); handleAddToWishlist(product); }}
                     variant="outline"
                     size="sm"
                   >
                     <Heart className="w-4 h-4" />
                   </Button>
                   <Button
-                    onClick={() => router.push(`/product/${product.id}`)}
+                    onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`); }}
                     variant="outline"
                     size="sm"
                   >
