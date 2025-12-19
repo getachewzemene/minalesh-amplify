@@ -395,7 +395,7 @@ function ProductsContent() {
               {/* Desktop: square ratio */}
               <div className="hidden md:block">
                 <AspectRatio ratio={1}>
-                  <div className="relative w-full h-full overflow-hidden bg-muted">
+                  <div className="relative w-full h-full overflow-hidden bg-muted flex items-center justify-center">
                     <Image
                       src={typeof product.image === 'string' ? product.image : product.image.src}
                       alt={product.name}
@@ -403,7 +403,7 @@ function ProductsContent() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                       placeholder="blur"
                       blurDataURL={getBlurDataURL()}
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="object-contain group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     {product.originalPrice && (
