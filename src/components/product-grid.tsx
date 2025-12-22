@@ -181,7 +181,7 @@ export function ProductGrid() {
             return (
               <div
                 key={product.id}
-                className="group bg-card rounded-lg shadow-card border transition-all duration-300 hover:shadow-gold hover:scale-105 cursor-pointer"
+                className="group bg-white dark:bg-card rounded-xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:-translate-y-2 cursor-pointer overflow-hidden"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
                 onClick={() => router.push(`/product/${product.id}`)}
@@ -189,7 +189,7 @@ export function ProductGrid() {
                 {/* Mobile: 4:3 ratio */}
                 <div className="block md:hidden">
                   <AspectRatio ratio={4 / 3}>
-                    <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted">
+                    <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                       <Image
                         src={imageUrl}
                         alt={product.name}
@@ -197,20 +197,20 @@ export function ProductGrid() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         placeholder="blur"
                         blurDataURL={blur}
-                        className="object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain p-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
                         priority={false}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       {/* Badges */}
-                      <div className="absolute top-3 left-3 flex gap-2">
+                      <div className="absolute top-3 left-3 flex flex-col gap-2">
                         {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive">
-                            Sale
+                          <Badge variant="destructive" className="shadow-lg font-semibold">
+                            SALE
                           </Badge>
                         )}
                         {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500">
+                          <Badge className="bg-orange-500 shadow-lg font-semibold">
                             Low Stock
                           </Badge>
                         )}
@@ -218,13 +218,13 @@ export function ProductGrid() {
 
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
-                          <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
-                            <Eye className="h-4 w-4" />
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
+                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-11 w-11" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                            <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
                             size="icon" 
-                            className="bg-primary hover:bg-primary/90" 
+                            className="bg-primary hover:bg-primary/90 shadow-xl rounded-full h-11 w-11" 
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -232,7 +232,7 @@ export function ProductGrid() {
                             }}
                             aria-label="Add to cart"
                           >
-                            <ShoppingCart className="h-4 w-4" />
+                            <ShoppingCart className="h-5 w-5" />
                           </Button>
                         </div>
                       )}
@@ -243,7 +243,7 @@ export function ProductGrid() {
                 {/* Desktop: square ratio with full-cover image */}
                 <div className="hidden md:block">
                   <AspectRatio ratio={1}>
-                    <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted">
+                    <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                       <Image
                         src={imageUrl}
                         alt={product.name}
@@ -251,20 +251,20 @@ export function ProductGrid() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         placeholder="blur"
                         blurDataURL={blur}
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain p-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
                         priority={false}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       {/* Badges */}
-                      <div className="absolute top-3 left-3 flex gap-2">
+                      <div className="absolute top-4 left-4 flex flex-col gap-2">
                         {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive">
-                            Sale
+                          <Badge variant="destructive" className="shadow-lg font-semibold px-3 py-1">
+                            SALE
                           </Badge>
                         )}
                         {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500">
+                          <Badge className="bg-orange-500 shadow-lg font-semibold px-3 py-1">
                             Low Stock
                           </Badge>
                         )}
@@ -272,13 +272,13 @@ export function ProductGrid() {
 
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity duration-300">
-                          <Button size="icon" variant="secondary" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
-                            <Eye className="h-4 w-4" />
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
+                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                            <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
                             size="icon" 
-                            className="bg-primary hover:bg-primary/90" 
+                            className="bg-primary hover:bg-primary/90 shadow-xl rounded-full h-12 w-12" 
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -286,7 +286,7 @@ export function ProductGrid() {
                             }}
                             aria-label="Add to cart"
                           >
-                            <ShoppingCart className="h-4 w-4" />
+                            <ShoppingCart className="h-5 w-5" />
                           </Button>
                         </div>
                       )}
@@ -294,40 +294,40 @@ export function ProductGrid() {
                   </AspectRatio>
                 </div>
 
-                <div className="p-4">
+                <div className="p-5">
                   {product.category && (
-                    <div className="mb-2">
-                      <Badge variant="outline" className="text-xs">
+                    <div className="mb-3">
+                      <Badge variant="outline" className="text-xs font-medium border-primary/20 text-primary">
                         {product.category.name}
                       </Badge>
                     </div>
                   )}
                   
-                  <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2">
+                  <h3 className="font-bold text-base text-card-foreground mb-3 line-clamp-2 leading-tight min-h-[2.5rem]">
                     {product.name}
                   </h3>
                   
-                  <div className="flex items-center gap-1 mb-2">
+                  <div className="flex items-center gap-1 mb-3">
                     <div className="flex">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-3 w-3 ${
+                          className={`h-4 w-4 ${
                             i < Math.floor(Number(product.ratingAverage))
                               ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-300"
+                              : "fill-gray-200 text-gray-200"
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground font-medium ml-1">
                       ({product.ratingCount})
                     </span>
                   </div>
 
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-primary">
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-2xl font-bold text-primary">
                         {formatCurrency(effectivePrice)}
                       </span>
                       {product.salePrice && product.salePrice < product.price && (
@@ -336,19 +336,19 @@ export function ProductGrid() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center mt-1">
-                      <span className="text-xs text-muted-foreground">
+                    <div className="flex items-center mt-2 gap-1">
+                      <span className="text-xs text-muted-foreground font-medium">
                         by {vendorName}
                       </span>
                       {product.vendor?.isVendor && (
-                        <ShieldCheck className="h-3 w-3 text-green-500 ml-1" />
+                        <ShieldCheck className="h-4 w-4 text-green-500" />
                       )}
                     </div>
                   </div>
 
                   <div className="flex gap-2">
                     <Button 
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all"
                       size="sm"
                       onClick={(e) => {
                         e.preventDefault();
@@ -361,6 +361,7 @@ export function ProductGrid() {
                     <Button 
                       variant="outline"
                       size="icon"
+                      className="border-2 hover:bg-red-50 hover:border-red-400 hover:text-red-500 transition-all"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
