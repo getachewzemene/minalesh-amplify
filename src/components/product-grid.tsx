@@ -197,7 +197,7 @@ export function ProductGrid() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         placeholder="blur"
                         blurDataURL={blur}
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain transition-transform duration-300 group-hover:scale-105"
                         priority={false}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -240,10 +240,10 @@ export function ProductGrid() {
                   </AspectRatio>
                 </div>
 
-                {/* Desktop: square ratio */}
+                {/* Desktop: square ratio with full-cover image */}
                 <div className="hidden md:block">
                   <AspectRatio ratio={1}>
-                    <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted flex items-center justify-center">
+                    <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted">
                       <Image
                         src={imageUrl}
                         alt={product.name}
@@ -251,7 +251,7 @@ export function ProductGrid() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         placeholder="blur"
                         blurDataURL={blur}
-                        className="object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         priority={false}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

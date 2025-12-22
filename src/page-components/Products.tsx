@@ -270,7 +270,7 @@ export default function Products() {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                       />
                       
                       {/* Badges */}
@@ -311,14 +311,14 @@ export default function Products() {
                   </AspectRatio>
                 </div>
 
-                {/* Desktop: square ratio */}
+                {/* Desktop: square ratio with full-cover image */}
                 <div className="hidden md:block">
                   <AspectRatio ratio={1}>
                     <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted">
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       
                       {/* Badges */}

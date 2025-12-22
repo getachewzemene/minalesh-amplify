@@ -4,11 +4,14 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const nextConfig = {
   // Image optimization with CDN support
   images: {
-    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
       },
     ],
     // Enable image optimization
