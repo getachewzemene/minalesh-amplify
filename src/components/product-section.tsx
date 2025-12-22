@@ -180,7 +180,7 @@ export function ProductSection({
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         placeholder="blur"
                         blurDataURL={blur}
-                        className="object-contain p-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                        className="object-contain p-4 transition-all duration-500 group-hover:scale-110"
                         priority={false}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -234,7 +234,7 @@ export function ProductSection({
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         placeholder="blur"
                         blurDataURL={blur}
-                        className="object-contain p-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                        className="object-contain p-6 transition-all duration-500 group-hover:scale-110"
                         priority={false}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

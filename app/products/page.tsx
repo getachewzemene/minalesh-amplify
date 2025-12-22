@@ -375,7 +375,7 @@ function ProductsContent() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                       placeholder="blur"
                       blurDataURL={getBlurDataURL()}
-                      className="object-contain p-4 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500"
+                      className="object-contain p-4 group-hover:scale-110 transition-all duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -405,7 +405,7 @@ function ProductsContent() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                       placeholder="blur"
                       blurDataURL={getBlurDataURL()}
-                      className="object-contain p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500"
+                      className="object-contain p-6 group-hover:scale-110 transition-all duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
