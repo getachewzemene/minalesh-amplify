@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
-import { verifyJWT } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth';
 
 /**
  * @swagger
@@ -91,7 +91,7 @@ async function postHandler(
       );
     }
 
-    const decoded = await verifyJWT(token);
+    const decoded = verifyToken(token);
     if (!decoded) {
       return NextResponse.json(
         { error: 'Invalid token' },

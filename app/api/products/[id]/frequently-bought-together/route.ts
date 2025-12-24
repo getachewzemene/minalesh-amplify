@@ -41,6 +41,7 @@ async function handler(
     }
 
     // Find related products from the same category or similar price range
+    const currentPriceNum = Number(currentProduct.price);
     const relatedProducts = await prisma.product.findMany({
       where: {
         AND: [
@@ -51,8 +52,8 @@ async function handler(
               { categoryId: currentProduct.categoryId },
               {
                 price: {
-                  gte: currentProduct.price * 0.5,
-                  lte: currentProduct.price * 1.5
+                  gte: currentPriceNum * 0.5,
+                  lte: currentPriceNum * 1.5
                 }
               }
             ]

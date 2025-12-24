@@ -286,7 +286,17 @@ export function ProductGrid() {
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
-                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setQuickViewProduct(product.id);
+                              setQuickViewOpen(true);
+                            }} 
+                            aria-label="Quick view"
+                          >
                             <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
