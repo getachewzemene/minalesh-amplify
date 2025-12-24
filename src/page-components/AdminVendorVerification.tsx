@@ -67,7 +67,7 @@ export default function AdminVendorVerification() {
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const url = statusFilter 
+      const url = statusFilter && statusFilter !== 'all'
         ? `/api/admin/vendors?status=${statusFilter}`
         : '/api/admin/vendors';
       
@@ -214,7 +214,7 @@ export default function AdminVendorVerification() {
             <SelectItem value="approved">Approved</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
             <SelectItem value="suspended">Suspended</SelectItem>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value="all">All</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -229,7 +229,7 @@ export default function AdminVendorVerification() {
             <Store className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium mb-2">No vendors found</p>
             <p className="text-sm text-muted-foreground">
-              {statusFilter ? `No ${statusFilter} vendors at this time` : 'No vendors registered yet'}
+              {statusFilter && statusFilter !== 'all' ? `No ${statusFilter} vendors at this time` : 'No vendors registered yet'}
             </p>
           </CardContent>
         </Card>
