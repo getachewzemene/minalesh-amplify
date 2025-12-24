@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,14 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Validate redirect URL to prevent open redirect vulnerabilities
+  const isValidRedirectUrl = (url: string | null): boolean => {
+    if (!url) return false
+    // Must start with / but not //, and not contain ://
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
+  }
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -49,7 +57,17 @@ export default function AdminLogin() {
       localStorage.setItem('auth_token', data.token)
       
       toast.success("Admin login successful!")
-      router.push('/admin/dashboard')
+      
+      // Refresh router to ensure cookies are synced
+      router.refresh()
+      
+      // Redirect to the originally requested page or default to admin dashboard
+      const next = searchParams.get('next')
+      const redirectUrl = 
+        isValidRedirectUrl(next) && next.startsWith('/admin') 
+          ? next 
+          : '/admin/dashboard'
+      router.push(redirectUrl)
     } catch (error) {
       console.error('Login error:', error)
       toast.error("An error occurred during login")
