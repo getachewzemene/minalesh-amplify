@@ -12,6 +12,9 @@ import prisma from '@/lib/prisma';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Magic constant for "infinite" forecast when there are no sales
+const MAX_FORECAST_DAYS = 999;
+
 export async function GET(request: NextRequest) {
   const { error, payload } = withAuth(request);
   if (error) return error;
@@ -71,7 +74,7 @@ export async function GET(request: NextRequest) {
       // Calculate days until stockout
       const daysUntilStockout = dailyAverage > 0 
         ? Math.floor(product.stockQuantity / dailyAverage)
-        : 999;
+        : MAX_FORECAST_DAYS;
       
       // Determine trend based on recent vs older sales
       const midPoint = new Date(startDate.getTime() + (Date.now() - startDate.getTime()) / 2);

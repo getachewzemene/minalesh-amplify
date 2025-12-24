@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Parse CSV/Excel file
     const text = await file.text();
-    const lines = text.split('\n');
+    const lines = text.split('\n').filter(line => line.trim());
     
     if (lines.length < 2) {
       return NextResponse.json(
@@ -90,8 +90,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Simple CSV parser that handles quoted fields
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            // Escaped quote
+            current += '"';
+            i++; // Skip next quote
+          } else {
+            // Toggle quote mode
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          // Field separator
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      
+      // Add last field
+      result.push(current.trim());
+      return result;
+    };
+
     // Parse header
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
     const requiredHeaders = ['name', 'price', 'description', 'category', 'stockquantity'];
     
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
@@ -110,13 +143,13 @@ export async function POST(request: NextRequest) {
       const line = lines[i].trim();
       if (!line) continue;
 
-      const values = line.split(',').map(v => v.trim());
-      if (values.length !== headers.length) {
-        errors.push(`Row ${i + 1}: Column count mismatch`);
-        continue;
-      }
-
       try {
+        const values = parseCSVLine(line);
+        if (values.length !== headers.length) {
+          errors.push(`Row ${i + 1}: Column count mismatch (expected ${headers.length}, got ${values.length})`);
+          continue;
+        }
+
         const product: any = {};
         headers.forEach((header, index) => {
           product[header] = values[index];

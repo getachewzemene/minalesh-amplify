@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Create CSV content
+    // Create CSV content with proper escaping
     const headers = [
       'name',
       'brand',
@@ -58,24 +58,35 @@ export async function GET(request: NextRequest) {
       'isFeatured'
     ];
 
+    // Helper function to escape CSV values
+    const escapeCSV = (value: any): string => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      // Quote if contains comma, newline, or quote
+      if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
     let csv = headers.join(',') + '\n';
 
     products.forEach(product => {
       const row = [
-        `"${product.name.replace(/"/g, '""')}"`,
-        product.brand ? `"${product.brand.replace(/"/g, '""')}"` : '',
-        product.price.toString(),
-        product.salePrice?.toString() || '',
-        `"${product.description.replace(/"/g, '""')}"`,
-        product.shortDescription ? `"${product.shortDescription.replace(/"/g, '""')}"` : '',
-        `"${product.category.name}"`,
-        product.sku || '',
-        product.stockQuantity.toString(),
-        product.lowStockThreshold?.toString() || '5',
-        product.weight?.toString() || '',
-        product.images[0] || '',
-        product.isDigital.toString(),
-        product.isFeatured.toString()
+        escapeCSV(product.name),
+        escapeCSV(product.brand || ''),
+        escapeCSV(product.price),
+        escapeCSV(product.salePrice || ''),
+        escapeCSV(product.description),
+        escapeCSV(product.shortDescription || ''),
+        escapeCSV(product.category.name),
+        escapeCSV(product.sku || ''),
+        escapeCSV(product.stockQuantity),
+        escapeCSV(product.lowStockThreshold || 5),
+        escapeCSV(product.weight || ''),
+        escapeCSV(product.images[0] || ''),
+        escapeCSV(product.isDigital),
+        escapeCSV(product.isFeatured)
       ];
 
       csv += row.join(',') + '\n';

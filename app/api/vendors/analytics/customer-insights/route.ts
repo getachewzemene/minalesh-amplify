@@ -38,16 +38,50 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Fetch analytics events for vendor's products
+    // First, get the vendor's product IDs to filter analytics
+    const vendorProducts = await prisma.product.findMany({
+      where: { vendorId: payload!.userId },
+      select: { id: true }
+    });
+
+    const vendorProductIds = vendorProducts.map(p => p.id);
+
+    if (vendorProductIds.length === 0) {
+      // No products, return empty data
+      return NextResponse.json({
+        insights: [],
+        summary: {
+          totalSessions: 0,
+          totalConversions: 0,
+          totalRevenue: 0,
+          avgConversionRate: 0,
+          periodDays: days
+        }
+      });
+    }
+
+    // Fetch analytics events for vendor's products only
     const events = await prisma.analyticsEvent.findMany({
       where: {
         createdAt: { gte: startDate },
         OR: [
-          { eventType: 'product_view' },
-          { eventType: 'product_click' },
-          { eventType: 'add_to_cart' }
+          { 
+            eventType: 'product_view'
+          },
+          { 
+            eventType: 'product_click'
+          },
+          { 
+            eventType: 'add_to_cart'
+          }
         ]
       }
+    });
+
+    // Filter events to only include vendor's products based on eventData
+    const vendorEvents = events.filter(event => {
+      const productId = (event.eventData as any)?.productId;
+      return productId && vendorProductIds.includes(productId);
     });
 
     // Get orders for conversion tracking
@@ -96,7 +130,7 @@ export async function GET(request: NextRequest) {
     // Count sessions (unique user + source combinations per day)
     const sessionMap = new Map<string, Set<string>>();
     
-    events.forEach(event => {
+    vendorEvents.forEach(event => {
       const source = (event.eventData as any)?.source || 'Direct';
       const userId = event.userId || 'anonymous';
       const day = new Date(event.createdAt).toDateString();
