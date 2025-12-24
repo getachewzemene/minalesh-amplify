@@ -18,10 +18,12 @@ import { Separator } from "@/components/ui/separator"
 import { 
   Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned,
   Heart, Clock, Star, ShoppingBag, Bell, Shield, Store, Eye,
-  TrendingUp, Search, CreditCard, Gift, History, Settings
+  TrendingUp, Search, CreditCard, Gift, History, Settings, GitCompare
 } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
+import { LoyaltyRewards } from "@/components/user/LoyaltyRewards"
+import { ProductComparison } from "@/components/user/ProductComparison"
 
 export default function Profile() {
   const { user, profile, logout, updateProfile, requestVendorVerification } = useAuth()
@@ -225,11 +227,12 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 lg:w-auto">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:w-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="recommendations">For You</TabsTrigger>
+                <TabsTrigger value="rewards">Rewards</TabsTrigger>
                 <TabsTrigger value="security">Security</TabsTrigger>
               </TabsList>
 
@@ -714,6 +717,14 @@ export default function Profile() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              </TabsContent>
+
+              {/* Rewards Tab */}
+              <TabsContent value="rewards" className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <LoyaltyRewards userId={user?.id} />
+                  <ProductComparison />
                 </div>
               </TabsContent>
             </Tabs>
