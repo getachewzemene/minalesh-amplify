@@ -64,7 +64,7 @@ export default function AdminLogin() {
       // Redirect to the originally requested page or default to admin dashboard
       const next = searchParams.get('next')
       const redirectUrl = 
-        isValidRedirectUrl(next) && next!.startsWith('/admin') 
+        isValidRedirectUrl(next) && next.startsWith('/admin') 
           ? next 
           : '/admin/dashboard'
       router.push(redirectUrl)

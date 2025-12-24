@@ -40,7 +40,7 @@ export default function AuthLogin() {
       // Redirect to the originally requested page or default to home
       const next = searchParams.get('next')
       const redirectUrl = 
-        isValidRedirectUrl(next) && !next!.startsWith('/admin') 
+        isValidRedirectUrl(next) && !next.startsWith('/admin') 
           ? next 
           : '/'
       router.push(redirectUrl)
