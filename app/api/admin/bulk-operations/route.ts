@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+
+// Check if user is admin
+function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
+  return adminEmails.includes(email);
+}
 
 /**
  * POST /api/admin/bulk-operations
  * Perform bulk operations on orders, products, or users
  */
-export const POST = withAdmin(async (req: NextRequest) => {
+export async function POST(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const body = await req.json();
     const { operation, entityType, entityIds, data } = body;
 
@@ -48,7 +64,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 async function handleOrdersBulkOperation(operation: string, orderIds: string[], data?: any) {
   switch (operation) {

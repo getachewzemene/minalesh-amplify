@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+
+// Check if user is admin
+function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
+  return adminEmails.includes(email);
+}
 
 /**
  * GET /api/admin/crm
  * Get customer relationship management data including segmentation and lifetime value
  */
-export const GET = withAdmin(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const { searchParams } = new URL(req.url);
     const segment = searchParams.get('segment');
 
@@ -132,14 +148,24 @@ export const GET = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 /**
  * POST /api/admin/crm
  * Send targeted communication to customer segments
  */
-export const POST = withAdmin(async (req: NextRequest) => {
+export async function POST(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const body = await req.json();
     const { segment, subject, message, customerIds } = body;
 
@@ -204,4 +230,4 @@ export const POST = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

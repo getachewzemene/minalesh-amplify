@@ -1,26 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+
+// Check if user is admin
+function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
+  return adminEmails.includes(email);
+}
 
 /**
  * GET /api/admin/notifications
  * Returns admin notifications (alerts, warnings, important events)
  */
-export const GET = withAdmin(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const now = new Date();
     const notifications: any[] = [];
 
     // Check for low stock products
     const lowStockProducts = await prisma.product.findMany({
       where: {
-        stock: { lt: 10 },
+        stockQuantity: { lt: 10 },
         isActive: true,
       },
       select: {
         id: true,
         name: true,
-        stock: true,
+        stockQuantity: true,
         vendor: {
           select: {
             businessName: true,
@@ -36,11 +52,11 @@ export const GET = withAdmin(async (req: NextRequest) => {
         type: 'warning',
         category: 'inventory',
         title: 'Low Stock Alert',
-        message: `${product.name} has only ${product.stock} items left`,
+        message: `${product.name} has only ${product.stockQuantity} items left`,
         metadata: {
           productId: product.id,
           productName: product.name,
-          stock: product.stock,
+          stock: product.stockQuantity,
           vendor: product.vendor?.businessName,
         },
         timestamp: now.toISOString(),
@@ -180,4 +196,4 @@ export const GET = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

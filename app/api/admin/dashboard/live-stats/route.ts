@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+
+// Check if user is admin
+function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
+  return adminEmails.includes(email);
+}
 
 /**
  * GET /api/admin/dashboard/live-stats
  * Returns real-time dashboard statistics for admin
  */
-export const GET = withAdmin(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -71,10 +87,10 @@ export const GET = withAdmin(async (req: NextRequest) => {
         },
       }),
       
-      // Low stock products (stock < 10)
+      // Low stock products (stockQuantity < 10)
       prisma.product.count({
         where: {
-          stock: { lt: 10 },
+          stockQuantity: { lt: 10 },
           isActive: true,
         },
       }),
@@ -179,4 +195,4 @@ export const GET = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

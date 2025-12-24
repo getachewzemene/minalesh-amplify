@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+
+// Check if user is admin
+function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
+  return adminEmails.includes(email);
+}
 
 /**
  * GET /api/admin/site-config
  * Get site configuration settings
  */
-export const GET = withAdmin(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     // Get all site settings
     const settings = await prisma.siteSettings.findFirst({
       orderBy: { updatedAt: 'desc' },
@@ -24,14 +40,24 @@ export const GET = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 /**
  * PUT /api/admin/site-config
  * Update site configuration settings
  */
-export const PUT = withAdmin(async (req: NextRequest) => {
+export async function PUT(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const body = await req.json();
     const {
       maintenanceMode,
@@ -109,7 +135,7 @@ export const PUT = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 function getDefaultSettings() {
   return {

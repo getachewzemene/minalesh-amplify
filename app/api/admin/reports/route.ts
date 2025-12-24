@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+
+// Check if user is admin
+function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
+  return adminEmails.includes(email);
+}
 
 /**
  * GET /api/admin/reports
  * Generate comprehensive reports for sales, inventory, customers, and more
  */
-export const GET = withAdmin(async (req: NextRequest) => {
+export async function GET(req: NextRequest) {
   try {
+    // Check authentication and admin role
+    const token = getTokenFromRequest(req);
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const user = await getUserFromToken(token);
+    if (!user || !isAdmin(user.email)) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     const { searchParams } = new URL(req.url);
     const reportType = searchParams.get('type') || 'sales';
     const startDate = searchParams.get('startDate');
@@ -70,7 +86,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 async function generateSalesReport(dateFilter: any) {
   const orders = await prisma.order.findMany({
@@ -181,11 +197,11 @@ async function generateInventoryReport() {
   const summary = {
     totalProducts: products.length,
     totalStockValue: products.reduce(
-      (sum, product) => sum + Number(product.price) * product.stock,
+      (sum, product) => sum + Number(product.price) * product.stockQuantity,
       0
     ),
-    lowStockProducts: products.filter((p) => p.stock < 10).length,
-    outOfStockProducts: products.filter((p) => p.stock === 0).length,
+    lowStockProducts: products.filter((p) => p.stockQuantity < 10).length,
+    outOfStockProducts: products.filter((p) => p.stockQuantity === 0).length,
     categoryBreakdown: {} as any,
   };
 
@@ -200,8 +216,8 @@ async function generateInventoryReport() {
       };
     }
     summary.categoryBreakdown[categoryName].products += 1;
-    summary.categoryBreakdown[categoryName].stock += product.stock;
-    summary.categoryBreakdown[categoryName].value += Number(product.price) * product.stock;
+    summary.categoryBreakdown[categoryName].stock += product.stockQuantity;
+    summary.categoryBreakdown[categoryName].value += Number(product.price) * product.stockQuantity;
   });
 
   return {
@@ -211,10 +227,10 @@ async function generateInventoryReport() {
       sku: product.sku,
       category: product.category?.name,
       vendor: product.vendor?.businessName,
-      stock: product.stock,
+      stock: product.stockQuantity,
       price: Number(product.price),
-      stockValue: Number(product.price) * product.stock,
-      status: product.stock === 0 ? 'Out of Stock' : product.stock < 10 ? 'Low Stock' : 'In Stock',
+      stockValue: Number(product.price) * product.stockQuantity,
+      status: product.stockQuantity === 0 ? 'Out of Stock' : product.stockQuantity < 10 ? 'Low Stock' : 'In Stock',
     })),
   };
 }
@@ -229,7 +245,7 @@ async function generateCustomersReport(dateFilter: any) {
       profile: true,
       orders: {
         where: {
-          status: { in: ['delivered', 'completed'] },
+          status: { in: ['delivered'] },
         },
       },
     },
@@ -300,7 +316,7 @@ async function generateFinancialReport(dateFilter: any) {
   const orders = await prisma.order.findMany({
     where: {
       createdAt: dateFilter,
-      status: { in: ['delivered', 'completed'] },
+      status: { in: ['delivered'] },
     },
   });
 
