@@ -31,6 +31,32 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - Inventory tracking
 - Sales analytics
 - Order management
+- **Advanced Vendor Tools** 🚀
+  - **Bulk Operations**
+    - Bulk product upload via CSV/Excel files
+    - Bulk export for offline editing
+    - Quick actions for bulk price updates, stock adjustments, and category changes
+  - **Inventory Forecasting**
+    - AI-powered predictions based on sales trends
+    - Days-until-stockout calculations
+    - Automated reorder recommendations
+    - Inventory turnover analytics and aging stock reports
+  - **Performance Insights**
+    - Customer behavior analytics (traffic sources, conversion rates)
+    - Product performance comparison tools
+    - Revenue forecasting
+  - **Marketing Tools**
+    - Campaign management and tracking
+    - Promotional scheduler
+    - Featured product management
+  - **Communication Hub**
+    - Customer messaging system
+    - Quick response templates
+    - Product Q&A management
+  - **Financial Tools**
+    - Expense tracking
+    - Profit margin calculator
+    - VAT and tax report generation
 
 ### For Administrators
 - **Comprehensive Product Management** - Full CRUD operations for all products
@@ -197,6 +223,11 @@ The API is fully documented using **Swagger/OpenAPI 3.0** specification.
 - **Admin** - Administrative operations (coupons, promotions, shipping zones)
 - **Analytics** - Sales and performance metrics
 - **Vendors** - Vendor-specific operations
+- **Advanced Vendor Tools** 🚀 - Professional e-commerce features
+  - `POST /api/vendors/products/bulk-upload` - Bulk product import via CSV/Excel
+  - `GET /api/vendors/products/export` - Export products to CSV
+  - `GET /api/vendors/inventory/forecast` - AI-powered inventory forecasting
+  - `GET /api/vendors/analytics/customer-insights` - Customer behavior analytics
 
 Access the OpenAPI JSON specification at: [http://localhost:3000/api/swagger.json](http://localhost:3000/api/swagger.json)
 

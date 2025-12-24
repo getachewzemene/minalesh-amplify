@@ -28,7 +28,8 @@ import {
   ShieldCheck,
   AlertCircle,
   FileText,
-  Receipt
+  Receipt,
+  Sparkles
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,6 +70,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils"
 import heroImage from "@/assets/hero-marketplace.jpg"
+import VendorAdvancedDashboard from "./VendorAdvancedDashboard"
 
 // TypeScript interfaces for API responses
 interface VendorStatement {
@@ -653,6 +655,14 @@ export default function Dashboard() {
               <Receipt className="h-4 w-4 mr-2" />
               Commission Ledger
             </Button>
+            <Button 
+              variant={activeTab === 'advanced' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('advanced')}
+              className={activeTab === 'advanced' ? 'bg-primary hover:bg-primary/90' : ''}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Advanced Tools
+            </Button>
           </div>
 
           {/* Content based on active tab */}
@@ -1230,6 +1240,10 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {activeTab === 'advanced' && (
+            <VendorAdvancedDashboard />
           )}
         </Container>
       </main>
