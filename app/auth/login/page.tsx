@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,7 @@ export default function AuthLogin() {
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -26,7 +27,13 @@ export default function AuthLogin() {
     const success = await login(email, password)
     
     if (success) {
-      router.push('/')
+      // Refresh router to ensure cookies are synced
+      router.refresh()
+      
+      // Redirect to the originally requested page or default to home
+      const next = searchParams.get('next')
+      const redirectUrl = next && !next.startsWith('/admin') ? next : '/'
+      router.push(redirectUrl)
     }
     
     setIsLoading(false)
