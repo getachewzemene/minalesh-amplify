@@ -199,14 +199,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Basic HTML validation and sanitization
+    // Note: In production, use a proper HTML sanitizer like DOMPurify or sanitize-html
+    const sanitizedMessage = message
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
+      .replace(/javascript:/gi, ''); // Remove javascript: protocol
+
+    if (sanitizedMessage !== message) {
+      return NextResponse.json(
+        { success: false, error: 'Message contains potentially unsafe content' },
+        { status: 400 }
+      );
+    }
+
     // Queue emails for sending
     const emailPromises = targetCustomers.map((customer) => 
       prisma.emailQueue.create({
         data: {
           to: customer.email,
           subject,
-          html: message,
-          text: message.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+          html: sanitizedMessage,
+          text: sanitizedMessage.replace(/<[^>]*>/g, ''), // Strip HTML for text version
           template: 'marketing',
           metadata: {
             customerId: customer.id,

@@ -184,6 +184,24 @@ async function handleProductsBulkOperation(operation: string, productIds: string
         throw new Error('Price adjustment data is required');
       }
 
+      // Validate price adjustment values
+      const adjustment = Number(data.priceAdjustment);
+      if (isNaN(adjustment)) {
+        throw new Error('Invalid price adjustment value');
+      }
+
+      if (data.adjustmentType === 'percentage') {
+        // Limit percentage adjustments to -90% to +500%
+        if (adjustment < -90 || adjustment > 500) {
+          throw new Error('Percentage adjustment must be between -90% and +500%');
+        }
+      } else if (data.adjustmentType === 'fixed') {
+        // For fixed adjustments, ensure it's not excessively large
+        if (Math.abs(adjustment) > 1000000) {
+          throw new Error('Fixed adjustment must be less than 1,000,000 ETB');
+        }
+      }
+
       const products = await prisma.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true, price: true },
@@ -193,10 +211,15 @@ async function handleProductsBulkOperation(operation: string, productIds: string
         let newPrice = product.price;
         
         if (data.adjustmentType === 'percentage') {
-          const adjustment = product.price.mul(data.priceAdjustment).div(100);
-          newPrice = product.price.add(adjustment);
+          const adjustmentAmount = product.price.mul(data.priceAdjustment).div(100);
+          newPrice = product.price.add(adjustmentAmount);
         } else if (data.adjustmentType === 'fixed') {
           newPrice = product.price.add(data.priceAdjustment);
+        }
+
+        // Ensure price doesn't go negative
+        if (newPrice.lessThan(0)) {
+          newPrice = product.price; // Keep original price if adjustment would make it negative
         }
 
         return prisma.product.update({
@@ -249,7 +272,7 @@ async function handleProductsBulkOperation(operation: string, productIds: string
           name: product.name,
           sku: product.sku,
           price: product.price,
-          stock: product.stock,
+          stock: product.stockQuantity,
           category: product.category?.name,
           vendor: product.vendor?.businessName,
           isActive: product.isActive,

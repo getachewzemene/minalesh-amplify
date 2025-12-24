@@ -73,25 +73,53 @@ export default function AdvancedAdminFeatures() {
   const fetchLiveStats = async () => {
     try {
       const response = await fetch('/api/admin/dashboard/live-stats');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setLiveStats(data);
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in again to access admin features.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error Loading Stats",
+            description: "Failed to load dashboard statistics. Please try again.",
+            variant: "destructive",
+          });
         }
+        return;
+      }
+      const data = await response.json();
+      if (data.success) {
+        setLiveStats(data);
       }
     } catch (error) {
       console.error('Error fetching live stats:', error);
+      toast({
+        title: "Network Error",
+        description: "Could not connect to server. Please check your connection.",
+        variant: "destructive",
+      });
     }
   };
 
   const fetchNotifications = async () => {
     try {
       const response = await fetch('/api/admin/notifications');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setNotifications(data.notifications);
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          return; // Already handled in fetchLiveStats
         }
+        toast({
+          title: "Error Loading Notifications",
+          description: "Failed to load notifications. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const data = await response.json();
+      if (data.success) {
+        setNotifications(data.notifications);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -121,23 +149,33 @@ export default function AdvancedAdminFeatures() {
   const exportReport = async (reportType: string) => {
     try {
       const response = await fetch(`/api/admin/reports?type=${reportType}&format=csv`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${reportType}-report-${new Date().toISOString()}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         toast({
-          title: "Report Downloaded",
-          description: `${reportType} report has been downloaded successfully.`,
+          title: "Export Failed",
+          description: errorData.error || `Failed to export ${reportType} report. Please try again.`,
+          variant: "destructive",
         });
+        return;
       }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportType}-report-${new Date().toISOString()}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({
+        title: "Report Downloaded",
+        description: `${reportType} report has been downloaded successfully.`,
+      });
     } catch (error) {
+      console.error('Export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to export report. Please try again.",
+        description: "Network error. Please check your connection and try again.",
         variant: "destructive",
       });
     }
