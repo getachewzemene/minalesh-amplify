@@ -110,6 +110,15 @@ export default function AuthLogin() {
                   Sign up
                 </Link>
               </p>
+              <p className="text-sm text-muted-foreground">
+                Administrator?{" "}
+                <Link 
+                  href="/admin/login" 
+                  className="text-primary hover:text-primary/80 font-medium underline"
+                >
+                  Admin Login
+                </Link>
+              </p>
               <div className="text-xs text-muted-foreground">
                 <p className="font-medium">Demo Vendor:</p>
                 <p>Email: demo.vendor@minalesh.com</p>
