@@ -25,6 +25,44 @@ import Image from "next/image"
 import { LoyaltyRewards } from "@/components/user/LoyaltyRewards"
 import { ProductComparison } from "@/components/user/ProductComparison"
 
+interface ProductRecommendation {
+  id: string
+  name: string
+  slug: string
+  price: number
+  salePrice?: number
+  images?: string[]
+  ratingAverage: number
+  category?: { name: string; slug: string }
+  vendor?: { displayName?: string }
+}
+
+interface RecentOrder {
+  id: string
+  orderNumber: string
+  status: string
+  totalAmount: number
+  createdAt: string
+}
+
+interface WishlistItem {
+  id: string
+  createdAt: string
+  product?: {
+    id: string
+    name: string
+    slug: string
+    price: number
+  }
+}
+
+interface ViewedProduct {
+  id?: string
+  name: string
+  slug: string
+  price: number
+}
+
 export default function Profile() {
   const { user, profile, logout, updateProfile, requestVendorVerification } = useAuth()
   const router = useRouter()
@@ -40,10 +78,10 @@ export default function Profile() {
   })
 
   // State for advanced features
-  const [recommendations, setRecommendations] = useState<any[]>([])
-  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([])
-  const [recentOrders, setRecentOrders] = useState<any[]>([])
-  const [wishlistItems, setWishlistItems] = useState<any[]>([])
+  const [recommendations, setRecommendations] = useState<ProductRecommendation[]>([])
+  const [recentlyViewed, setRecentlyViewed] = useState<ViewedProduct[]>([])
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [loadingRecommendations, setLoadingRecommendations] = useState(true)
   const [loadingRecentlyViewed, setLoadingRecentlyViewed] = useState(true)
 
@@ -76,6 +114,9 @@ export default function Profile() {
       }
     } catch (error) {
       console.error('Error loading recently viewed:', error)
+      // Clear corrupted data
+      localStorage.removeItem('recentlyViewed')
+      toast.error('Failed to load recently viewed products. Data has been reset.')
     } finally {
       setLoadingRecentlyViewed(false)
     }
