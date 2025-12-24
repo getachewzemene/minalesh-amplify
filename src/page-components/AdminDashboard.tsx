@@ -16,6 +16,7 @@ import AdminCouponsManagement from "@/page-components/AdminCouponsManagement";
 import AdminShippingManagement from "@/page-components/AdminShippingManagement";
 import AdminOrdersManagement from "@/page-components/AdminOrdersManagement";
 import AdminVendorVerification from "@/page-components/AdminVendorVerification";
+import AdvancedAdminFeatures from "@/page-components/AdvancedAdminFeatures";
 import { 
   Users, 
   Store, 
@@ -384,8 +385,9 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-6 lg:grid-cols-8 text-xs md:text-sm">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 text-xs md:text-sm">
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="vendors">Vendors</TabsTrigger>
@@ -495,6 +497,10 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="advanced" className="space-y-6">
+              <AdvancedAdminFeatures />
             </TabsContent>
 
             <TabsContent value="orders" className="space-y-6">

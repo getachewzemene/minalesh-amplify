@@ -64,6 +64,17 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - Analytics dashboard
 - Category management
 - Order oversight
+- **Advanced Admin Dashboard** 🚀
+  - Real-time statistics with live updates
+  - Intelligent notification center
+  - Fraud detection and risk alerts
+  - Bulk operations (orders, products, users)
+  - Customer relationship management (CRM)
+  - Customer segmentation and lifetime value tracking
+  - Comprehensive reporting (sales, inventory, financial)
+  - CSV export for all reports
+  - Site configuration management
+  - 📚 **[View Advanced Admin Features Documentation](docs/ADVANCED_ADMIN_FEATURES.md)**
 - **Pricing & Promotions Management**
   - Create and manage coupon codes (percentage, fixed amount, free shipping)
   - Set up promotions and discounts
