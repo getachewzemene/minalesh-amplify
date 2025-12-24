@@ -20,6 +20,13 @@ export default function AuthLogin() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // Validate redirect URL to prevent open redirect vulnerabilities
+  const isValidRedirectUrl = (url: string | null): boolean => {
+    if (!url) return false
+    // Must start with / and not contain :// or //
+    return url.startsWith('/') && !url.includes('://') && !url.startsWith('//')
+  }
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -32,7 +39,10 @@ export default function AuthLogin() {
       
       // Redirect to the originally requested page or default to home
       const next = searchParams.get('next')
-      const redirectUrl = next && !next.startsWith('/admin') ? next : '/'
+      const redirectUrl = 
+        isValidRedirectUrl(next) && !next!.startsWith('/admin') 
+          ? next 
+          : '/'
       router.push(redirectUrl)
     }
     
