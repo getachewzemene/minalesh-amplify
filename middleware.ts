@@ -19,19 +19,27 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX)
   const isVendorRoute = pathname.startsWith(VENDOR_PREFIX)
+  const isAdminLogin = pathname === '/admin/login'
 
   if (!isAdminRoute && !isVendorRoute) return NextResponse.next()
 
+  // Allow access to admin login page without authentication
+  if (isAdminLogin) return NextResponse.next()
+
   const token = req.cookies.get(AUTH_COOKIE)?.value
   if (!token) {
-    const loginUrl = new URL('/auth/login', req.url)
+    const loginUrl = isAdminRoute 
+      ? new URL('/admin/login', req.url)
+      : new URL('/auth/login', req.url)
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
   const payload = await verifyJWT(token)
   if (!payload?.role) {
-    const loginUrl = new URL('/auth/login', req.url)
+    const loginUrl = isAdminRoute 
+      ? new URL('/admin/login', req.url)
+      : new URL('/auth/login', req.url)
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }
