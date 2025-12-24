@@ -1,19 +1,27 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Container } from "@/components/ui/container"
 import { Badge } from "@/components/ui/badge"
-import { Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { 
+  Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned,
+  Heart, Clock, Star, ShoppingBag, Bell, Shield, Store, Eye,
+  TrendingUp, Search, CreditCard, Gift, History, Settings
+} from "lucide-react"
 import { toast } from "sonner"
+import Image from "next/image"
 
 export default function Profile() {
   const { user, profile, logout, updateProfile, requestVendorVerification } = useAuth()
@@ -28,6 +36,86 @@ export default function Profile() {
     tradeLicense: profile?.tradeLicense || "",
     tinNumber: profile?.tinNumber || ""
   })
+
+  // State for advanced features
+  const [recommendations, setRecommendations] = useState<any[]>([])
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([])
+  const [recentOrders, setRecentOrders] = useState<any[]>([])
+  const [wishlistItems, setWishlistItems] = useState<any[]>([])
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true)
+  const [loadingRecentlyViewed, setLoadingRecentlyViewed] = useState(true)
+
+  // Fetch recommendations
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        const response = await fetch('/api/products/recommendations?limit=6')
+        if (response.ok) {
+          const data = await response.json()
+          setRecommendations(data.products || [])
+        }
+      } catch (error) {
+        console.error('Error fetching recommendations:', error)
+      } finally {
+        setLoadingRecommendations(false)
+      }
+    }
+
+    fetchRecommendations()
+  }, [])
+
+  // Fetch recently viewed products from localStorage
+  useEffect(() => {
+    try {
+      const viewed = localStorage.getItem('recentlyViewed')
+      if (viewed) {
+        const viewedProducts = JSON.parse(viewed).slice(0, 6)
+        setRecentlyViewed(viewedProducts)
+      }
+    } catch (error) {
+      console.error('Error loading recently viewed:', error)
+    } finally {
+      setLoadingRecentlyViewed(false)
+    }
+  }, [])
+
+  // Fetch recent orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('/api/orders')
+        if (response.ok) {
+          const data = await response.json()
+          setRecentOrders((data.orders || []).slice(0, 5))
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+      }
+    }
+
+    if (user) {
+      fetchOrders()
+    }
+  }, [user])
+
+  // Fetch wishlist
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const response = await fetch('/api/wishlist')
+        if (response.ok) {
+          const data = await response.json()
+          setWishlistItems((data.items || []).slice(0, 6))
+        }
+      } catch (error) {
+        console.error('Error fetching wishlist:', error)
+      }
+    }
+
+    if (user) {
+      fetchWishlist()
+    }
+  }, [user])
 
   const handleSave = () => {
     updateProfile(profileData)
@@ -49,204 +137,586 @@ export default function Profile() {
     }
   }
 
+  const handleQuickReorder = (orderId: string) => {
+    toast.info("Adding items to cart...")
+    // Navigate to order details or add to cart
+    router.push(`/orders/${orderId}`)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="py-8">
         <Container>
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>
                 <h1 className="text-3xl font-bold">My Account</h1>
-                <p className="text-muted-foreground mt-1">Manage your profile, addresses, and orders</p>
+                <p className="text-muted-foreground mt-1">
+                  Welcome back, {profile?.displayName || user?.email?.split('@')[0]}!
+                </p>
               </div>
               <Button variant="outline" onClick={handleLogout}>Logout</Button>
             </div>
 
-            {/* Quick Links */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <Link href="/profile">
-                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Profile</h3>
-                      <p className="text-sm text-muted-foreground">Personal information</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/addresses">
-                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MapPinned className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Addresses</h3>
-                      <p className="text-sm text-muted-foreground">Manage delivery addresses</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+            {/* Quick Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <Link href="/orders">
-                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Package className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Orders</h3>
-                      <p className="text-sm text-muted-foreground">View order history</p>
+                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Orders</p>
+                        <p className="text-2xl font-bold">{recentOrders.length}</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Package className="h-6 w-6 text-primary" />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </Link>
+              
+              <Link href="/wishlist">
+                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Wishlist Items</p>
+                        <p className="text-2xl font-bold">{wishlistItems.length}</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center">
+                        <Heart className="h-6 w-6 text-pink-500" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/addresses">
+                <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Saved Addresses</p>
+                        <p className="text-2xl font-bold">-</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <MapPinned className="h-6 w-6 text-blue-500" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Card className="bg-gradient-card shadow-card hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Viewed Products</p>
+                      <p className="text-2xl font-bold">{recentlyViewed.length}</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                      <Eye className="h-6 w-6 text-purple-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Profile Info */}
-              <div className="lg:col-span-1">
-                <Card className="bg-gradient-card shadow-card">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col items-center">
-                      <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                        <User className="h-12 w-12 text-primary" />
+            <Tabs defaultValue="overview" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 lg:w-auto">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="recommendations">For You</TabsTrigger>
+                <TabsTrigger value="security">Security</TabsTrigger>
+              </TabsList>
+
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Orders */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <History className="h-5 w-5" />
+                        Recent Orders
+                      </CardTitle>
+                      <CardDescription>Your latest purchases</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {recentOrders.length > 0 ? (
+                        <div className="space-y-4">
+                          {recentOrders.map((order: any) => (
+                            <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                              <div className="flex-1">
+                                <p className="font-medium">Order #{order.orderNumber}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(order.createdAt).toLocaleDateString()}
+                                </p>
+                                <Badge variant="outline" className="mt-1">
+                                  {order.status}
+                                </Badge>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold">{order.totalAmount} ETB</p>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="mt-2"
+                                  onClick={() => handleQuickReorder(order.id)}
+                                >
+                                  <ShoppingBag className="h-4 w-4 mr-1" />
+                                  Reorder
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                          <Button variant="outline" className="w-full" asChild>
+                            <Link href="/orders">View All Orders</Link>
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No orders yet</p>
+                          <Button className="mt-4" asChild>
+                            <Link href="/products">Start Shopping</Link>
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Wishlist Preview */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Heart className="h-5 w-5" />
+                        Wishlist
+                      </CardTitle>
+                      <CardDescription>Items you love</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {wishlistItems.length > 0 ? (
+                        <div className="space-y-4">
+                          {wishlistItems.map((item: any) => (
+                            <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                              <div className="flex-1">
+                                <p className="font-medium line-clamp-1">{item.product?.name}</p>
+                                <p className="text-sm font-bold text-primary">
+                                  {item.product?.price} ETB
+                                </p>
+                              </div>
+                              <Button size="sm" asChild>
+                                <Link href={`/product/${item.product?.slug}`}>View</Link>
+                              </Button>
+                            </div>
+                          ))}
+                          <Button variant="outline" className="w-full" asChild>
+                            <Link href="/wishlist">View All Wishlist</Link>
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Heart className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No items in wishlist</p>
+                          <Button className="mt-4" asChild>
+                            <Link href="/products">Browse Products</Link>
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Recently Viewed */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Recently Viewed
+                    </CardTitle>
+                    <CardDescription>Products you've checked out</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingRecentlyViewed ? (
+                      <div className="text-center py-8">Loading...</div>
+                    ) : recentlyViewed.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {recentlyViewed.map((product: any, index: number) => (
+                          <Link
+                            key={index}
+                            href={`/product/${product.slug}`}
+                            className="group"
+                          >
+                            <div className="border rounded-lg p-4 hover:shadow-lg transition-all">
+                              <div className="aspect-square bg-muted rounded-md mb-2 flex items-center justify-center">
+                                <Package className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                              <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {product.name}
+                              </p>
+                              <p className="text-sm font-bold text-primary mt-1">
+                                {product.price} ETB
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
                       </div>
-                      <h2 className="text-xl font-bold">{profile?.displayName || user?.email}</h2>
-                      <p className="text-muted-foreground">{user?.email}</p>
-                      <div className="mt-4">
-                        <Badge variant={profile?.isVendor ? "secondary" : "outline"}>
-                          {profile?.isVendor ? "VENDOR" : "USER"}
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No recently viewed products</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Profile Tab */}
+              <TabsContent value="profile" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Profile Card */}
+                  <Card className="lg:col-span-1">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col items-center">
+                        <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                          <User className="h-12 w-12 text-primary" />
+                        </div>
+                        <h2 className="text-xl font-bold text-center">
+                          {profile?.displayName || user?.email}
+                        </h2>
+                        <p className="text-sm text-muted-foreground text-center">{user?.email}</p>
+                        <div className="mt-4">
+                          <Badge variant={profile?.isVendor ? "secondary" : "outline"}>
+                            {profile?.isVendor ? "VENDOR" : "CUSTOMER"}
+                          </Badge>
+                        </div>
+                        
+                        {profile?.isVendor && (
+                          <div className="mt-4 w-full">
+                            <Separator className="mb-4" />
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Status:</span>
+                              {profile?.vendorStatus === 'approved' ? (
+                                <Badge className="bg-green-500">Verified</Badge>
+                              ) : profile?.vendorStatus === 'pending' ? (
+                                <Badge className="bg-yellow-500">Pending</Badge>
+                              ) : (
+                                <Badge variant="destructive">Not Verified</Badge>
+                              )}
+                            </div>
+                            {profile?.vendorStatus !== 'approved' && profile?.vendorStatus !== 'pending' && (
+                              <Button 
+                                className="w-full mt-4"
+                                onClick={handleVerifyVendor}
+                              >
+                                Request Verification
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Profile Form */}
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-center">
+                        <span>Profile Information</span>
+                        {!editing ? (
+                          <Button variant="outline" onClick={() => setEditing(true)}>
+                            Edit Profile
+                          </Button>
+                        ) : (
+                          <div className="space-x-2">
+                            <Button variant="outline" onClick={() => setEditing(false)}>
+                              Cancel
+                            </Button>
+                            <Button onClick={handleSave}>Save Changes</Button>
+                          </div>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="displayName">Display Name</Label>
+                          <Input 
+                            id="displayName" 
+                            value={profileData.displayName} 
+                            onChange={(e) => setProfileData({...profileData, displayName: e.target.value})} 
+                            disabled={!editing}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input 
+                              id="firstName" 
+                              value={profileData.firstName} 
+                              onChange={(e) => setProfileData({...profileData, firstName: e.target.value})} 
+                              disabled={!editing}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input 
+                              id="lastName" 
+                              value={profileData.lastName} 
+                              onChange={(e) => setProfileData({...profileData, lastName: e.target.value})} 
+                              disabled={!editing}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input 
+                            id="phone" 
+                            type="tel" 
+                            value={profileData.phone} 
+                            onChange={(e) => setProfileData({...profileData, phone: e.target.value})} 
+                            disabled={!editing}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="address">Address</Label>
+                          <Input 
+                            id="address" 
+                            value={profileData.address} 
+                            onChange={(e) => setProfileData({...profileData, address: e.target.value})} 
+                            disabled={!editing}
+                            placeholder="Enter your address"
+                          />
+                        </div>
+                        
+                        {profile?.isVendor && (
+                          <>
+                            <Separator className="my-4" />
+                            <h3 className="font-semibold">Vendor Information</h3>
+                            <div>
+                              <Label htmlFor="tradeLicense">Trade License Number</Label>
+                              <Input 
+                                id="tradeLicense" 
+                                value={profileData.tradeLicense} 
+                                onChange={(e) => setProfileData({...profileData, tradeLicense: e.target.value})} 
+                                disabled={!editing}
+                                placeholder="Enter trade license number"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="tinNumber">TIN Number</Label>
+                              <Input 
+                                id="tinNumber" 
+                                value={profileData.tinNumber} 
+                                onChange={(e) => setProfileData({...profileData, tinNumber: e.target.value})} 
+                                disabled={!editing}
+                                placeholder="Enter TIN number"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Activity Tab */}
+              <TabsContent value="activity" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5" />
+                      Account Activity
+                    </CardTitle>
+                    <CardDescription>Your shopping journey</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-4">
+                        {recentOrders.slice(0, 3).map((order: any, index: number) => (
+                          <div key={order.id} className="flex gap-4 items-start">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Package className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">Order Placed</p>
+                              <p className="text-sm text-muted-foreground">
+                                Order #{order.orderNumber} • {order.totalAmount} ETB
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(order.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {wishlistItems.slice(0, 3).map((item: any, index: number) => (
+                          <div key={item.id} className="flex gap-4 items-start">
+                            <div className="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+                              <Heart className="h-5 w-5 text-pink-500" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">Added to Wishlist</p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.product?.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(item.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {recentOrders.length === 0 && wishlistItems.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No activity yet</p>
+                            <p className="text-sm mt-2">Start shopping to see your activity here</p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Recommendations Tab */}
+              <TabsContent value="recommendations" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Star className="h-5 w-5" />
+                      Recommended For You
+                    </CardTitle>
+                    <CardDescription>Products you might like based on your browsing history</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingRecommendations ? (
+                      <div className="text-center py-8">Loading recommendations...</div>
+                    ) : recommendations.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {recommendations.map((product: any) => (
+                          <Link
+                            key={product.id}
+                            href={`/product/${product.slug}`}
+                            className="group"
+                          >
+                            <div className="border rounded-lg p-4 hover:shadow-lg transition-all hover:scale-105">
+                              <div className="aspect-square bg-muted rounded-md mb-2 flex items-center justify-center overflow-hidden">
+                                {product.images && product.images.length > 0 ? (
+                                  <img
+                                    src={product.images[0]}
+                                    alt={product.name}
+                                    className="object-cover w-full h-full"
+                                  />
+                                ) : (
+                                  <Package className="h-8 w-8 text-muted-foreground" />
+                                )}
+                              </div>
+                              <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {product.name}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <p className="text-sm font-bold text-primary">
+                                  {product.price} ETB
+                                </p>
+                                {product.ratingAverage > 0 && (
+                                  <div className="flex items-center">
+                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-xs ml-1">{product.ratingAverage}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Star className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No recommendations available yet</p>
+                        <p className="text-sm mt-2">Browse products to get personalized recommendations</p>
+                        <Button className="mt-4" asChild>
+                          <Link href="/products">Browse Products</Link>
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Security Tab */}
+              <TabsContent value="security" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Account Security
+                      </CardTitle>
+                      <CardDescription>Manage your security settings</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Email Verification</p>
+                          <p className="text-sm text-muted-foreground">
+                            {user?.emailVerified ? 'Verified' : 'Not verified'}
+                          </p>
+                        </div>
+                        <Badge variant={user?.emailVerified ? "default" : "outline"}>
+                          {user?.emailVerified ? 'Verified' : 'Pending'}
                         </Badge>
                       </div>
                       
-                      {profile?.isVendor && (
-                        <div className="mt-4 w-full">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Verification Status:</span>
-                            {profile?.vendorStatus === 'approved' ? (
-                              <Badge className="bg-green-500">Verified</Badge>
-                            ) : profile?.vendorStatus === 'pending' ? (
-                              <Badge className="bg-yellow-500">Pending</Badge>
-                            ) : (
-                              <Badge variant="destructive">Not Verified</Badge>
-                            )}
-                          </div>
-                          {profile?.vendorStatus !== 'approved' && profile?.vendorStatus !== 'pending' && (
-                            <Button 
-                              className="w-full mt-2 bg-primary hover:bg-primary/90"
-                              onClick={handleVerifyVendor}
-                            >
-                              Request Verification
-                            </Button>
-                          )}
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Password</p>
+                          <p className="text-sm text-muted-foreground">Last changed recently</p>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                        <Button variant="outline" size="sm">Change</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Profile Details */}
-              <div className="lg:col-span-2">
-                <Card className="bg-gradient-card shadow-card">
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      <span>Profile Information</span>
-                      {!editing ? (
-                        <Button variant="outline" onClick={() => setEditing(true)}>Edit</Button>
-                      ) : (
-                        <div className="space-x-2">
-                          <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
-                          <Button onClick={handleSave}>Save</Button>
-                        </div>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="displayName">Display Name</Label>
-                        <Input 
-                          id="displayName" 
-                          value={profileData.displayName} 
-                          onChange={(e) => setProfileData({...profileData, displayName: e.target.value})} 
-                          disabled={!editing}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Bell className="h-5 w-5" />
+                        Notification Preferences
+                      </CardTitle>
+                      <CardDescription>Manage how you receive updates</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input 
-                            id="firstName" 
-                            value={profileData.firstName} 
-                            onChange={(e) => setProfileData({...profileData, firstName: e.target.value})} 
-                            disabled={!editing}
-                          />
+                          <p className="font-medium">Order Updates</p>
+                          <p className="text-sm text-muted-foreground">Email & In-app</p>
                         </div>
-                        <div>
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input 
-                            id="lastName" 
-                            value={profileData.lastName} 
-                            onChange={(e) => setProfileData({...profileData, lastName: e.target.value})} 
-                            disabled={!editing}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input 
-                          id="phone" 
-                          type="tel" 
-                          value={profileData.phone} 
-                          onChange={(e) => setProfileData({...profileData, phone: e.target.value})} 
-                          disabled={!editing}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="address">Address</Label>
-                        <Input 
-                          id="address" 
-                          value={profileData.address} 
-                          onChange={(e) => setProfileData({...profileData, address: e.target.value})} 
-                          disabled={!editing}
-                          placeholder="Enter your address"
-                        />
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/profile/notifications">Manage</Link>
+                        </Button>
                       </div>
                       
-                      {profile?.isVendor && (
-                        <>
-                          <div>
-                            <Label htmlFor="tradeLicense">Trade License Number</Label>
-                            <Input 
-                              id="tradeLicense" 
-                              value={profileData.tradeLicense} 
-                              onChange={(e) => setProfileData({...profileData, tradeLicense: e.target.value})} 
-                              disabled={!editing}
-                              placeholder="Enter trade license number"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="tinNumber">TIN Number</Label>
-                            <Input 
-                              id="tinNumber" 
-                              value={profileData.tinNumber} 
-                              onChange={(e) => setProfileData({...profileData, tinNumber: e.target.value})} 
-                              disabled={!editing}
-                              placeholder="Enter TIN number"
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Promotions</p>
+                          <p className="text-sm text-muted-foreground">Get deals & offers</p>
+                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/profile/notifications">Manage</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </Container>
       </main>
