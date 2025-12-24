@@ -99,9 +99,34 @@ npx tsx prisma/seeds/categories.ts
 # (Optional) Seed demo products (Phones, CCTV, Alarms, Storage, etc.)
 npx tsx prisma/seeds/demo-products.ts
 
+# Initialize admin user (required for admin access)
+npm run init:admin
+# Follow the prompts to create the admin account
+
 # Start the development server
 npm run dev
 ```
+
+### Admin Setup
+
+The system supports **only one admin user** to maintain security and accountability. To set up the admin:
+
+1. **After database setup**, run the admin initialization script:
+   ```bash
+   npm run init:admin
+   ```
+
+2. **Follow the prompts** to enter:
+   - Admin email address
+   - Admin password (minimum 8 characters)
+   - First name (optional)
+   - Last name (optional)
+
+3. **Access the admin portal** at:
+   - Local: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+   - Production: `https://yourdomain.com/admin/login`
+
+**Note:** If an admin already exists, the script will inform you and prevent creating a second admin. To change the admin user, you must manually update the database.
 
 ### Security & RBAC
 
@@ -140,7 +165,7 @@ npm run dev
   - Email queue processing (every 1-5 minutes)
   - Webhook retry processing (every 5-10 minutes)
   - Inventory cleanup (every 5 minutes)
-- Manually assign admin roles via database
+- **Initialize admin user** using `npm run init:admin` script
 - Use HTTPS and consider httpOnly cookies
 - Enable PostgreSQL SSL connections
 
