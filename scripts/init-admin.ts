@@ -12,6 +12,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '../src/lib/auth';
+import { validateSingleAdminConstraint } from '../src/services/AdminService';
 import * as readline from 'readline';
 
 const prisma = new PrismaClient();
@@ -50,8 +51,11 @@ async function initAdmin() {
 
     // Get admin details from user input
     const email = await question('Admin Email: ');
-    if (!email || !email.includes('@')) {
-      throw new Error('Invalid email address');
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      throw new Error('Invalid email address format');
     }
 
     const password = await question('Admin Password (min 8 characters): ');
@@ -70,6 +74,13 @@ async function initAdmin() {
     if (existingUser) {
       // Update existing user to admin
       console.log('\n⚠️  User with this email already exists. Upgrading to admin...');
+      
+      // Validate single admin constraint
+      try {
+        await validateSingleAdminConstraint(existingUser.id, 'admin');
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Cannot upgrade user to admin');
+      }
       
       const updatedUser = await prisma.user.update({
         where: { email },

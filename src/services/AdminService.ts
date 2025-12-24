@@ -10,10 +10,11 @@ import { UserRole } from '@prisma/client';
  * Check if an admin user already exists in the system
  */
 export async function adminExists(): Promise<boolean> {
-  const count = await prisma.user.count({
+  const admin = await prisma.user.findFirst({
     where: { role: 'admin' },
+    select: { id: true },
   });
-  return count > 0;
+  return admin !== null;
 }
 
 /**

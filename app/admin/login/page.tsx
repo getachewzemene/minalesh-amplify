@@ -44,7 +44,8 @@ export default function AdminLogin() {
         return
       }
 
-      // Store token
+      // Store token in localStorage (matches existing auth pattern)
+      // Note: HttpOnly cookie is also set by server for SSR/middleware
       localStorage.setItem('auth_token', data.token)
       
       toast.success("Admin login successful!")
