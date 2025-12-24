@@ -23,8 +23,8 @@ export default function AuthLogin() {
   // Validate redirect URL to prevent open redirect vulnerabilities
   const isValidRedirectUrl = (url: string | null): boolean => {
     if (!url) return false
-    // Must start with / and not contain :// or //
-    return url.startsWith('/') && !url.includes('://') && !url.startsWith('//')
+    // Must start with / but not //, and not contain ://
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
   }
 
   const onSubmit = async (e: FormEvent) => {
