@@ -94,7 +94,7 @@ export function DeliveryEstimator({ productId, vendorCity, inStock }: DeliveryEs
             </div>
 
             <div className="text-xs text-muted-foreground space-y-1">
-              <p>• Standard delivery: 3-7 business days</p>
+              <p>• Delivery time varies by region (1-10 business days)</p>
               <p>• Express delivery available at checkout</p>
               {vendorCity && (
                 <p>• Ships from: {vendorCity}</p>

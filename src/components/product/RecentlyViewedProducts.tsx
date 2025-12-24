@@ -17,9 +17,6 @@ interface ViewedProduct {
   viewedAt: number
 }
 
-const STORAGE_KEY = 'recently_viewed_products'
-const MAX_ITEMS = 12
-
 export function RecentlyViewedProducts() {
   const [products, setProducts] = useState<ViewedProduct[]>([])
   const router = useRouter()
@@ -43,12 +40,12 @@ export function RecentlyViewedProducts() {
 
   const loadRecentlyViewed = () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
       if (stored) {
         const items = JSON.parse(stored) as ViewedProduct[]
         // Sort by most recent first
         const sorted = items.sort((a, b) => b.viewedAt - a.viewedAt)
-        setProducts(sorted.slice(0, MAX_ITEMS))
+        setProducts(sorted.slice(0, PRODUCT_LIMITS.MAX_RECENTLY_VIEWED))
       }
     } catch (error) {
       console.error('Error loading recently viewed:', error)
@@ -116,7 +113,7 @@ export function trackProductView(product: {
   image: string
 }) {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
     let items: ViewedProduct[] = stored ? JSON.parse(stored) : []
     
     // Remove existing entry for this product
@@ -129,9 +126,9 @@ export function trackProductView(product: {
     })
     
     // Keep only the most recent items
-    items = items.slice(0, MAX_ITEMS)
+    items = items.slice(0, PRODUCT_LIMITS.MAX_RECENTLY_VIEWED)
     
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    localStorage.setItem(STORAGE_KEYS.RECENTLY_VIEWED, JSON.stringify(items))
     
     // Dispatch event to notify other components
     window.dispatchEvent(new Event('recently-viewed-updated'))

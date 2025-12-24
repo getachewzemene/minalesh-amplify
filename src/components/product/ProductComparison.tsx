@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import { DEFAULTS, PRODUCT_LIMITS } from "@/lib/product-constants"
 
 interface Product {
   id: string
@@ -89,7 +90,7 @@ export function ProductComparison({ isOpen, onClose, products }: ProductComparis
                       <div className="space-y-3">
                         <div className="relative aspect-square bg-background rounded overflow-hidden">
                           <Image
-                            src={product.images?.[0] || '/placeholder-product.jpg'}
+                            src={product.images?.[0] || DEFAULTS.PLACEHOLDER_IMAGE}
                             alt={product.name}
                             fill
                             className="object-contain p-2"
@@ -220,7 +221,7 @@ export function useProductComparison() {
   }, [])
 
   const addToCompare = (productId: string) => {
-    const newList = [...compareProducts, productId].slice(-4) // Max 4 products
+    const newList = [...compareProducts, productId].slice(-PRODUCT_LIMITS.MAX_COMPARISON)
     setCompareProducts(newList)
     localStorage.setItem('compare_products', JSON.stringify(newList))
   }

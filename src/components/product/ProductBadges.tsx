@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, Star, Flame, Package, Clock } from "lucide-react"
+import { TIME_CONSTANTS, BADGE_THRESHOLDS } from "@/lib/product-constants"
 
 interface ProductBadgesProps {
   isBestSeller?: boolean
@@ -47,7 +48,7 @@ export function ProductBadges({
       )}
 
       {/* Limited Stock Badge */}
-      {stockQuantity > 0 && stockQuantity <= 5 && (
+      {stockQuantity > 0 && stockQuantity <= BADGE_THRESHOLDS.LIMITED_STOCK && (
         <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold shadow-lg animate-pulse">
           <Clock className="w-3 h-3 mr-1" />
           Only {stockQuantity} Left!
@@ -55,7 +56,7 @@ export function ProductBadges({
       )}
 
       {/* Low Stock Warning */}
-      {stockQuantity > 5 && stockQuantity <= 10 && (
+      {stockQuantity > BADGE_THRESHOLDS.LIMITED_STOCK && stockQuantity <= BADGE_THRESHOLDS.LOW_STOCK && (
         <Badge className="bg-orange-500 text-white font-semibold shadow-lg">
           <Package className="w-3 h-3 mr-1" />
           Low Stock
@@ -63,7 +64,7 @@ export function ProductBadges({
       )}
 
       {/* Highly Rated Badge */}
-      {rating && rating >= 4.5 && (
+      {rating && rating >= BADGE_THRESHOLDS.HIGHLY_RATED && (
         <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-lg">
           <Star className="w-3 h-3 mr-1 fill-white" />
           Highly Rated
@@ -96,14 +97,14 @@ export function getProductBadges(product: {
     ? new Date(product.createdAt) 
     : product.createdAt
 
-  // Product is "new" if created within last 30 days
-  const isNew = (Date.now() - createdDate.getTime()) < 30 * 24 * 60 * 60 * 1000
+  // Product is "new" if created within threshold
+  const isNew = (Date.now() - createdDate.getTime()) < TIME_CONSTANTS.NEW_PRODUCT_THRESHOLD
 
   // Best seller if high sales count
-  const isBestSeller = (product.salesCount || 0) > 50
+  const isBestSeller = (product.salesCount || 0) > BADGE_THRESHOLDS.BEST_SELLER_SALES
 
   // Trending if high view count recently
-  const isTrending = (product.viewCount || 0) > 100
+  const isTrending = (product.viewCount || 0) > BADGE_THRESHOLDS.TRENDING_VIEWS
 
   // Has discount
   const hasDiscount = !!product.salePrice && product.salePrice < product.price

@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/utils"
 import { useShop } from "@/context/shop-context"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { DEFAULTS } from "@/lib/product-constants"
 
 interface Product {
   id: string
@@ -62,33 +63,33 @@ export function QuickViewModal({ productId, isOpen, onClose }: QuickViewModalPro
     }
   }
 
-  const handleAddToCart = () => {
-    if (!product) return
+  const getProductData = () => {
+    if (!product) return null
     
-    const imageUrl = product.images?.[0] || '/placeholder-product.jpg'
+    const imageUrl = product.images?.[0] || DEFAULTS.PLACEHOLDER_IMAGE
     const price = product.salePrice || product.price
     
-    addToCart({
+    return {
       id: product.id,
       name: product.name,
       price,
       image: imageUrl
-    })
+    }
+  }
+
+  const handleAddToCart = () => {
+    const data = getProductData()
+    if (!data) return
+    
+    addToCart(data)
     toast.success("Added to cart!")
   }
 
   const handleAddToWishlist = () => {
-    if (!product) return
+    const data = getProductData()
+    if (!data) return
     
-    const imageUrl = product.images?.[0] || '/placeholder-product.jpg'
-    const price = product.salePrice || product.price
-    
-    addToWishlist({
-      id: product.id,
-      name: product.name,
-      price,
-      image: imageUrl
-    })
+    addToWishlist(data)
     toast.success("Added to wishlist!")
   }
 
@@ -112,7 +113,7 @@ export function QuickViewModal({ productId, isOpen, onClose }: QuickViewModalPro
             <div className="space-y-3">
               <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
                 <Image
-                  src={product.images?.[selectedImage] || '/placeholder-product.jpg'}
+                  src={product.images?.[selectedImage] || DEFAULTS.PLACEHOLDER_IMAGE}
                   alt={product.name}
                   fill
                   className="object-contain p-4"

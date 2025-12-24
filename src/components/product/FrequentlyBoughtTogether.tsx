@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/utils"
 import { useShop } from "@/context/shop-context"
 import { toast } from "sonner"
 import Image from "next/image"
+import { DEFAULTS } from "@/lib/product-constants"
 
 interface Product {
   id: string
@@ -93,7 +94,7 @@ export function FrequentlyBoughtTogether({ currentProductId, currentProduct }: F
 
     relatedProducts.forEach(product => {
       if (selectedProducts.has(product.id)) {
-        const imageUrl = product.images?.[0] || '/placeholder-product.jpg'
+        const imageUrl = product.images?.[0] || DEFAULTS.PLACEHOLDER_IMAGE
         addToCart({
           id: product.id,
           name: product.name,
@@ -160,7 +161,7 @@ export function FrequentlyBoughtTogether({ currentProductId, currentProduct }: F
                   <div className="flex-1 flex gap-3">
                     <div className="relative w-20 h-20 bg-muted rounded flex-shrink-0">
                       <Image
-                        src={product.images?.[0] || '/placeholder-product.jpg'}
+                        src={product.images?.[0] || DEFAULTS.PLACEHOLDER_IMAGE}
                         alt={product.name}
                         fill
                         className="object-contain p-1"
