@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { DEFAULTS, PRODUCT_LIMITS } from "@/lib/product-constants"
+import { DEFAULTS, PRODUCT_LIMITS, STORAGE_KEYS } from "@/lib/product-constants"
 
 interface Product {
   id: string
@@ -210,7 +210,7 @@ export function useProductComparison() {
 
   useEffect(() => {
     // Load from localStorage
-    const stored = localStorage.getItem('compare_products')
+    const stored = localStorage.getItem(STORAGE_KEYS.COMPARE_PRODUCTS)
     if (stored) {
       try {
         setCompareProducts(JSON.parse(stored))
@@ -223,18 +223,18 @@ export function useProductComparison() {
   const addToCompare = (productId: string) => {
     const newList = [...compareProducts, productId].slice(-PRODUCT_LIMITS.MAX_COMPARISON)
     setCompareProducts(newList)
-    localStorage.setItem('compare_products', JSON.stringify(newList))
+    localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(newList))
   }
 
   const removeFromCompare = (productId: string) => {
     const newList = compareProducts.filter(id => id !== productId)
     setCompareProducts(newList)
-    localStorage.setItem('compare_products', JSON.stringify(newList))
+    localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(newList))
   }
 
   const clearCompare = () => {
     setCompareProducts([])
-    localStorage.removeItem('compare_products')
+    localStorage.removeItem(STORAGE_KEYS.COMPARE_PRODUCTS)
   }
 
   const openCompare = () => setIsCompareOpen(true)
