@@ -8,6 +8,8 @@ import { ProductGrid } from "@/components/product-grid"
 import { ProductSection } from "@/components/product-section"
 import { Footer } from "@/components/footer"
 import { useAuth } from "@/context/auth-context"
+import { RecentlyViewedProducts } from "@/components/product/RecentlyViewedProducts"
+import { Container } from "@/components/ui/container"
 
 export default function Home() {
   const { user } = useAuth()
@@ -53,6 +55,11 @@ export default function Home() {
             showViewAll={false}
           />
         )}
+
+        {/* Recently Viewed Products */}
+        <Container className="py-8">
+          <RecentlyViewedProducts />
+        </Container>
       </main>
       <Footer />
     </div>

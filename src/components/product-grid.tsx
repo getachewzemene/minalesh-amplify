@@ -14,6 +14,8 @@ import { formatCurrency } from "@/lib/utils"
 import { ProductCardSkeleton } from "@/components/ui/loading-state"
 import { parsePrimaryImage, getEffectivePrice, getBlurDataURL } from "@/lib/image-utils"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { QuickViewModal } from "@/components/product/QuickViewModal"
+import { ProductBadges, getProductBadges } from "@/components/product/ProductBadges"
 
 interface Product {
   id: string
@@ -35,6 +37,7 @@ interface Product {
     city?: string
   }
   stockQuantity: number
+  createdAt?: Date | string
 }
 
 export function ProductGrid() {
@@ -46,6 +49,8 @@ export function ProductGrid() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState<string[]>(["All"])
+  const [quickViewProduct, setQuickViewProduct] = useState<string | null>(null)
+  const [quickViewOpen, setQuickViewOpen] = useState(false)
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -203,23 +208,32 @@ export function ProductGrid() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       {/* Badges */}
-                      <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive" className="shadow-lg font-semibold">
-                            SALE
-                          </Badge>
-                        )}
-                        {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500 shadow-lg font-semibold">
-                            Low Stock
-                          </Badge>
-                        )}
+                      <div className="absolute top-3 left-3 z-10">
+                        <ProductBadges
+                          {...getProductBadges({
+                            createdAt: product.createdAt || new Date(),
+                            stockQuantity: product.stockQuantity,
+                            salePrice: product.salePrice,
+                            price: product.price,
+                            ratingAverage: product.ratingAverage
+                          })}
+                        />
                       </div>
 
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
-                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-11 w-11" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-11 w-11" 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setQuickViewProduct(product.id);
+                              setQuickViewOpen(true);
+                            }} 
+                            aria-label="Quick view"
+                          >
                             <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
@@ -257,23 +271,32 @@ export function ProductGrid() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       {/* Badges */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive" className="shadow-lg font-semibold px-3 py-1">
-                            SALE
-                          </Badge>
-                        )}
-                        {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500 shadow-lg font-semibold px-3 py-1">
-                            Low Stock
-                          </Badge>
-                        )}
+                      <div className="absolute top-4 left-4 z-10">
+                        <ProductBadges
+                          {...getProductBadges({
+                            createdAt: product.createdAt || new Date(),
+                            stockQuantity: product.stockQuantity,
+                            salePrice: product.salePrice,
+                            price: product.price,
+                            ratingAverage: product.ratingAverage
+                          })}
+                        />
                       </div>
 
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
-                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setQuickViewProduct(product.id);
+                              setQuickViewOpen(true);
+                            }} 
+                            aria-label="Quick view"
+                          >
                             <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
@@ -387,6 +410,16 @@ export function ProductGrid() {
           </Button>
         </div>
       </Container>
+
+      {/* Quick View Modal */}
+      <QuickViewModal 
+        productId={quickViewProduct}
+        isOpen={quickViewOpen}
+        onClose={() => {
+          setQuickViewOpen(false);
+          setQuickViewProduct(null);
+        }}
+      />
     </section>
   )
 }

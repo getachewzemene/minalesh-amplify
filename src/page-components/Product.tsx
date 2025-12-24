@@ -20,6 +20,11 @@ import {
   type CachedProduct 
 } from "@/lib/offline-cache"
 import { parseAllImages, getEffectivePrice, parseJsonField } from "@/lib/image-utils"
+import { FrequentlyBoughtTogether } from "@/components/product/FrequentlyBoughtTogether"
+import { ProductQA } from "@/components/product/ProductQA"
+import { StockAlert } from "@/components/product/StockAlert"
+import { RecentlyViewedProducts, trackProductView } from "@/components/product/RecentlyViewedProducts"
+import { DeliveryEstimator } from "@/components/product/DeliveryEstimator"
 
 interface ProductData {
   id: string
@@ -78,6 +83,16 @@ export default function Product() {
         if (response.ok) {
           const data = await response.json()
           setDisplayProduct(data.product)
+          
+          // Track this product view
+          const productImages = parseAllImages(data.product.images)
+          trackProductView({
+            id: data.product.id,
+            name: data.product.name,
+            price: data.product.price,
+            salePrice: data.product.salePrice,
+            image: productImages[0] || '/placeholder-product.jpg'
+          })
         } else if (response.status === 404) {
           setError('Product not found')
         } else {
@@ -329,6 +344,13 @@ export default function Product() {
                 )}
               </div>
 
+              {/* Stock Alert for Out of Stock Items */}
+              <StockAlert 
+                productId={displayProduct.id}
+                productName={displayProduct.name}
+                isInStock={displayProduct.stockQuantity > 0}
+              />
+
               {/* Quantity and Actions */}
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -409,6 +431,13 @@ export default function Product() {
                   <span className="text-xs">Easy Returns</span>
                 </div>
               </div>
+
+              {/* Delivery Estimator */}
+              <DeliveryEstimator
+                productId={displayProduct.id}
+                vendorCity={displayProduct.vendor?.city}
+                inStock={displayProduct.stockQuantity > 0}
+              />
             </div>
           </div>
 
@@ -470,6 +499,23 @@ export default function Product() {
           <div className="mt-12">
             <ReviewsSection productId={displayProduct.id} />
           </div>
+
+          {/* Frequently Bought Together */}
+          <FrequentlyBoughtTogether 
+            currentProductId={displayProduct.id}
+            currentProduct={{
+              id: displayProduct.id,
+              name: displayProduct.name,
+              price: currentPrice,
+              image: firstImage
+            }}
+          />
+
+          {/* Product Q&A */}
+          <ProductQA productId={displayProduct.id} />
+
+          {/* Recently Viewed Products */}
+          <RecentlyViewedProducts />
         </Container>
       </main>
 
