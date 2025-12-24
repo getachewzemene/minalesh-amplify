@@ -801,3 +801,25 @@ model CommissionLedger {
   @@index([paidAt])
   @@map("commission_ledger")
 }
+
+model SiteSettings {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  maintenanceMode      Boolean  @default(false) @map("maintenance_mode")
+  maintenanceMessage   String?  @map("maintenance_message")
+  featuredProducts     Json?    @map("featured_products")
+  homepageBanners      Json?    @map("homepage_banners")
+  announcementBar      Json?    @map("announcement_bar")
+  allowNewVendors      Boolean  @default(true) @map("allow_new_vendors")
+  allowNewCustomers    Boolean  @default(true) @map("allow_new_customers")
+  minOrderAmount       Decimal  @default(0) @map("min_order_amount") @db.Decimal(10, 2)
+  maxOrderAmount       Decimal  @default(1000000) @map("max_order_amount") @db.Decimal(10, 2)
+  defaultCurrency      String   @default("ETB") @map("default_currency")
+  taxRate              Decimal  @default(0.15) @map("tax_rate") @db.Decimal(5, 4)
+  shippingEnabled      Boolean  @default(true) @map("shipping_enabled")
+  emailNotifications   Boolean  @default(true) @map("email_notifications")
+  smsNotifications     Boolean  @default(false) @map("sms_notifications")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
