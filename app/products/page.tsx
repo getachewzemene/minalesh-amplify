@@ -361,13 +361,13 @@ function ProductsContent() {
             {products.map((product) => (
             <div
               key={product.id}
-              className="group relative border rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-card cursor-pointer"
+              className="group relative bg-white dark:bg-card rounded-xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:-translate-y-2 transition-all duration-500 cursor-pointer"
               onClick={() => router.push(`/product/${product.id}`)}
             >
               {/* Mobile: 4:3 ratio */}
               <div className="block md:hidden">
                 <AspectRatio ratio={4 / 3}>
-                  <div className="relative w-full h-full overflow-hidden bg-muted">
+                  <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                     <Image
                       src={typeof product.image === 'string' ? product.image : product.image.src}
                       alt={product.name}
@@ -375,19 +375,21 @@ function ProductsContent() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                       placeholder="blur"
                       blurDataURL={getBlurDataURL()}
-                      className="object-contain group-hover:scale-105 transition-transform duration-300"
+                      className="object-contain p-4 group-hover:scale-110 transition-all duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {product.originalPrice && (
-                      <Badge className="absolute top-2 left-2 bg-red-500">
-                        -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                      </Badge>
-                    )}
-                    {product.hasAR && (
-                      <Badge className="absolute top-2 right-2 bg-purple-500">
-                        AR View
-                      </Badge>
-                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                      {product.originalPrice && (
+                        <Badge className="bg-red-500 shadow-lg font-semibold">
+                          -{Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                        </Badge>
+                      )}
+                      {product.hasAR && (
+                        <Badge className="bg-purple-500 shadow-lg font-semibold">
+                          AR View
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </AspectRatio>
               </div>
@@ -395,7 +397,7 @@ function ProductsContent() {
               {/* Desktop: enforce square ratio and better image fit */}
               <div className="hidden md:block">
                 <div className="aspect-square">
-                  <div className="relative w-full h-full overflow-hidden bg-muted">
+                  <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                     <Image
                       src={typeof product.image === 'string' ? product.image : product.image.src}
                       alt={product.name}
@@ -403,27 +405,29 @@ function ProductsContent() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                       placeholder="blur"
                       blurDataURL={getBlurDataURL()}
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="object-contain p-6 group-hover:scale-110 transition-all duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {product.originalPrice && (
-                      <Badge className="absolute top-2 left-2 bg-red-500">
-                        -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                      </Badge>
-                    )}
-                    {product.hasAR && (
-                      <Badge className="absolute top-2 right-2 bg-purple-500">
-                        AR View
-                      </Badge>
-                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {product.originalPrice && (
+                        <Badge className="bg-red-500 shadow-lg font-semibold px-3 py-1">
+                          -{Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                        </Badge>
+                      )}
+                      {product.hasAR && (
+                        <Badge className="bg-purple-500 shadow-lg font-semibold px-3 py-1">
+                          AR View
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 space-y-3">
+              <div className="p-5 space-y-3">
                 <div>
-                  <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground">{product.vendor}</p>
+                  <h3 className="font-bold text-base line-clamp-2 leading-tight min-h-[2.5rem]">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">{product.vendor}</p>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -433,17 +437,17 @@ function ProductsContent() {
                       className={`w-4 h-4 ${
                         i < Math.floor(product.rating)
                           ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
+                          : "fill-gray-200 text-gray-200"
                       }`}
                     />
                   ))}
-                  <span className="text-sm text-muted-foreground ml-2">
+                  <span className="text-sm text-muted-foreground font-medium ml-2">
                     ({product.reviews})
                   </span>
                 </div>
 
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold">
+                  <span className="text-2xl font-bold text-primary">
                     ETB {product.price.toLocaleString()}
                   </span>
                   {product.originalPrice && (
@@ -456,7 +460,7 @@ function ProductsContent() {
                 <div className="flex gap-2">
                   <Button
                     onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
-                    className="flex-1"
+                    className="flex-1 bg-primary hover:bg-primary/90 font-semibold shadow-md hover:shadow-lg transition-all"
                     size="sm"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
@@ -465,14 +469,16 @@ function ProductsContent() {
                   <Button
                     onClick={(e) => { e.stopPropagation(); handleAddToWishlist(product); }}
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="border-2 hover:bg-red-50 hover:border-red-400 hover:text-red-500 transition-all"
                   >
                     <Heart className="w-4 h-4" />
                   </Button>
                   <Button
                     onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`); }}
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="border-2"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>

@@ -1,164 +1,146 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
+/**
+ * Demo page to showcase the premium product card design
+ */
+
+import { useState } from "react"
 import Image from "next/image"
-import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Star, ShoppingCart, Eye, Heart, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from "next/navigation"
-import { useShop } from "@/context/shop-context"
-import { toast } from "sonner"
-import { formatCurrency } from "@/lib/utils"
-import { ProductCardSkeleton } from "@/components/ui/loading-state"
-import { parsePrimaryImage, getEffectivePrice, getBlurDataURL } from "@/lib/image-utils"
+import { Container } from "@/components/ui/container"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 
-interface Product {
-  id: string
-  name: string
-  price: number
-  salePrice?: number | null
-  ratingAverage: number
-  ratingCount: number
-  images: any
-  category?: {
-    name: string
-    slug: string
-  }
-  vendor?: {
-    displayName?: string
-    firstName?: string
-    lastName?: string
-    isVendor?: boolean
-    city?: string
-  }
-  stockQuantity: number
-}
+// Mock product data for demonstration
+const mockProducts = [
+  {
+    id: '1',
+    name: 'Premium Wireless Headphones',
+    price: 4999,
+    salePrice: 3999,
+    ratingAverage: 4.5,
+    ratingCount: 128,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Electronics', slug: 'electronics' },
+    vendor: { displayName: 'TechGear Ethiopia', isVendor: true },
+    stockQuantity: 15,
+  },
+  {
+    id: '2',
+    name: 'Smart Watch Series 5',
+    price: 8999,
+    salePrice: null,
+    ratingAverage: 4.8,
+    ratingCount: 256,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Wearables', slug: 'wearables' },
+    vendor: { displayName: 'Smart Devices', isVendor: true },
+    stockQuantity: 3,
+  },
+  {
+    id: '3',
+    name: 'Laptop Stand Adjustable',
+    price: 1299,
+    salePrice: null,
+    ratingAverage: 4.2,
+    ratingCount: 89,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Accessories', slug: 'accessories' },
+    vendor: { displayName: 'Office Solutions', isVendor: false },
+    stockQuantity: 50,
+  },
+  {
+    id: '4',
+    name: 'USB-C Hub 7-in-1',
+    price: 2499,
+    salePrice: 1999,
+    ratingAverage: 4.6,
+    ratingCount: 342,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Accessories', slug: 'accessories' },
+    vendor: { displayName: 'ConnectTech', isVendor: true },
+    stockQuantity: 25,
+  },
+  {
+    id: '5',
+    name: 'Mechanical Keyboard RGB',
+    price: 6999,
+    salePrice: null,
+    ratingAverage: 4.9,
+    ratingCount: 512,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Gaming', slug: 'gaming' },
+    vendor: { displayName: 'GamePro ET', isVendor: true },
+    stockQuantity: 8,
+  },
+  {
+    id: '6',
+    name: 'Wireless Mouse Ergonomic',
+    price: 1899,
+    salePrice: 1499,
+    ratingAverage: 4.3,
+    ratingCount: 176,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Accessories', slug: 'accessories' },
+    vendor: { displayName: 'Tech Accessories', isVendor: true },
+    stockQuantity: 2,
+  },
+  {
+    id: '7',
+    name: 'Portable SSD 1TB',
+    price: 12999,
+    salePrice: null,
+    ratingAverage: 4.7,
+    ratingCount: 234,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Storage', slug: 'storage' },
+    vendor: { displayName: 'Data Solutions', isVendor: true },
+    stockQuantity: 12,
+  },
+  {
+    id: '8',
+    name: 'Webcam 4K HD',
+    price: 5999,
+    salePrice: 4799,
+    ratingAverage: 4.4,
+    ratingCount: 198,
+    images: '/placeholder-product.jpg',
+    category: { name: 'Electronics', slug: 'electronics' },
+    vendor: { displayName: 'VideoTech', isVendor: false },
+    stockQuantity: 18,
+  },
+]
 
-interface ProductSectionProps {
-  title: string
-  description?: string
-  endpoint: string
-  limit: number
-  categorySlug?: string
-  productId?: string
-  showViewAll?: boolean
-  viewAllLink?: string
-}
-
-export function ProductSection({
-  title,
-  description,
-  endpoint,
-  limit,
-  categorySlug,
-  productId,
-  showViewAll = false,
-  viewAllLink = "/products",
-}: ProductSectionProps) {
-  const router = useRouter()
-  const { addToCart, addToWishlist } = useShop()
+export default function DemoCards() {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true)
-        const params = new URLSearchParams()
-        params.append('limit', limit.toString())
-        if (categorySlug) params.append('category', categorySlug)
-        if (productId) params.append('productId', productId)
-
-        const response = await fetch(`${endpoint}?${params.toString()}`)
-        if (response.ok) {
-          const data = await response.json()
-          setProducts(data.products || [])
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProducts()
-  }, [endpoint, limit, categorySlug, productId])
-
-  const handleAddToCart = (product: Product) => {
-    const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
-    const price = getEffectivePrice(product)
-
-    addToCart({ 
-      id: product.id, 
-      name: product.name, 
-      price, 
-      image: imageUrl,
-      category: product.category?.name || 'Uncategorized',
-      vendor: product.vendor?.displayName || 
-              `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
-              'Unknown Vendor',
-    })
-    toast.success("Item added to cart")
+  const formatCurrency = (amount: number) => {
+    return `ETB ${amount.toLocaleString()}`
   }
 
-  const handleAddToWishlist = (product: Product) => {
-    const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
-    const price = getEffectivePrice(product)
-
-    addToWishlist({ 
-      id: product.id, 
-      name: product.name, 
-      price,
-      image: imageUrl,
-      category: product.category?.name || 'Uncategorized',
-      vendor: product.vendor?.displayName || 
-              `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
-              'Unknown Vendor',
-    })
-    toast.success("Item added to wishlist")
-  }
-
-  if (loading) {
-    return (
-      <section className="py-12 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">{title}</h2>
-            {description && (
-              <p className="text-muted-foreground">{description}</p>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <ProductCardSkeleton count={limit > 4 ? 4 : limit} />
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  if (!products.length) {
-    return null
+  const getBlurDataURL = () => {
+    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='
   }
 
   return (
-    <section className="py-12 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">{title}</h2>
-          {description && (
-            <p className="text-muted-foreground max-w-2xl mx-auto">{description}</p>
-          )}
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <Container className="py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Premium Product Card Design</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Redesigned product cards with modern aesthetics, enhanced shadows, smooth animations, and professional layout
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => {
-            const imageUrl = parsePrimaryImage(product.images) || '/placeholder-product.jpg'
-            const effectivePrice = getEffectivePrice(product)
-            const vendorName = product.vendor?.displayName || 
-                               `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
-                               'Unknown Vendor'
+          {mockProducts.map((product) => {
+            const imageUrl = product.images || '/placeholder-product.jpg'
+            const effectivePrice = product.salePrice || product.price
+            const vendorName = product.vendor?.displayName || 'Unknown Vendor'
             const blur = getBlurDataURL()
 
             return (
@@ -167,7 +149,6 @@ export function ProductSection({
                 className="group bg-white dark:bg-card rounded-xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:-translate-y-2 cursor-pointer overflow-hidden"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
-                onClick={() => router.push(`/product/${product.id}`)}
               >
                 {/* Mobile: 4:3 ratio */}
                 <div className="block md:hidden">
@@ -202,17 +183,12 @@ export function ProductSection({
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
-                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-11 w-11" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-11 w-11" aria-label="View product">
                             <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
                             size="icon" 
                             className="bg-primary hover:bg-primary/90 shadow-xl rounded-full h-11 w-11" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleAddToCart(product);
-                            }}
                             aria-label="Add to cart"
                           >
                             <ShoppingCart className="h-5 w-5" />
@@ -223,7 +199,7 @@ export function ProductSection({
                   </AspectRatio>
                 </div>
 
-                {/* Desktop: square ratio */}
+                {/* Desktop: square ratio with full-cover image */}
                 <div className="hidden md:block">
                   <AspectRatio ratio={1}>
                     <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -256,17 +232,12 @@ export function ProductSection({
                       {/* Hover actions */}
                       {hoveredProduct === product.id && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
-                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
+                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" aria-label="View product">
                             <Eye className="h-5 w-5" />
                           </Button>
                           <Button 
                             size="icon" 
                             className="bg-primary hover:bg-primary/90 shadow-xl rounded-full h-12 w-12" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleAddToCart(product);
-                            }}
                             aria-label="Add to cart"
                           >
                             <ShoppingCart className="h-5 w-5" />
@@ -333,11 +304,6 @@ export function ProductSection({
                     <Button 
                       className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all"
                       size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleAddToCart(product);
-                      }}
                     >
                       Add to Cart
                     </Button>
@@ -345,11 +311,6 @@ export function ProductSection({
                       variant="outline"
                       size="icon"
                       className="border-2 hover:bg-red-50 hover:border-red-400 hover:text-red-500 transition-all"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleAddToWishlist(product);
-                      }}
                       aria-label="Add to wishlist"
                     >
                       <Heart className="h-4 w-4" />
@@ -360,15 +321,8 @@ export function ProductSection({
             )
           })}
         </div>
-
-        {showViewAll && (
-          <div className="text-center mt-8">
-            <Button variant="outline" size="lg" onClick={() => router.push(viewAllLink)}>
-              View All Products
-            </Button>
-          </div>
-        )}
-      </div>
-    </section>
+      </Container>
+      <Footer />
+    </div>
   )
 }
