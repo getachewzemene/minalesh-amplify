@@ -15,6 +15,7 @@ import { ProductCardSkeleton } from "@/components/ui/loading-state"
 import { parsePrimaryImage, getEffectivePrice, getBlurDataURL } from "@/lib/image-utils"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { QuickViewModal } from "@/components/product/QuickViewModal"
+import { ProductBadges, getProductBadges } from "@/components/product/ProductBadges"
 
 interface Product {
   id: string
@@ -36,6 +37,7 @@ interface Product {
     city?: string
   }
   stockQuantity: number
+  createdAt?: Date | string
 }
 
 export function ProductGrid() {
@@ -206,17 +208,16 @@ export function ProductGrid() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       {/* Badges */}
-                      <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive" className="shadow-lg font-semibold">
-                            SALE
-                          </Badge>
-                        )}
-                        {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500 shadow-lg font-semibold">
-                            Low Stock
-                          </Badge>
-                        )}
+                      <div className="absolute top-3 left-3 z-10">
+                        <ProductBadges
+                          {...getProductBadges({
+                            createdAt: product.createdAt || new Date(),
+                            stockQuantity: product.stockQuantity,
+                            salePrice: product.salePrice,
+                            price: product.price,
+                            ratingAverage: product.ratingAverage
+                          })}
+                        />
                       </div>
 
                       {/* Hover actions */}
@@ -270,17 +271,16 @@ export function ProductGrid() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       {/* Badges */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive" className="shadow-lg font-semibold px-3 py-1">
-                            SALE
-                          </Badge>
-                        )}
-                        {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500 shadow-lg font-semibold px-3 py-1">
-                            Low Stock
-                          </Badge>
-                        )}
+                      <div className="absolute top-4 left-4 z-10">
+                        <ProductBadges
+                          {...getProductBadges({
+                            createdAt: product.createdAt || new Date(),
+                            stockQuantity: product.stockQuantity,
+                            salePrice: product.salePrice,
+                            price: product.price,
+                            ratingAverage: product.ratingAverage
+                          })}
+                        />
                       </div>
 
                       {/* Hover actions */}

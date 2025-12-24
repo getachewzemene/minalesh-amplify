@@ -24,6 +24,7 @@ import { FrequentlyBoughtTogether } from "@/components/product/FrequentlyBoughtT
 import { ProductQA } from "@/components/product/ProductQA"
 import { StockAlert } from "@/components/product/StockAlert"
 import { RecentlyViewedProducts, trackProductView } from "@/components/product/RecentlyViewedProducts"
+import { DeliveryEstimator } from "@/components/product/DeliveryEstimator"
 
 interface ProductData {
   id: string
@@ -430,6 +431,13 @@ export default function Product() {
                   <span className="text-xs">Easy Returns</span>
                 </div>
               </div>
+
+              {/* Delivery Estimator */}
+              <DeliveryEstimator
+                productId={displayProduct.id}
+                vendorCity={displayProduct.vendor?.city}
+                inStock={displayProduct.stockQuantity > 0}
+              />
             </div>
           </div>
 
