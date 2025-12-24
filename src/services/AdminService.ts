@@ -29,11 +29,11 @@ export async function getAdmin() {
 
 /**
  * Validate that creating/updating a user to admin role doesn't violate the single admin constraint
- * @param userId - The user ID being updated (null for new users)
+ * @param userId - The user ID being updated (undefined for new users, string for existing users)
  * @param newRole - The role being set
  * @throws Error if attempting to create a second admin
  */
-export async function validateSingleAdminConstraint(userId: string | null, newRole: UserRole): Promise<void> {
+export async function validateSingleAdminConstraint(userId: string | undefined, newRole: UserRole): Promise<void> {
   if (newRole !== 'admin') {
     return; // Not setting to admin, no constraint to check
   }

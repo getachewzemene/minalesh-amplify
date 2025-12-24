@@ -76,11 +76,7 @@ async function initAdmin() {
       console.log('\n⚠️  User with this email already exists. Upgrading to admin...');
       
       // Validate single admin constraint
-      try {
-        await validateSingleAdminConstraint(existingUser.id, 'admin');
-      } catch (error) {
-        throw new Error(error instanceof Error ? error.message : 'Cannot upgrade user to admin');
-      }
+      await validateSingleAdminConstraint(existingUser.id, 'admin');
       
       const updatedUser = await prisma.user.update({
         where: { email },
