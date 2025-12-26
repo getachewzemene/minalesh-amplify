@@ -1064,3 +1064,61 @@ model ProductComparison {
   @@index([userId])
   @@map("product_comparisons")
 }
+
+// Vendor Verification System
+enum VerificationStatus {
+  pending
+  under_review
+  approved
+  rejected
+  suspended
+}
+
+model VendorVerification {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId              String              @unique @map("vendor_id") @db.Uuid
+  tradeLicenseUrl       String?             @map("trade_license_url")
+  tradeLicenseNumber    String?             @map("trade_license_number")
+  tinCertificateUrl     String?             @map("tin_certificate_url")
+  tinNumber             String?             @map("tin_number")
+  businessRegUrl        String?             @map("business_reg_url")
+  ownerIdUrl            String?             @map("owner_id_url")
+  status                VerificationStatus  @default(pending)
+  rejectionReason       String?             @map("rejection_reason")
+  reviewedBy            String?             @map("reviewed_by") @db.Uuid
+  reviewedAt            DateTime?           @map("reviewed_at")
+  submittedAt           DateTime            @default(now()) @map("submitted_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([vendorId])
+  @@map("vendor_verifications")
+}
+
+// Data Privacy - Export Requests
+enum DataExportStatus {
+  pending
+  processing
+  completed
+  failed
+  expired
+}
+
+model DataExportRequest {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String            @map("user_id") @db.Uuid
+  status        DataExportStatus  @default(pending)
+  format        String            @default("json") // json or csv
+  downloadUrl   String?           @map("download_url")
+  fileSize      Int?              @map("file_size")
+  expiresAt     DateTime          @map("expires_at")
+  completedAt   DateTime?         @map("completed_at")
+  failedAt      DateTime?         @map("failed_at")
+  failureReason String?           @map("failure_reason")
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("data_export_requests")
+}
