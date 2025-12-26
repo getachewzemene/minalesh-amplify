@@ -93,6 +93,15 @@ model User {
   wishlists     Wishlist[]
   couponUsages  CouponUsage[]
   notificationPreferences NotificationPreference?
+  preferences   UserPreferences?
+  loyaltyAccount LoyaltyAccount?
+  referralsGiven Referral[] @relation("Referrer")
+  referralsReceived Referral[] @relation("Referee")
+  giftCardsPurchased GiftCard[] @relation("GiftCardPurchaser")
+  giftCardsReceived GiftCard[] @relation("GiftCardRecipient")
+  sellerRatings SellerRating[]
+  disputes      Dispute[]
+  comparisons   ProductComparison[]
 
   @@map("users")
 }
@@ -124,6 +133,8 @@ model Profile {
   vendorPayouts VendorPayout[]
   vendorStatements VendorStatement[]
   addresses     Address[]
+  sellerRatings SellerRating[]
+  disputes      Dispute[]
 
   @@map("profiles")
 }
@@ -296,6 +307,9 @@ model Order {
   couponUsages      CouponUsage[]
   refunds           Refund[]
   invoice           Invoice?
+  giftCardTransactions GiftCardTransaction[]
+  sellerRatings     SellerRating[]
+  disputes          Dispute[]
 
   @@map("orders")
 }
@@ -814,6 +828,7 @@ model SiteSettings {
   minOrderAmount       Decimal  @default(0) @map("min_order_amount") @db.Decimal(10, 2)
   maxOrderAmount       Decimal  @default(1000000) @map("max_order_amount") @db.Decimal(10, 2)
   defaultCurrency      String   @default("ETB") @map("default_currency")
+  defaultLanguage      String   @default("en") @map("default_language")
   taxRate              Decimal  @default(0.15) @map("tax_rate") @db.Decimal(5, 4)
   shippingEnabled      Boolean  @default(true) @map("shipping_enabled")
   emailNotifications   Boolean  @default(true) @map("email_notifications")
@@ -822,4 +837,230 @@ model SiteSettings {
   updatedAt            DateTime @updatedAt @map("updated_at")
 
   @@map("site_settings")
+}
+
+// User Preferences for language and other settings
+model UserPreferences {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  language        String   @default("en")
+  currency        String   @default("ETB")
+  emailMarketing  Boolean  @default(true) @map("email_marketing")
+  smsMarketing    Boolean  @default(false) @map("sms_marketing")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// Loyalty Program
+enum LoyaltyTier {
+  bronze
+  silver
+  gold
+  platinum
+}
+
+model LoyaltyAccount {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  points          Int      @default(0)
+  lifetimePoints  Int      @default(0) @map("lifetime_points")
+  tier            LoyaltyTier @default(bronze)
+  nextTierPoints  Int      @default(1000) @map("next_tier_points")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    LoyaltyTransaction[]
+
+  @@map("loyalty_accounts")
+}
+
+model LoyaltyTransaction {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId   String   @map("account_id") @db.Uuid
+  points      Int      // positive for earn, negative for redeem
+  type        String   // purchase, review, referral, redeem, bonus
+  description String
+  relatedId   String?  @map("related_id") @db.Uuid // orderId, reviewId, etc.
+  createdAt   DateTime @default(now()) @map("created_at")
+  expiresAt   DateTime? @map("expires_at")
+
+  account     LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([createdAt])
+  @@map("loyalty_transactions")
+}
+
+// Referral Program
+enum ReferralStatus {
+  pending
+  registered
+  completed
+  expired
+}
+
+model Referral {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referrerId  String   @map("referrer_id") @db.Uuid
+  refereeId   String?  @map("referee_id") @db.Uuid
+  code        String   @unique
+  status      ReferralStatus @default(pending)
+  rewardIssued Boolean @default(false) @map("reward_issued")
+  createdAt   DateTime @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+  expiresAt   DateTime @map("expires_at")
+
+  referrer    User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee     User?    @relation("Referee", fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([referrerId])
+  @@index([status])
+  @@map("referrals")
+}
+
+// Gift Cards
+enum GiftCardStatus {
+  active
+  redeemed
+  expired
+  cancelled
+}
+
+model GiftCard {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String   @unique
+  purchaserId  String   @map("purchaser_id") @db.Uuid
+  recipientId  String?  @map("recipient_id") @db.Uuid
+  recipientEmail String? @map("recipient_email")
+  amount       Decimal  @db.Decimal(10, 2)
+  balance      Decimal  @db.Decimal(10, 2)
+  status       GiftCardStatus @default(active)
+  message      String?
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  redeemedAt   DateTime? @map("redeemed_at")
+
+  purchaser    User     @relation("GiftCardPurchaser", fields: [purchaserId], references: [id], onDelete: Cascade)
+  recipient    User?    @relation("GiftCardRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+  transactions GiftCardTransaction[]
+
+  @@index([code])
+  @@index([status])
+  @@map("gift_cards")
+}
+
+model GiftCardTransaction {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cardId     String   @map("card_id") @db.Uuid
+  orderId    String?  @map("order_id") @db.Uuid
+  amount     Decimal  @db.Decimal(10, 2)
+  type       String   // purchase, redeem, refund
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  card       GiftCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  order      Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([cardId])
+  @@map("gift_card_transactions")
+}
+
+// Seller Ratings
+model SellerRating {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId          String   @map("vendor_id") @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  orderId           String   @map("order_id") @db.Uuid
+  communication     Int      // 1-5
+  shippingSpeed     Int      @map("shipping_speed") // 1-5
+  accuracy          Int      // 1-5
+  customerService   Int      @map("customer_service") // 1-5
+  overallRating     Decimal  @map("overall_rating") @db.Decimal(3, 2) // calculated average
+  comment           String?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  vendor            Profile  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, userId])
+  @@index([vendorId])
+  @@map("seller_ratings")
+}
+
+// Dispute Resolution
+enum DisputeType {
+  not_received
+  not_as_described
+  damaged
+  wrong_item
+  refund_issue
+  other
+}
+
+enum DisputeStatus {
+  open
+  pending_vendor_response
+  pending_admin_review
+  resolved
+  closed
+}
+
+model Dispute {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId       String        @map("order_id") @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  vendorId      String        @map("vendor_id") @db.Uuid
+  type          DisputeType
+  description   String
+  evidenceUrls  String[]      @map("evidence_urls")
+  status        DisputeStatus @default(open)
+  resolution    String?
+  resolvedBy    String?       @map("resolved_by") @db.Uuid
+  resolvedAt    DateTime?     @map("resolved_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor        Profile       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  messages      DisputeMessage[]
+
+  @@index([status])
+  @@index([userId])
+  @@index([vendorId])
+  @@map("disputes")
+}
+
+model DisputeMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  disputeId  String   @map("dispute_id") @db.Uuid
+  senderId   String   @map("sender_id") @db.Uuid
+  message    String
+  isAdmin    Boolean  @default(false) @map("is_admin")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  dispute    Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  @@index([disputeId])
+  @@map("dispute_messages")
+}
+
+// Product Comparison
+model ProductComparison {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  productIds String[] @map("product_ids") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("product_comparisons")
 }

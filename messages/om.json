@@ -1,0 +1,174 @@
+{
+  "common": {
+    "loading": "Fe'aa jira...",
+    "error": "Dogoggora",
+    "success": "Milkaa'ina",
+    "cancel": "Haquu",
+    "confirm": "Mirkaneessi",
+    "save": "Olkaa'i",
+    "delete": "Haquu",
+    "edit": "Sirreessi",
+    "search": "Barbaadi",
+    "filter": "Gingilchi",
+    "sort": "Tartiiba",
+    "viewAll": "Hunda Ilaali",
+    "learnMore": "Dabalataan Baraa",
+    "close": "Cufi"
+  },
+  "nav": {
+    "home": "Mana",
+    "products": "Oomishaalee",
+    "cart": "Gaarii",
+    "wishlist": "Tarree Hawwii",
+    "orders": "Ajajawwan",
+    "profile": "Piroofaayila",
+    "vendor": "Dashiboordi Gurgurtaa",
+    "admin": "Bulchaa",
+    "login": "Seeni",
+    "register": "Galmaa'i",
+    "logout": "Ba'i",
+    "about": "Waa'ee Keenya",
+    "contact": "Nu Quunnamaa",
+    "help": "Gargaarsa"
+  },
+  "products": {
+    "title": "Oomishaalee",
+    "newArrivals": "Oomisha Haaraa",
+    "topSelling": "Gurgurtaa Guddaa",
+    "recommended": "Siif Gorfame",
+    "addToCart": "Gara Gaariitti Ida'i",
+    "addToWishlist": "Gara Tarree Hawwiitti Ida'i",
+    "outOfStock": "Mankuusaa Irraa Bahe",
+    "inStock": "Mankuusaa Keessa Jira",
+    "price": "Gatii",
+    "category": "Ramaddii",
+    "rating": "Sadarkaa",
+    "reviews": "Gamaaggama",
+    "description": "Ibsa",
+    "specifications": "Ibsa Bal'aa",
+    "compareProducts": "Oomishaalee Wal Bira Qabi"
+  },
+  "cart": {
+    "title": "Gaarii Bittaa",
+    "empty": "Gaarii kee duwwaa dha",
+    "subtotal": "Ida'amaa Xiqqaa",
+    "shipping": "Geejjiba",
+    "tax": "Gibira",
+    "total": "Waliigalaa",
+    "checkout": "Kaffaltii Itti Fufi",
+    "continueShopping": "Bittaa Itti Fufi",
+    "removeItem": "Wanta Balleessi",
+    "updateQuantity": "Baay'ina Haaroomsi",
+    "applyCoupon": "Kuuppoonii Fayyadami"
+  },
+  "orders": {
+    "title": "Ajajawwan Koo",
+    "orderNumber": "Lakkoofsa Ajajaa",
+    "orderDate": "Guyyaa Ajajaa",
+    "status": "Haala",
+    "total": "Waliigalaa",
+    "viewDetails": "Bal'ina Ilaali",
+    "trackOrder": "Ajaja Hordofi",
+    "cancelOrder": "Ajaja Haquu",
+    "returnOrder": "Ajaja Deebisi",
+    "noOrders": "Ajajni hin jiru"
+  },
+  "vendor": {
+    "dashboard": "Dashiboordi Gurgurtaa",
+    "products": "Oomishaalee",
+    "addProduct": "Oomisha Ida'i",
+    "editProduct": "Oomisha Sirreessi",
+    "orders": "Ajajawwan",
+    "analytics": "Xiinxala",
+    "earnings": "Galii",
+    "reviews": "Gamaaggama",
+    "inventory": "Kuusaa"
+  },
+  "auth": {
+    "login": "Seeni",
+    "register": "Galmaa'i",
+    "email": "Imeelii",
+    "password": "Jecha Iccitii",
+    "confirmPassword": "Jecha Iccitii Mirkaneessi",
+    "forgotPassword": "Jecha Iccitii Dagattee?",
+    "rememberMe": "Na Yaadadhu",
+    "dontHaveAccount": "Akkaawuntii hin qabdu?",
+    "alreadyHaveAccount": "Duraanuu akkaawuntii qabdaa?",
+    "registerVendor": "Akka Gurgurtuutti Galmaa'i",
+    "firstName": "Maqaa Jalqabaa",
+    "lastName": "Maqaa Maatii",
+    "phoneNumber": "Lakkoofsa Bilbilaa"
+  },
+  "profile": {
+    "title": "Piroofaayila Koo",
+    "personalInfo": "Odeeffannoo Dhuunfaa",
+    "addresses": "Teessoowwan",
+    "paymentMethods": "Malaawwan Kaffaltii",
+    "preferences": "Filannoo",
+    "language": "Afaan",
+    "currency": "Maallaqaa",
+    "notifications": "Beeksisawwan",
+    "privacy": "Qindaa'ina Iccitii"
+  },
+  "loyalty": {
+    "title": "Sagantaa Amanamummaa",
+    "points": "Qabxiiwwan",
+    "tier": "Sadarkaa",
+    "bronze": "Naasii",
+    "silver": "Meetii",
+    "gold": "Warqee",
+    "platinum": "Palaatinaam",
+    "earnPoints": "Qabxii Argadhu",
+    "redeemPoints": "Qabxii Jijjiirraa",
+    "benefits": "Faayidaalee",
+    "history": "Seenaa Qabxii"
+  },
+  "referral": {
+    "title": "Hirmaachisa & Badhaasa Argadhu",
+    "yourCode": "Koodii Hirmaachisaa Kee",
+    "shareCode": "Koodii Kee Qoodi",
+    "referFriends": "Hiriyoota Hirmaachisi",
+    "earnRewards": "Badhaasa Argadhu",
+    "howItWorks": "Akkamitti Hojjeta"
+  },
+  "giftCard": {
+    "title": "Kaardii Kennaa",
+    "buyGiftCard": "Kaardii Kennaa Biti",
+    "redeemGiftCard": "Kaardii Kennaa Jijjiirraa",
+    "checkBalance": "Hanga Ilaali",
+    "giftCardCode": "Koodii Kaardii Kennaa"
+  },
+  "support": {
+    "title": "Gargaarsa Maamiltootaa",
+    "faq": "Gaaffilee Yeroo Baay'ee Gaafataman",
+    "contactUs": "Nu Quunnamaa",
+    "submitTicket": "Tikeettii Galmaa'i",
+    "trackTicket": "Tikeettii Hordofi",
+    "helpCenter": "Giddugala Gargaarsa"
+  },
+  "legal": {
+    "terms": "Dambii Tajaajilaa",
+    "privacy": "Imaamata Iccitii",
+    "cookies": "Imaamata Kuukii",
+    "returnPolicy": "Imaamata Deebisuu"
+  },
+  "footer": {
+    "aboutUs": "Waa'ee Keenya",
+    "contactUs": "Nu Quunnamaa",
+    "careers": "Hojiiwwan",
+    "blog": "Biloogii",
+    "followUs": "Nu Hordofaa",
+    "copyright": "© 2024 Minalesh. Mirgi hundi ni eegama."
+  },
+  "errors": {
+    "general": "Wanti tokko doggoggoreera",
+    "networkError": "Dogoggora networki. Walitti dhufeenya kee mirkaneessi.",
+    "notFound": "Fuuli hin argamne",
+    "unauthorized": "Eeyyama hin qabne",
+    "serverError": "Dogoggora sarvaarii. Maaloo booda yaali."
+  },
+  "currency": {
+    "etb": "Qarshii",
+    "birr": "Qarshii"
+  }
+}

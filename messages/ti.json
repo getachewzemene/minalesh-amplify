@@ -1,0 +1,174 @@
+{
+  "common": {
+    "loading": "ይጽዕን ኣሎ...",
+    "error": "ጌጋ",
+    "success": "ዓወት",
+    "cancel": "ሰርዝ",
+    "confirm": "ኣረጋግጽ",
+    "save": "ዓቅብ",
+    "delete": "ደምስስ",
+    "edit": "ኣርም",
+    "search": "ድለ",
+    "filter": "ፍልተር",
+    "sort": "ስርዓት",
+    "viewAll": "ኩሉ ርአ",
+    "learnMore": "ተወሳኺ ተማሃር",
+    "close": "ዓጽው"
+  },
+  "nav": {
+    "home": "መበገሲ",
+    "products": "ፍርያታት",
+    "cart": "ዓረብያ",
+    "wishlist": "ዝርዝር ድሌታት",
+    "orders": "ትእዛዛት",
+    "profile": "መገለጺ",
+    "vendor": "ዳሽቦርድ ነጋዲ",
+    "admin": "ኣስተዳዳሪ",
+    "login": "ኣትው",
+    "register": "ምዝገባ",
+    "logout": "ውጻእ",
+    "about": "ብዛዕባና",
+    "contact": "ርኸቡና",
+    "help": "ሓገዝ"
+  },
+  "products": {
+    "title": "ፍርያታት",
+    "newArrivals": "ሓደሽቲ ፍርያታት",
+    "topSelling": "ልዑል ሽያጥ",
+    "recommended": "ንዓኻ ዝምከር",
+    "addToCart": "ናብ ዓረብያ ወስኽ",
+    "addToWishlist": "ናብ ዝርዝር ድሌታት ወስኽ",
+    "outOfStock": "ካብ መኽዘን ወጺኡ",
+    "inStock": "ኣብ መኽዘን",
+    "price": "ዋጋ",
+    "category": "ምድብ",
+    "rating": "ደረጃ",
+    "reviews": "ግምገማታት",
+    "description": "መግለጺ",
+    "specifications": "ዝርዝራት",
+    "compareProducts": "ፍርያታት ኣነፃጽር"
+  },
+  "cart": {
+    "title": "ዓረብያ ዕዳጋ",
+    "empty": "ዓረብያኻ ባዶ እዩ",
+    "subtotal": "ንኡስ ድምር",
+    "shipping": "መልኣኺ",
+    "tax": "ግብሪ",
+    "total": "ድምር",
+    "checkout": "ክፍሊት ቀጽል",
+    "continueShopping": "ዕዳጋ ቀጽል",
+    "removeItem": "ንብረት ኣልግስ",
+    "updateQuantity": "መጠን ኣዘምን",
+    "applyCoupon": "ኩፖን ተጠቐም"
+  },
+  "orders": {
+    "title": "ትእዛዛተይ",
+    "orderNumber": "ቁጽሪ ትእዛዝ",
+    "orderDate": "ዕለት ትእዛዝ",
+    "status": "ኩነታት",
+    "total": "ድምር",
+    "viewDetails": "ዝርዝራት ርአ",
+    "trackOrder": "ትእዛዝ ክትትል",
+    "cancelOrder": "ትእዛዝ ሰርዝ",
+    "returnOrder": "ትእዛዝ መልስ",
+    "noOrders": "ክሳዕ ሕጂ ትእዛዝ የለን"
+  },
+  "vendor": {
+    "dashboard": "ዳሽቦርድ ነጋዲ",
+    "products": "ፍርያታት",
+    "addProduct": "ፍርያት ወስኽ",
+    "editProduct": "ፍርያት ኣርም",
+    "orders": "ትእዛዛት",
+    "analytics": "ትንተና",
+    "earnings": "ኣታዊታት",
+    "reviews": "ግምገማታት",
+    "inventory": "መኽዘን"
+  },
+  "auth": {
+    "login": "ኣትው",
+    "register": "ምዝገባ",
+    "email": "ኢመይል",
+    "password": "ቃል ምሕላፍ",
+    "confirmPassword": "ቃል ምሕላፍ ኣረጋግጽ",
+    "forgotPassword": "ቃል ምሕላፍ ረሲዕካ?",
+    "rememberMe": "ዘክረኒ",
+    "dontHaveAccount": "መለያ የብልካን?",
+    "alreadyHaveAccount": "ቅድሚ ሕጂ መለያ ኣለካ?",
+    "registerVendor": "ከም ነጋዲ ምዝገባ",
+    "firstName": "ስም",
+    "lastName": "ስም ኣቦ",
+    "phoneNumber": "ቁጽሪ ተሌፎን"
+  },
+  "profile": {
+    "title": "መገለጺይ",
+    "personalInfo": "ውልቃዊ ሓበሬታ",
+    "addresses": "ኣድራሻታት",
+    "paymentMethods": "ኣገባባት ክፍሊት",
+    "preferences": "ምርጫታት",
+    "language": "ቋንቋ",
+    "currency": "ገንዘብ",
+    "notifications": "መበገሲታት",
+    "privacy": "ምቁጽጻር ብሕትውነት"
+  },
+  "loyalty": {
+    "title": "መደብ ተኣማንነት",
+    "points": "ነጥብታት",
+    "tier": "ደረጃ",
+    "bronze": "ናሓስ",
+    "silver": "ብሩር",
+    "gold": "ወርቂ",
+    "platinum": "ፕላቲነም",
+    "earnPoints": "ነጥብታት ርከብ",
+    "redeemPoints": "ነጥብታት ቀይር",
+    "benefits": "ረብሓታት",
+    "history": "ታሪኽ ነጥብታት"
+  },
+  "referral": {
+    "title": "ኣመላኽት & ሽልማት ርከብ",
+    "yourCode": "ኮድ ኣመላኽታኻ",
+    "shareCode": "ኮድካ ኣካፍል",
+    "referFriends": "ኣሕዋትካ ኣመላኽት",
+    "earnRewards": "ሽልማት ርከብ",
+    "howItWorks": "ከመይ ይሰርሕ"
+  },
+  "giftCard": {
+    "title": "ካርድ ስጦታ",
+    "buyGiftCard": "ካርድ ስጦታ ግዛእ",
+    "redeemGiftCard": "ካርድ ስጦታ ቀይር",
+    "checkBalance": "ተረፍ ምርመራ",
+    "giftCardCode": "ኮድ ካርድ ስጦታ"
+  },
+  "support": {
+    "title": "ደገፍ ዓሚል",
+    "faq": "ተደጋጋሚ ሕቶታት",
+    "contactUs": "ርኸቡና",
+    "submitTicket": "ቲኬት ኣቕርብ",
+    "trackTicket": "ቲኬት ክትትል",
+    "helpCenter": "ማእከል ሓገዝ"
+  },
+  "legal": {
+    "terms": "ውዕላት ግልጋሎት",
+    "privacy": "ፖሊሲ ብሕትውነት",
+    "cookies": "ፖሊሲ ኩኪ",
+    "returnPolicy": "ፖሊሲ ምምላስ"
+  },
+  "footer": {
+    "aboutUs": "ብዛዕባና",
+    "contactUs": "ርኸቡና",
+    "careers": "ስራሕ",
+    "blog": "ብሎግ",
+    "followUs": "ተኸተሉና",
+    "copyright": "© 2024 ሚናሌሽ። ኩሉ መሰላት ተሓልዩ።"
+  },
+  "errors": {
+    "general": "ገለ ጌጋ ኣጋጢሙ",
+    "networkError": "ጌጋ መርበብ። ብኽብረትካ ርክብካ ኣረጋግጽ።",
+    "notFound": "ገጽ ኣይተረኽበን",
+    "unauthorized": "ዘይፍቑድ መእተዊ",
+    "serverError": "ጌጋ ሰርቨር። ብኽብረትካ ድሕሪ ገለ ግዜ ፈትን።"
+  },
+  "currency": {
+    "etb": "ብር",
+    "birr": "ብር"
+  }
+}

@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
+import createMiddleware from 'next-intl/middleware'
+import { locales, defaultLocale } from './i18n'
 
 const ADMIN_PREFIX = '/admin'
 const VENDOR_PREFIX = '/vendor'
 const AUTH_COOKIE = 'auth_token'
+
+// Create i18n middleware
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed'
+})
 
 async function verifyJWT(token: string) {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-key-change-in-production')
@@ -17,11 +26,16 @@ async function verifyJWT(token: string) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  
+  // Handle i18n for non-auth routes
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX)
   const isVendorRoute = pathname.startsWith(VENDOR_PREFIX)
   const isAdminLogin = pathname === '/admin/login'
 
-  if (!isAdminRoute && !isVendorRoute) return NextResponse.next()
+  // Apply i18n middleware first for non-protected routes
+  if (!isAdminRoute && !isVendorRoute) {
+    return intlMiddleware(req)
+  }
 
   // Allow access to admin login page without authentication
   if (isAdminLogin) return NextResponse.next()
@@ -56,5 +70,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/vendor/:path*'],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 }
