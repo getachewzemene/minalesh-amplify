@@ -83,6 +83,8 @@ echo ""
 echo "Checking Documentation:"
 echo "-----------------------"
 check_file "PHASE1_LEGAL_COMPLIANCE.md"
+check_file "GDPR-DISPUTE-IMPLEMENTATION-GUIDE.md"
+check_file "test-gdpr-dispute-features.md"
 echo ""
 
 echo "=========================================="
