@@ -22,15 +22,19 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - **Multiple shipping options** - Choose from standard, express, or store pickup
 - **Transparent pricing** - View itemized costs including discounts, shipping, and VAT
 - **Refunds & Returns** - Request full or partial refunds with automatic stock restoration
+- **Dispute Resolution** - File disputes for order issues with vendor/admin mediation
+- **Data Privacy** - Export your data or delete your account (GDPR compliant)
 
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
+- **Enhanced Verification** - Submit business documents for admin review and approval
 - Product management (Create, Read, Update, Delete)
 - **Media Management** - Upload images with automatic optimization and S3 storage
 - **Accessibility Support** - Add alt text to product images
 - Inventory tracking
 - Sales analytics
 - Order management
+- **Dispute Management** - Respond to customer disputes and resolve issues
 - **Advanced Vendor Tools** 🚀
   - **Bulk Operations**
     - Bulk product upload via CSV/Excel files
@@ -89,6 +93,11 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Capture authorized payments (full or partial amounts)
   - Support for Stripe and Ethiopian payment providers
   - 📚 **[View Refunds & Captures Documentation](docs/REFUNDS_AND_CAPTURES.md)**
+- **Legal Compliance & Trust** 🆕
+  - Vendor verification system with document review
+  - Dispute resolution and mediation
+  - GDPR-compliant data export and account deletion
+  - 📚 **[View Phase 1 Legal Compliance Documentation](PHASE1_LEGAL_COMPLIANCE.md)**
 - [View detailed admin documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md)
 
 ### Ethiopian-Specific Features
