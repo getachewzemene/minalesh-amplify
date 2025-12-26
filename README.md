@@ -28,6 +28,7 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
 - **Enhanced Verification** - Submit business documents for admin review and approval
+- **Seller Ratings** - Build reputation through customer ratings across multiple dimensions
 - Product management (Create, Read, Update, Delete)
 - **Media Management** - Upload images with automatic optimization and S3 storage
 - **Accessibility Support** - Add alt text to product images
@@ -61,6 +62,9 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
     - Expense tracking
     - Profit margin calculator
     - VAT and tax report generation
+    - Ethiopian tax compliance tools (TIN validation, tax invoicing)
+    - Automated tax reporting for Ethiopian tax authorities
+    - 📚 **[View Tax Compliance Documentation](docs/SELLER_RATINGS_AND_TAX_COMPLIANCE.md)**
 
 ### For Administrators
 - **Comprehensive Product Management** - Full CRUD operations for all products
@@ -103,11 +107,13 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 ### Ethiopian-Specific Features
 - 🇪🇹 Ethiopian Birr (ETB) currency support
 - 🏪 Local business verification (Trade License, TIN)
+- 📋 **Ethiopian Tax Compliance** - TIN validation, tax invoicing, and automated reporting
+- ⭐ **Seller Ratings System** - Multi-dimensional vendor performance tracking
 - ☕ Ethiopian product categories (Coffee, Traditional Clothing, Spices, etc.)
 - 📍 Ethiopian market context and terminology
 - 🎨 Cultural sensitivity in product categorization
 - 🚚 Ethiopian shipping zones (Addis Ababa, Major Cities, Regional Areas)
-- 💰 Ethiopian VAT (15%) automatically calculated
+- 💰 Ethiopian VAT (15%) automatically calculated with category-based exemptions
 - 🏙️ Support for major Ethiopian cities and regions
 
 ## Getting Started
@@ -243,11 +249,15 @@ The API is fully documented using **Swagger/OpenAPI 3.0** specification.
 - **Admin** - Administrative operations (coupons, promotions, shipping zones)
 - **Analytics** - Sales and performance metrics
 - **Vendors** - Vendor-specific operations
+- **Seller Ratings** 🆕 - Vendor rating submission and retrieval
+- **Tax Compliance** 🆕 - Ethiopian tax reporting and compliance
 - **Advanced Vendor Tools** 🚀 - Professional e-commerce features
   - `POST /api/vendors/products/bulk-upload` - Bulk product import via CSV/Excel
   - `GET /api/vendors/products/export` - Export products to CSV
   - `GET /api/vendors/inventory/forecast` - AI-powered inventory forecasting
   - `GET /api/vendors/analytics/customer-insights` - Customer behavior analytics
+  - `GET /api/vendors/tax-report` 🆕 - Ethiopian tax compliance reporting
+  - `GET /api/vendors/stats` 🆕 - Vendor statistics with ratings
 
 Access the OpenAPI JSON specification at: [http://localhost:3000/api/swagger.json](http://localhost:3000/api/swagger.json)
 
