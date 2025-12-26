@@ -1,0 +1,174 @@
+{
+  "common": {
+    "loading": "በመጫን ላይ...",
+    "error": "ስህተት",
+    "success": "ተሳክቷል",
+    "cancel": "ሰርዝ",
+    "confirm": "አረጋግጥ",
+    "save": "አስቀምጥ",
+    "delete": "ሰርዝ",
+    "edit": "አስተካክል",
+    "search": "ፈልግ",
+    "filter": "አጣራ",
+    "sort": "ደርድር",
+    "viewAll": "ሁሉንም ይመልከቱ",
+    "learnMore": "ተጨማሪ ይወቁ",
+    "close": "ዝጋ"
+  },
+  "nav": {
+    "home": "መነሻ",
+    "products": "ምርቶች",
+    "cart": "ጋሪ",
+    "wishlist": "የምስ ፈልግ ዝርዝር",
+    "orders": "ትዕዛዞች",
+    "profile": "መገለጫ",
+    "vendor": "ሻጭ ዳሽቦርድ",
+    "admin": "አስተዳዳሪ",
+    "login": "ግባ",
+    "register": "ተመዝገብ",
+    "logout": "ውጣ",
+    "about": "ስለ እኛ",
+    "contact": "አግኙን",
+    "help": "እርዳታ"
+  },
+  "products": {
+    "title": "ምርቶች",
+    "newArrivals": "አዲስ ምርቶች",
+    "topSelling": "ከፍተኛ ሽያጭ",
+    "recommended": "ለእርስዎ የሚመከር",
+    "addToCart": "ወደ ጋሪ ጨምር",
+    "addToWishlist": "ወደ ምኞት ዝርዝር ጨምር",
+    "outOfStock": "ከመጋዘን ውጭ",
+    "inStock": "በመጋዘን ላይ",
+    "price": "ዋጋ",
+    "category": "ምድብ",
+    "rating": "ደረጃ",
+    "reviews": "ግምገማዎች",
+    "description": "መግለጫ",
+    "specifications": "ዝርዝሮች",
+    "compareProducts": "ምርቶችን አወዳድር"
+  },
+  "cart": {
+    "title": "የገበያ ጋሪ",
+    "empty": "ጋሪዎ ባዶ ነው",
+    "subtotal": "ንዑስ ድምር",
+    "shipping": "መላኪያ",
+    "tax": "ግብር",
+    "total": "ጠቅላላ",
+    "checkout": "ለመክፈል ቀጥል",
+    "continueShopping": "ገበያን ቀጥል",
+    "removeItem": "ንጥል አስወግድ",
+    "updateQuantity": "ብዛት አዘምን",
+    "applyCoupon": "ኩፖን ይተግብሩ"
+  },
+  "orders": {
+    "title": "የእኔ ትዕዛዞች",
+    "orderNumber": "የትዕዛዝ ቁጥር",
+    "orderDate": "የትዕዛዝ ቀን",
+    "status": "ሁኔታ",
+    "total": "ጠቅላላ",
+    "viewDetails": "ዝርዝሮችን ይመልከቱ",
+    "trackOrder": "ትዕዛዝን ይከታተሉ",
+    "cancelOrder": "ትዕዛዝን ሰርዝ",
+    "returnOrder": "ትዕዛዝን መልስ",
+    "noOrders": "ገና ምንም ትዕዛዝ የለም"
+  },
+  "vendor": {
+    "dashboard": "ሻጭ ዳሽቦርድ",
+    "products": "ምርቶች",
+    "addProduct": "ምርት ጨምር",
+    "editProduct": "ምርት አስተካክል",
+    "orders": "ትዕዛዞች",
+    "analytics": "ትንታኔዎች",
+    "earnings": "ገቢዎች",
+    "reviews": "ግምገማዎች",
+    "inventory": "ክምችት"
+  },
+  "auth": {
+    "login": "ግባ",
+    "register": "ተመዝገብ",
+    "email": "ኢሜል",
+    "password": "የይለፍ ቃል",
+    "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+    "forgotPassword": "የይለፍ ቃል ረስተዋል?",
+    "rememberMe": "አስታውሰኝ",
+    "dontHaveAccount": "መለያ የለዎትም?",
+    "alreadyHaveAccount": "ቀድሞውኑ መለያ አለዎት?",
+    "registerVendor": "እንደ ሻጭ ይመዝገቡ",
+    "firstName": "የመጀመሪያ ስም",
+    "lastName": "የአባት ስም",
+    "phoneNumber": "ስልክ ቁጥር"
+  },
+  "profile": {
+    "title": "የኔ መገለጫ",
+    "personalInfo": "የግል መረጃ",
+    "addresses": "አድራሻዎች",
+    "paymentMethods": "የክፍያ ዘዴዎች",
+    "preferences": "ምርጫዎች",
+    "language": "ቋንቋ",
+    "currency": "ምንዛሬ",
+    "notifications": "ማሳወቂያዎች",
+    "privacy": "የግላዊነት ቅንብሮች"
+  },
+  "loyalty": {
+    "title": "የታማኝነት ፕሮግራም",
+    "points": "ነጥቦች",
+    "tier": "ደረጃ",
+    "bronze": "ነሐስ",
+    "silver": "ብር",
+    "gold": "ወርቅ",
+    "platinum": "ፕላቲነም",
+    "earnPoints": "ነጥቦችን ያግኙ",
+    "redeemPoints": "ነጥቦችን ይቀይሩ",
+    "benefits": "ጥቅሞች",
+    "history": "የነጥብ ታሪክ"
+  },
+  "referral": {
+    "title": "ጓደኞችን ጋብዝ እና ሽልማት አግኝ",
+    "yourCode": "የእርስዎ የማጣቀሻ ኮድ",
+    "shareCode": "ኮድዎን ያጋሩ",
+    "referFriends": "ጓደኞችን ያመለክቱ",
+    "earnRewards": "ሽልማቶችን ያግኙ",
+    "howItWorks": "እንዴት ይሰራል"
+  },
+  "giftCard": {
+    "title": "የስጦታ ካርዶች",
+    "buyGiftCard": "የስጦታ ካርድ ይግዙ",
+    "redeemGiftCard": "የስጦታ ካርድ ይለውጡ",
+    "checkBalance": "ቀሪ ሂሳብ ይመልከቱ",
+    "giftCardCode": "የስጦታ ካርድ ኮድ"
+  },
+  "support": {
+    "title": "የደንበኛ ድጋፍ",
+    "faq": "በተደጋጋሚ የሚጠየቁ ጥያቄዎች",
+    "contactUs": "አግኙን",
+    "submitTicket": "ትኬት ያስገቡ",
+    "trackTicket": "ትኬትን ይከታተሉ",
+    "helpCenter": "የእርዳታ ማዕከል"
+  },
+  "legal": {
+    "terms": "የአገልግሎት ውሎች",
+    "privacy": "የግላዊነት ፖሊሲ",
+    "cookies": "የኩኪ ፖሊሲ",
+    "returnPolicy": "የመመለሻ ፖሊሲ"
+  },
+  "footer": {
+    "aboutUs": "ስለ እኛ",
+    "contactUs": "አግኙን",
+    "careers": "ስራዎች",
+    "blog": "ብሎግ",
+    "followUs": "ይከተሉን",
+    "copyright": "© 2024 ሚናሌሽ። ሁሉም መብቶች የተጠበቁ ናቸው።"
+  },
+  "errors": {
+    "general": "የሆነ ችግር ተፈጥሯል",
+    "networkError": "የአውታረ መረብ ስህተት። እባክዎ ግንኙነትዎን ያረጋግጡ።",
+    "notFound": "ገጽ አልተገኘም",
+    "unauthorized": "ያልተፈቀደ መዳረሻ",
+    "serverError": "የአገልጋይ ስህተት። እባክዎ ቆይተው ይሞክሩ።"
+  },
+  "currency": {
+    "etb": "ብር",
+    "birr": "ብር"
+  }
+}
