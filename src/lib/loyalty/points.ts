@@ -64,11 +64,12 @@ export async function awardPoints(
     }
 
     // Add transaction and update account in a transaction
+    const accountId = account.id
     const result = await prisma.$transaction(async (tx) => {
       // Create transaction
       const transaction = await tx.loyaltyTransaction.create({
         data: {
-          accountId: account!.id,
+          accountId,
           points,
           type,
           description,
@@ -78,14 +79,16 @@ export async function awardPoints(
       })
 
       // Update account points
-      const newPoints = Math.max(0, account!.points + points)
-      const newLifetimePoints =
-        points > 0 ? account!.lifetimePoints + points : account!.lifetimePoints
+      const newPoints = Math.max(0, account.points + points)
+      // Lifetime points should only increase with earned points, not decrease with redemptions
+      const newLifetimePoints = points > 0 
+        ? account.lifetimePoints + points 
+        : account.lifetimePoints
 
       const { tier, nextTierPoints } = calculateTier(newLifetimePoints)
 
       const updatedAccount = await tx.loyaltyAccount.update({
-        where: { id: account!.id },
+        where: { id: accountId },
         data: {
           points: newPoints,
           lifetimePoints: newLifetimePoints,

@@ -49,8 +49,9 @@ export function LanguageSwitcher() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ language: newLocale }),
-    }).catch(() => {
-      // Ignore errors - cookie is fallback
+    }).catch((error) => {
+      // Log error but don't block language change
+      console.error('Failed to save language preference:', error)
     })
 
     // Navigate to new locale

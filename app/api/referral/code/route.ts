@@ -151,11 +151,22 @@ export async function POST(req: NextRequest) {
       where: { code },
     })
     
-    while (existingCode) {
+    let attempts = 0
+    const MAX_ATTEMPTS = 10
+    
+    while (existingCode && attempts < MAX_ATTEMPTS) {
       code = generateReferralCode()
       existingCode = await prisma.referral.findUnique({
         where: { code },
       })
+      attempts++
+    }
+    
+    if (attempts >= MAX_ATTEMPTS) {
+      return NextResponse.json(
+        { error: 'Failed to generate unique referral code. Please try again.' },
+        { status: 500 }
+      )
     }
 
     // Create new referral code (valid for 1 year)

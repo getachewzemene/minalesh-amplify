@@ -106,11 +106,22 @@ export async function POST(req: NextRequest) {
       where: { code },
     })
     
-    while (existingCard) {
+    let attempts = 0
+    const MAX_ATTEMPTS = 10
+    
+    while (existingCard && attempts < MAX_ATTEMPTS) {
       code = generateGiftCardCode()
       existingCard = await prisma.giftCard.findUnique({
         where: { code },
       })
+      attempts++
+    }
+    
+    if (attempts >= MAX_ATTEMPTS) {
+      return NextResponse.json(
+        { error: 'Failed to generate unique gift card code. Please try again.' },
+        { status: 500 }
+      )
     }
 
     // Gift cards expire in 1 year

@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
         data: {
           points: newPoints,
           lifetimePoints: newLifetimePoints,
-          tier: tier as any,
+          tier: tier as 'bronze' | 'silver' | 'gold' | 'platinum',
           nextTierPoints,
         },
       })
