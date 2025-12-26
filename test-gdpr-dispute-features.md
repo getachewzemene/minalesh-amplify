@@ -159,52 +159,52 @@ Two cron jobs need to be configured in production:
 
 1. **Data Export**:
 ```bash
-# Note: Replace $TOKEN with your actual auth token
+# Note: Replace <YOUR_TOKEN> with your actual auth token
 # For local testing: http://localhost:3000
 # For production: https://yourdomain.com
 
 # Request export
 curl -X POST http://localhost:3000/api/user/data-export \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"format":"json"}'
 
 # Check status
 curl http://localhost:3000/api/user/data-export \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer <YOUR_TOKEN>"
 
 # Download (after processing)
-curl http://localhost:3000/api/user/data-export/download?requestId=$ID \
-  -H "Authorization: Bearer $TOKEN"
+curl http://localhost:3000/api/user/data-export/download?requestId=<REQUEST_ID> \
+  -H "Authorization: Bearer <YOUR_TOKEN>"
 ```
 
 2. **Account Deletion**:
 ```bash
 # Note: Replace with actual credentials
 curl -X DELETE http://localhost:3000/api/user/account \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{"password":"mypassword","confirmation":"DELETE MY ACCOUNT"}'
+  -d '{"password":"<YOUR_PASSWORD>","confirmation":"DELETE MY ACCOUNT"}'
 ```
 
 3. **Disputes**:
 ```bash
-# Note: Replace ORDER_ID, DISPUTE_ID with actual values
+# Note: Replace <ORDER_ID>, <DISPUTE_ID>, <YOUR_TOKEN>, <ADMIN_TOKEN> with actual values
 # File dispute
 curl -X POST http://localhost:3000/api/disputes \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{"orderId":"...","type":"not_as_described","description":"Product was different"}'
+  -d '{"orderId":"<ORDER_ID>","type":"not_as_described","description":"Product was different"}'
 
 # Send message
-curl -X POST http://localhost:3000/api/disputes/$DISPUTE_ID/messages \
-  -H "Authorization: Bearer $TOKEN" \
+curl -X POST http://localhost:3000/api/disputes/<DISPUTE_ID>/messages \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"message":"I can send a replacement"}'
 
 # Admin resolve
-curl -X PATCH http://localhost:3000/api/admin/disputes/$DISPUTE_ID \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
+curl -X PATCH http://localhost:3000/api/admin/disputes/<DISPUTE_ID> \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"status":"resolved","resolution":"Full refund approved","refundAmount":500}'
 ```

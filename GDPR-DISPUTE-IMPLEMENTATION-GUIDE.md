@@ -44,11 +44,11 @@ curl -X POST http://localhost:3000/api/user/data-export \
 }
 
 # Check status
-curl https://yourdomain.com/api/user/data-export \
+curl http://localhost:3000/api/user/data-export \
   -H "Authorization: Bearer $USER_TOKEN"
 
 # Download when ready
-curl https://yourdomain.com/api/user/data-export/download?requestId=abc-123 \
+curl http://localhost:3000/api/user/data-export/download?requestId=abc-123 \
   -H "Authorization: Bearer $USER_TOKEN"
 ```
 
@@ -71,7 +71,8 @@ Users can permanently delete their account with proper safeguards.
 
 **Example Usage:**
 ```bash
-curl -X DELETE https://yourdomain.com/api/user/account \
+# Note: Use http://localhost:3000 for local development, https://yourdomain.com for production
+curl -X DELETE http://localhost:3000/api/user/account \
   -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -127,7 +128,8 @@ Customers can file disputes for order issues.
 
 **Example Usage:**
 ```bash
-curl -X POST https://yourdomain.com/api/disputes \
+# Note: Use http://localhost:3000 for local development, https://yourdomain.com for production
+curl -X POST http://localhost:3000/api/disputes \
   -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -153,8 +155,8 @@ Real-time communication between customer and vendor.
 
 **Example Usage:**
 ```bash
-# Send message
-curl -X POST https://yourdomain.com/api/disputes/dispute-123/messages \
+# Send message (Use http://localhost:3000 for local development)
+curl -X POST http://localhost:3000/api/disputes/dispute-123/messages \
   -H "Authorization: Bearer $VENDOR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"message": "I will ship a replacement item today"}'
@@ -191,12 +193,12 @@ Admins can review and resolve disputes.
 
 **Example Usage:**
 ```bash
-# List disputes pending admin review
-curl https://yourdomain.com/api/admin/disputes?status=pending_admin_review \
+# List disputes pending admin review (Use http://localhost:3000 for local development)
+curl http://localhost:3000/api/admin/disputes?status=pending_admin_review \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 
 # Resolve dispute
-curl -X PATCH https://yourdomain.com/api/admin/disputes/dispute-123 \
+curl -X PATCH http://localhost:3000/api/admin/disputes/dispute-123 \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
