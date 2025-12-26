@@ -3,7 +3,11 @@ import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import { withRoleCheck } from '@/lib/middleware';
-import { calculateTaxReportSummary, TaxReportPeriod } from '@/lib/ethiopian-tax';
+import { 
+  calculateTaxReportSummary, 
+  TaxReportPeriod,
+  isVATExemptInEthiopia 
+} from '@/lib/ethiopian-tax';
 
 /**
  * @swagger
@@ -142,7 +146,7 @@ async function getVendorTaxReportHandler(request: Request): Promise<NextResponse
     const salesData = orders.flatMap((order) =>
       order.orderItems.map((item) => {
         const categorySlug = item.product.category?.slug || '';
-        const isVATExempt = isVATExemptCategory(categorySlug);
+        const isVATExempt = isVATExemptInEthiopia(categorySlug);
         const itemSubtotal = Number(item.price) * item.quantity;
         const itemDiscount = Number(item.discount);
         const itemTotal = itemSubtotal - itemDiscount;
@@ -183,7 +187,7 @@ async function getVendorTaxReportHandler(request: Request): Promise<NextResponse
         const itemSubtotal = Number(item.price) * item.quantity;
         const itemDiscount = Number(item.discount);
         const itemTotal = itemSubtotal - itemDiscount;
-        const isVATExempt = isVATExemptCategory(categoryName);
+        const isVATExempt = isVATExemptInEthiopia(categoryName);
         const vatAmount = isVATExempt ? 0 : itemTotal * 0.15;
 
         acc[categoryName].totalSales += itemTotal;
@@ -230,29 +234,6 @@ async function getVendorTaxReportHandler(request: Request): Promise<NextResponse
     console.error('Error generating tax report:', error);
     throw error;
   }
-}
-
-// Helper function to check if category is VAT exempt
-function isVATExemptCategory(categorySlug: string): boolean {
-  const exemptCategories = [
-    'basic-food',
-    'agriculture',
-    'agricultural-inputs',
-    'medicine',
-    'medical-supplies',
-    'medical-equipment',
-    'books',
-    'educational-materials',
-    'school-supplies',
-    'financial-services',
-    'insurance',
-    'fertilizer',
-    'seeds',
-    'livestock',
-    'veterinary-services',
-  ];
-
-  return exemptCategories.includes(categorySlug.toLowerCase());
 }
 
 export const GET = withApiLogger(
