@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import { withRoleCheck } from '@/lib/middleware';
@@ -57,7 +57,8 @@ async function resolveDisputeHandler(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -100,7 +101,7 @@ async function resolveDisputeHandler(
       data: {
         status,
         resolution,
-        resolvedBy: user.id,
+        resolvedBy: user.userId,
         resolvedAt: new Date(),
       },
     });

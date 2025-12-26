@@ -57,25 +57,34 @@ async function listVerificationsHandler(request: Request): Promise<NextResponse>
         skip: (page - 1) * perPage,
         take: perPage,
         orderBy: { submittedAt: 'desc' },
-        include: {
-          vendor: {
-            select: {
-              id: true,
-              displayName: true,
-              user: {
-                select: {
-                  email: true,
-                },
-              },
-            },
-          },
-        },
       }),
       prisma.vendorVerification.count({ where }),
     ]);
 
+    // Get vendor details separately for each verification
+    const verificationsWithVendor = await Promise.all(
+      verifications.map(async (verification) => {
+        const vendor = await prisma.profile.findUnique({
+          where: { id: verification.vendorId },
+          select: {
+            id: true,
+            displayName: true,
+            user: {
+              select: {
+                email: true,
+              },
+            },
+          },
+        });
+        return {
+          ...verification,
+          vendor,
+        };
+      })
+    );
+
     return NextResponse.json({
-      verifications,
+      verifications: verificationsWithVendor,
       pagination: {
         page,
         perPage,

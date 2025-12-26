@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import { withRoleCheck } from '@/lib/middleware';
@@ -65,14 +65,15 @@ import { withRoleCheck } from '@/lib/middleware';
 
 async function submitVerificationHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get vendor profile
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     if (!profile || !profile.isVendor) {
@@ -164,14 +165,15 @@ async function submitVerificationHandler(request: Request): Promise<NextResponse
 
 async function getVerificationStatusHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get vendor profile
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     if (!profile || !profile.isVendor) {

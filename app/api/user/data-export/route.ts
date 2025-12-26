@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 
@@ -65,7 +65,8 @@ import { withApiLogger } from '@/lib/api-logger';
 
 async function createDataExportHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -83,7 +84,7 @@ async function createDataExportHandler(request: Request): Promise<NextResponse> 
     // Check for existing pending/processing requests
     const existingRequest = await prisma.dataExportRequest.findFirst({
       where: {
-        userId: user.id,
+        userId: user.userId,
         status: {
           in: ['pending', 'processing'],
         },
@@ -106,7 +107,7 @@ async function createDataExportHandler(request: Request): Promise<NextResponse> 
 
     const exportRequest = await prisma.dataExportRequest.create({
       data: {
-        userId: user.id,
+        userId: user.userId,
         format,
         status: 'pending',
         expiresAt,
@@ -132,14 +133,15 @@ async function createDataExportHandler(request: Request): Promise<NextResponse> 
 
 async function getDataExportRequestsHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const requests = await prisma.dataExportRequest.findMany({
       where: {
-        userId: user.id,
+        userId: user.userId,
       },
       orderBy: {
         createdAt: 'desc',

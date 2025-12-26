@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 
@@ -72,7 +72,8 @@ async function getDisputeHandler(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -81,7 +82,7 @@ async function getDisputeHandler(
 
     // Get user's profile
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     const dispute = await prisma.dispute.findUnique({
@@ -137,7 +138,7 @@ async function getDisputeHandler(
     }
 
     // Check access: must be customer, vendor, or admin
-    const isCustomer = dispute.userId === user.id;
+    const isCustomer = dispute.userId === user.userId;
     const isVendor = profile?.isVendor && dispute.vendorId === profile.id;
     const isAdmin = user.role === 'admin';
 
@@ -160,7 +161,8 @@ async function updateDisputeHandler(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -171,7 +173,7 @@ async function updateDisputeHandler(
 
     // Get user's profile
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     const dispute = await prisma.dispute.findUnique({
@@ -186,7 +188,7 @@ async function updateDisputeHandler(
     }
 
     // Check access
-    const isCustomer = dispute.userId === user.id;
+    const isCustomer = dispute.userId === user.userId;
     const isVendor = profile?.isVendor && dispute.vendorId === profile.id;
 
     if (!isCustomer && !isVendor) {

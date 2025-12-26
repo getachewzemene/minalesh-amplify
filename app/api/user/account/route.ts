@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import bcrypt from 'bcryptjs';
@@ -40,7 +40,8 @@ import bcrypt from 'bcryptjs';
 
 async function deleteAccountHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -65,7 +66,7 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
 
     // Verify password
     const userData = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: user.userId },
       select: { password: true },
     });
 
@@ -84,7 +85,7 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
     // Check for active orders
     const activeOrders = await prisma.order.findMany({
       where: {
-        userId: user.id,
+        userId: user.userId,
         status: {
           in: ['pending', 'paid', 'confirmed', 'processing', 'shipped'],
         },
@@ -105,7 +106,7 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
     await prisma.$transaction(async (tx) => {
       // Anonymize reviews instead of deleting (to preserve product ratings)
       await tx.review.updateMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
         data: {
           comment: '[User account deleted]',
           images: [],
@@ -114,37 +115,37 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
 
       // Delete wishlist items
       await tx.wishlist.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Delete cart items
       await tx.cart.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Delete notifications
       await tx.notification.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Delete data export requests
       await tx.dataExportRequest.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Delete user preferences
       await tx.userPreferences.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Delete notification preferences
       await tx.notificationPreference.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Delete loyalty account and transactions
       const loyaltyAccount = await tx.loyaltyAccount.findUnique({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
       
       if (loyaltyAccount) {
@@ -160,32 +161,32 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
       await tx.referral.deleteMany({
         where: {
           OR: [
-            { referrerId: user.id },
-            { refereeId: user.id },
+            { referrerId: user.userId },
+            { refereeId: user.userId },
           ],
         },
       });
 
       // Delete product comparisons
       await tx.productComparison.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Note: Keep orders and order history for tax/legal compliance (7 years)
       // These will be anonymized by removing the userId reference
       await tx.order.updateMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
         data: { userId: null },
       });
 
       // Delete profile (cascade will handle addresses)
       await tx.profile.deleteMany({
-        where: { userId: user.id },
+        where: { userId: user.userId },
       });
 
       // Finally, delete the user account
       await tx.user.delete({
-        where: { id: user.id },
+        where: { id: user.userId },
       });
     });
 

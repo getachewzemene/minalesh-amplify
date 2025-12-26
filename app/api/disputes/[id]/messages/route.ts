@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 
@@ -70,7 +70,8 @@ async function sendMessageHandler(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -88,7 +89,7 @@ async function sendMessageHandler(
 
     // Get user's profile
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     const dispute = await prisma.dispute.findUnique({
@@ -103,7 +104,7 @@ async function sendMessageHandler(
     }
 
     // Check access
-    const isCustomer = dispute.userId === user.id;
+    const isCustomer = dispute.userId === user.userId;
     const isVendor = profile?.isVendor && dispute.vendorId === profile.id;
     const isAdmin = user.role === 'admin';
 
@@ -126,7 +127,7 @@ async function sendMessageHandler(
     const disputeMessage = await prisma.disputeMessage.create({
       data: {
         disputeId,
-        senderId: user.id,
+        senderId: user.userId,
         message: message.trim(),
         isAdmin: user.role === 'admin',
       },
@@ -164,7 +165,8 @@ async function getMessagesHandler(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -173,7 +175,7 @@ async function getMessagesHandler(
 
     // Get user's profile
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     const dispute = await prisma.dispute.findUnique({
@@ -188,7 +190,7 @@ async function getMessagesHandler(
     }
 
     // Check access
-    const isCustomer = dispute.userId === user.id;
+    const isCustomer = dispute.userId === user.userId;
     const isVendor = profile?.isVendor && dispute.vendorId === profile.id;
     const isAdmin = user.role === 'admin';
 

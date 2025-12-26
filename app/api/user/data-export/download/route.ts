@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 
@@ -37,7 +37,8 @@ import { withApiLogger } from '@/lib/api-logger';
 
 async function downloadExportHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -55,7 +56,7 @@ async function downloadExportHandler(request: Request): Promise<NextResponse> {
     const exportRequest = await prisma.dataExportRequest.findFirst({
       where: {
         id: requestId,
-        userId: user.id,
+        userId: user.userId,
       },
     });
 

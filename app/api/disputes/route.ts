@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 
@@ -74,7 +74,8 @@ import { withApiLogger } from '@/lib/api-logger';
 
 async function createDisputeHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -110,7 +111,7 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
     const order = await prisma.order.findFirst({
       where: {
         id: orderId,
-        userId: user.id,
+        userId: user.userId,
       },
       include: {
         orderItems: {
@@ -172,7 +173,7 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
     const dispute = await prisma.dispute.create({
       data: {
         orderId,
-        userId: user.id,
+        userId: user.userId,
         vendorId,
         type,
         description,
@@ -212,7 +213,8 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
 
 async function getDisputesHandler(request: Request): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -224,7 +226,7 @@ async function getDisputesHandler(request: Request): Promise<NextResponse> {
 
     // Get user's profile to check if they're a vendor
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.userId },
     });
 
     const where: any = {};
@@ -232,11 +234,11 @@ async function getDisputesHandler(request: Request): Promise<NextResponse> {
     // Show disputes where user is either the customer or the vendor
     if (profile?.isVendor) {
       where.OR = [
-        { userId: user.id },
+        { userId: user.userId },
         { vendorId: profile.id },
       ];
     } else {
-      where.userId = user.id;
+      where.userId = user.userId;
     }
 
     if (status) {

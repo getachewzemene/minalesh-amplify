@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import { withRoleCheck } from '@/lib/middleware';
@@ -79,22 +79,6 @@ async function getVerificationHandler(
 
     const verification = await prisma.vendorVerification.findUnique({
       where: { id },
-      include: {
-        vendor: {
-          select: {
-            id: true,
-            displayName: true,
-            tradeLicense: true,
-            tinNumber: true,
-            user: {
-              select: {
-                email: true,
-                createdAt: true,
-              },
-            },
-          },
-        },
-      },
     });
 
     if (!verification) {
@@ -104,7 +88,29 @@ async function getVerificationHandler(
       );
     }
 
-    return NextResponse.json({ verification });
+    // Get vendor profile separately
+    const vendor = await prisma.profile.findUnique({
+      where: { id: verification.vendorId },
+      select: {
+        id: true,
+        displayName: true,
+        tradeLicense: true,
+        tinNumber: true,
+        user: {
+          select: {
+            email: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      verification: {
+        ...verification,
+        vendor,
+      },
+    });
   } catch (error) {
     console.error('Error fetching verification:', error);
     throw error;
@@ -116,7 +122,8 @@ async function reviewVerificationHandler(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const user = await verifyToken(request);
+    const token = getTokenFromRequest(request);
+    const user = getUserFromToken(token);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -147,17 +154,6 @@ async function reviewVerificationHandler(
     // Check if verification exists
     const verification = await prisma.vendorVerification.findUnique({
       where: { id },
-      include: {
-        vendor: {
-          include: {
-            user: {
-              select: {
-                email: true,
-              },
-            },
-          },
-        },
-      },
     });
 
     if (!verification) {
@@ -167,13 +163,25 @@ async function reviewVerificationHandler(
       );
     }
 
+    // Get vendor profile with user email
+    const vendor = await prisma.profile.findUnique({
+      where: { id: verification.vendorId },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
     // Update verification status
     const updatedVerification = await prisma.vendorVerification.update({
       where: { id },
       data: {
         status,
         rejectionReason: status === 'rejected' ? rejectionReason : null,
-        reviewedBy: user.id,
+        reviewedBy: user.userId,
         reviewedAt: new Date(),
       },
     });
