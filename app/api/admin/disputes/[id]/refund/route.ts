@@ -92,7 +92,9 @@ async function processRefundHandler(
     }
 
     // Determine refund amount
-    const refundAmount = customAmount ?? Number(order.totalAmount);
+    const refundAmount = customAmount !== undefined && customAmount !== null 
+      ? customAmount 
+      : Number(order.totalAmount);
 
     if (refundAmount > Number(order.totalAmount)) {
       return NextResponse.json(
