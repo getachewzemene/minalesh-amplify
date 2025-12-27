@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { 
   Package, 
   TrendingUp, 
@@ -179,6 +180,7 @@ const INITIAL_PRODUCT_FORM = {
 };
 
 export default function Dashboard() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('7d')
   const [showAddProductForm, setShowAddProductForm] = useState(false)
@@ -210,6 +212,18 @@ export default function Dashboard() {
       case 'same': return <Minus className="h-4 w-4 text-gray-500" />
       default: return null
     }
+  }
+
+  const getVerificationStatusText = (status?: string) => {
+    if (status === 'pending') return 'Verification Pending'
+    if (status === 'rejected') return 'Verification Rejected'
+    return 'Not Verified'
+  }
+
+  const getVerificationButtonText = (status?: string) => {
+    if (status === 'rejected') return 'Resubmit Verification'
+    if (status === 'pending') return 'View Status'
+    return 'Start Verification'
   }
 
   const handleAddProduct = async () => {
@@ -296,20 +310,8 @@ export default function Dashboard() {
   };
 
   const handleVerifyVendor = () => {
-    // In a real app, this would send verification documents to a backend
-    if (profile?.tradeLicense && profile?.tinNumber) {
-      requestVendorVerification(profile.tradeLicense, profile.tinNumber);
-      toast({
-        title: "Verification Submitted",
-        description: "Your verification request has been submitted. You'll be notified once approved."
-      });
-    } else {
-      toast({
-        title: "Verification Information Required",
-        description: "Please provide your Trade License and TIN Number in your profile.",
-        variant: "destructive"
-      });
-    }
+    // Navigate to the verification page
+    router.push('/vendor/verification');
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -527,23 +529,29 @@ export default function Dashboard() {
                         <ShieldCheck className="h-4 w-4 mr-1" />
                         Verified Vendor
                       </Badge>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => router.push('/vendor/verification')}
+                        className="text-white/90 hover:text-white hover:bg-white/10"
+                      >
+                        View Status
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Badge variant="destructive">
                         <AlertCircle className="h-4 w-4 mr-1" />
-                        {profile?.vendorStatus === 'pending' ? 'Verification Pending' : 'Not Verified'}
+                        {getVerificationStatusText(profile?.vendorStatus)}
                       </Badge>
-                      {profile?.vendorStatus !== 'pending' && (
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          onClick={handleVerifyVendor}
-                          className="ml-2"
-                        >
-                          Verify Account
-                        </Button>
-                      )}
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleVerifyVendor}
+                        className="ml-2"
+                      >
+                        {getVerificationButtonText(profile?.vendorStatus)}
+                      </Button>
                     </div>
                   )}
                 </div>
