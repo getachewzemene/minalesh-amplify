@@ -18,7 +18,8 @@ import { Separator } from "@/components/ui/separator"
 import { 
   Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned,
   Heart, Clock, Star, ShoppingBag, Bell, Shield, Store, Eye,
-  TrendingUp, Search, CreditCard, Gift, History, Settings, GitCompare
+  TrendingUp, Search, CreditCard, Gift, History, Settings, GitCompare,
+  Download, Trash2, Database
 } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
@@ -268,13 +269,14 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:w-auto">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 lg:w-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="recommendations">For You</TabsTrigger>
                 <TabsTrigger value="rewards">Rewards</TabsTrigger>
                 <TabsTrigger value="security">Security</TabsTrigger>
+                <TabsTrigger value="privacy">Privacy</TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -767,6 +769,114 @@ export default function Profile() {
                   <LoyaltyRewards userId={user?.id} />
                   <ProductComparison />
                 </div>
+              </TabsContent>
+
+              {/* Privacy & Data Tab */}
+              <TabsContent value="privacy" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Download className="h-5 w-5" />
+                        Data Export
+                      </CardTitle>
+                      <CardDescription>
+                        Download a copy of your personal data
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Request a complete export of all your data including profile information, 
+                        orders, reviews, and more. Exports are available in JSON or CSV format.
+                      </p>
+                      <div className="pt-4">
+                        <Button asChild className="w-full">
+                          <Link href="/profile/settings/data-export">
+                            <Database className="h-4 w-4 mr-2" />
+                            Manage Data Exports
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-red-200 dark:border-red-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-500">
+                        <Trash2 className="h-5 w-5" />
+                        Delete Account
+                      </CardTitle>
+                      <CardDescription>
+                        Permanently delete your account and data
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Permanently delete your account and all associated data. This action 
+                        cannot be undone. Please make sure you want to proceed.
+                      </p>
+                      <div className="pt-4">
+                        <Button variant="destructive" asChild className="w-full">
+                          <Link href="/profile/settings/delete-account">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete My Account
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Privacy Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Privacy Rights</CardTitle>
+                    <CardDescription>
+                      We respect your privacy and give you control over your data
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-4 text-sm text-muted-foreground">
+                      <div className="flex items-start gap-3">
+                        <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-foreground">Right to Access</p>
+                          <p>You can request and download all your personal data at any time.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-foreground">Right to Deletion</p>
+                          <p>You can request deletion of your account and personal data.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-foreground">Right to Rectification</p>
+                          <p>You can update your personal information through your profile settings.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-foreground">Data Portability</p>
+                          <p>Export your data in standard formats (JSON, CSV) that you can use elsewhere.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Separator className="my-4" />
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Learn more about how we handle your data
+                      </p>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/legal/privacy">Privacy Policy</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
