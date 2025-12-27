@@ -102,6 +102,19 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
       );
     }
 
+    // Get user info before deletion for confirmation email
+    const userInfo = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { 
+        email: true,
+        profile: {
+          select: {
+            displayName: true,
+          },
+        },
+      },
+    });
+
     // Start transaction for account deletion
     await prisma.$transaction(async (tx) => {
       // Anonymize reviews instead of deleting (to preserve product ratings)
@@ -189,6 +202,17 @@ async function deleteAccountHandler(request: Request): Promise<NextResponse> {
         where: { id: user.userId },
       });
     });
+
+    // Send account deletion confirmation email
+    if (userInfo) {
+      const { queueEmail, createAccountDeletionConfirmationEmail } = await import('@/lib/email');
+      const displayName = userInfo.profile?.displayName || userInfo.email.split('@')[0];
+      const emailTemplate = createAccountDeletionConfirmationEmail(
+        userInfo.email,
+        displayName
+      );
+      await queueEmail(emailTemplate);
+    }
 
     return NextResponse.json({
       message: 'Account deleted successfully. We are sorry to see you go.',

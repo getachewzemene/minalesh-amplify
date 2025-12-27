@@ -203,7 +203,18 @@ async function reviewVerificationHandler(
       });
     }
 
-    // TODO: Send email notification to vendor about verification decision
+    // Send email notification to vendor about verification decision
+    if (vendor?.user?.email) {
+      const { queueEmail, createVerificationStatusEmail } = await import('@/lib/email');
+      const vendorName = vendor.displayName || vendor.user.email.split('@')[0];
+      const emailTemplate = createVerificationStatusEmail(
+        vendor.user.email,
+        vendorName,
+        status,
+        rejectionReason
+      );
+      await queueEmail(emailTemplate);
+    }
 
     return NextResponse.json({
       message: `Verification ${status} successfully`,

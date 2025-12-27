@@ -120,7 +120,67 @@ async function resolveDisputeHandler(
       // TODO: Process the actual refund through payment provider
     }
 
-    // TODO: Send email notifications to customer and vendor
+    // Send email notifications to customer and vendor
+    const [customerProfile, vendorProfile, orderInfo] = await Promise.all([
+      prisma.profile.findUnique({
+        where: { userId: dispute.userId },
+        select: {
+          displayName: true,
+          user: { select: { email: true } },
+        },
+      }),
+      prisma.profile.findUnique({
+        where: { id: dispute.vendorId },
+        select: {
+          displayName: true,
+          user: { select: { email: true } },
+        },
+      }),
+      prisma.order.findUnique({
+        where: { id: dispute.orderId },
+        select: { orderNumber: true },
+      }),
+    ]);
+
+    if (customerProfile && vendorProfile && orderInfo) {
+      const { queueEmail, createDisputeResolvedEmail } = await import('@/lib/email');
+      
+      // Determine outcome based on resolution text and refund
+      let outcome: 'customer_favor' | 'vendor_favor' | 'partial_refund' | 'other' = 'other';
+      if (refundAmount && refundAmount > 0) {
+        if (refundAmount >= dispute.order.totalAmount) {
+          outcome = 'customer_favor';
+        } else {
+          outcome = 'partial_refund';
+        }
+      } else if (resolution.toLowerCase().includes('customer') || resolution.toLowerCase().includes('buyer')) {
+        outcome = 'customer_favor';
+      } else if (resolution.toLowerCase().includes('vendor') || resolution.toLowerCase().includes('seller')) {
+        outcome = 'vendor_favor';
+      }
+
+      // Notify customer
+      const customerEmail = createDisputeResolvedEmail(
+        customerProfile.user.email,
+        customerProfile.displayName || 'Customer',
+        dispute.id,
+        orderInfo.orderNumber,
+        resolution,
+        outcome
+      );
+      await queueEmail(customerEmail);
+
+      // Notify vendor
+      const vendorEmail = createDisputeResolvedEmail(
+        vendorProfile.user.email,
+        vendorProfile.displayName || 'Vendor',
+        dispute.id,
+        orderInfo.orderNumber,
+        resolution,
+        outcome
+      );
+      await queueEmail(vendorEmail);
+    }
 
     return NextResponse.json({
       message: 'Dispute resolved successfully',

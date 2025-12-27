@@ -85,8 +85,52 @@ export async function GET(request: Request) {
           },
         });
 
-        // TODO: Send email notification to admin
-        // TODO: Send notification to customer about escalation
+        // Send email notifications for escalation
+        const orderInfo = await prisma.order.findUnique({
+          where: { id: dispute.orderId },
+          select: { orderNumber: true },
+        });
+
+        if (orderInfo) {
+          const { queueEmail, createDisputeEscalatedEmail } = await import('@/lib/email');
+
+          // Get customer profile
+          const customerProfile = await prisma.profile.findUnique({
+            where: { userId: dispute.userId },
+            select: { displayName: true },
+          });
+
+          // Notify customer about escalation
+          if (dispute.user.email) {
+            const customerName = customerProfile?.displayName || 'Customer';
+            const customerEmail = createDisputeEscalatedEmail(
+              dispute.user.email,
+              customerName,
+              dispute.id,
+              orderInfo.orderNumber,
+              false // isAdmin
+            );
+            await queueEmail(customerEmail);
+          }
+
+          // Notify admin (use configured admin email)
+          const adminEmail = process.env.ADMIN_EMAIL;
+          if (adminEmail) {
+            const adminEmailTemplate = createDisputeEscalatedEmail(
+              adminEmail,
+              'Admin',
+              dispute.id,
+              orderInfo.orderNumber,
+              true // isAdmin
+            );
+            await queueEmail(adminEmailTemplate);
+          } else {
+            logEvent('admin_email_not_configured', {
+              disputeId: dispute.id,
+              message: 'ADMIN_EMAIL not set, skipping admin notification',
+            });
+          }
+        }
 
         escalated++;
 

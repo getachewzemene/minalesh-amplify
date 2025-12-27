@@ -189,8 +189,62 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
       },
     });
 
-    // TODO: Send email notification to vendor
-    // TODO: Send confirmation email to customer
+    // Send email notifications to vendor and customer
+    const [customerProfile, vendorProfile] = await Promise.all([
+      prisma.profile.findUnique({
+        where: { userId: user.userId },
+        select: {
+          displayName: true,
+          user: {
+            select: { email: true },
+          },
+        },
+      }),
+      prisma.profile.findUnique({
+        where: { id: vendorId },
+        select: {
+          displayName: true,
+          user: {
+            select: { email: true },
+          },
+        },
+      }),
+    ]);
+
+    if (customerProfile && vendorProfile) {
+      const { queueEmail, createDisputeFiledEmail } = await import('@/lib/email');
+      
+      // Send notification to vendor
+      const vendorEmail = createDisputeFiledEmail(
+        vendorProfile.user.email,
+        vendorProfile.displayName || 'Vendor',
+        dispute.id,
+        dispute.order.orderNumber,
+        type,
+        true // isVendor
+      );
+      await queueEmail(vendorEmail);
+
+      // Send confirmation to customer
+      const customerEmail = createDisputeFiledEmail(
+        customerProfile.user.email,
+        customerProfile.displayName || 'Customer',
+        dispute.id,
+        dispute.order.orderNumber,
+        type,
+        false // isVendor
+      );
+      await queueEmail(customerEmail);
+    } else {
+      // Log warning if profiles are missing
+      const { logEvent } = await import('@/lib/logger');
+      logEvent('dispute_filed_notification_skipped', {
+        disputeId: dispute.id,
+        customerProfileMissing: !customerProfile,
+        vendorProfileMissing: !vendorProfile,
+        message: 'Email notification skipped due to missing profile data',
+      });
+    }
 
     return NextResponse.json(
       {

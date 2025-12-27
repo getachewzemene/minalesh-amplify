@@ -551,3 +551,602 @@ Minalesh Team
     `.trim(),
   };
 }
+
+/**
+ * Email template for data export ready notification
+ */
+export function createDataExportReadyEmail(
+  to: string,
+  downloadUrl: string,
+  expiresAt: Date,
+  format: string
+): EmailTemplate {
+  const expiryDate = new Date(expiresAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return {
+    to,
+    subject: 'Your Data Export is Ready',
+    template: 'data_export_ready',
+    text: `
+Your data export is ready!
+
+We've prepared your requested data export in ${format.toUpperCase()} format.
+
+Download your data:
+${downloadUrl}
+
+Important: This download link will expire on ${expiryDate}.
+
+If you did not request this export, please contact our support team immediately.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2196F3; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .button { display: inline-block; padding: 12px 24px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+    .info-box { background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #2196F3; }
+    .warning { background-color: #fff3cd; padding: 10px; border-radius: 5px; margin: 15px 0; color: #856404; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Your Data Export is Ready</h1>
+    </div>
+    <div class="content">
+      <p>Great news! We've prepared your requested data export.</p>
+      <div class="info-box">
+        <p><strong>Format:</strong> ${format.toUpperCase()}</p>
+        <p><strong>Expires:</strong> ${expiryDate}</p>
+      </div>
+      <a href="${downloadUrl}" class="button">Download Your Data</a>
+      <div class="warning">
+        <p><strong>⏰ Important:</strong> This download link will expire on ${expiryDate}. Please download your data before this date.</p>
+      </div>
+      <p><small>If you did not request this export, please contact our support team immediately.</small></p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for data export expiring soon
+ */
+export function createDataExportExpiringEmail(
+  to: string,
+  downloadUrl: string,
+  expiresAt: Date,
+  hoursRemaining: number
+): EmailTemplate {
+  const expiryDate = new Date(expiresAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
+
+  return {
+    to,
+    subject: `⏰ Your Data Export Expires in ${hoursRemaining} Hours`,
+    template: 'data_export_expiring',
+    text: `
+Your data export is expiring soon!
+
+Your data export will expire in ${hoursRemaining} hours (${expiryDate}).
+
+Download your data now:
+${downloadUrl}
+
+After expiration, you'll need to request a new export.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #FF9800; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .button { display: inline-block; padding: 12px 24px; background-color: #FF9800; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+    .urgent-box { background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #FF9800; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⏰ Data Export Expiring Soon</h1>
+    </div>
+    <div class="content">
+      <div class="urgent-box">
+        <p><strong>Reminder:</strong> Your data export will expire in <strong>${hoursRemaining} hours</strong> (${expiryDate}).</p>
+      </div>
+      <p>Please download your data before it expires. After expiration, you'll need to request a new export.</p>
+      <a href="${downloadUrl}" class="button">Download Your Data Now</a>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for account deletion confirmation
+ */
+export function createAccountDeletionConfirmationEmail(
+  to: string,
+  displayName: string
+): EmailTemplate {
+  return {
+    to,
+    subject: 'Account Deletion Confirmation',
+    template: 'account_deletion_confirmation',
+    text: `
+Hello ${displayName},
+
+This email confirms that your Minalesh account has been permanently deleted.
+
+Your personal data has been removed from our systems in accordance with GDPR and data privacy regulations.
+
+We're sorry to see you go. If you change your mind, you're always welcome to create a new account.
+
+If you did not request this deletion, please contact our support team immediately.
+
+Thank you for being part of Minalesh,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #757575; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .info-box { background-color: #e0e0e0; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Account Deletion Confirmation</h1>
+    </div>
+    <div class="content">
+      <p>Hello ${displayName},</p>
+      <div class="info-box">
+        <p>This email confirms that your Minalesh account has been <strong>permanently deleted</strong>.</p>
+        <p>Your personal data has been removed from our systems in accordance with GDPR and data privacy regulations.</p>
+      </div>
+      <p>We're sorry to see you go. If you change your mind, you're always welcome to create a new account.</p>
+      <p><small><strong>Security Note:</strong> If you did not request this deletion, please contact our support team immediately.</small></p>
+    </div>
+    <div class="footer">
+      <p>Thank you for being part of Minalesh,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for vendor verification status change
+ */
+export function createVerificationStatusEmail(
+  to: string,
+  vendorName: string,
+  status: string,
+  rejectionReason?: string
+): EmailTemplate {
+  const statusMessages = {
+    approved: {
+      subject: '✅ Your Vendor Verification is Approved',
+      message: 'Congratulations! Your vendor verification has been approved. You can now start selling on Minalesh.',
+      color: '#4CAF50',
+    },
+    rejected: {
+      subject: '❌ Vendor Verification Update',
+      message: 'Unfortunately, your vendor verification has been rejected.',
+      color: '#f44336',
+    },
+    under_review: {
+      subject: '🔍 Your Vendor Verification is Under Review',
+      message: 'Your verification documents are currently being reviewed by our team.',
+      color: '#2196F3',
+    },
+    suspended: {
+      subject: '⚠️ Vendor Account Suspended',
+      message: 'Your vendor account has been suspended.',
+      color: '#FF9800',
+    },
+  };
+
+  const statusInfo = statusMessages[status as keyof typeof statusMessages] || statusMessages.under_review;
+
+  return {
+    to,
+    subject: statusInfo.subject,
+    template: 'verification_status_change',
+    text: `
+Hello ${vendorName},
+
+${statusInfo.message}
+
+Status: ${status.toUpperCase().replace(/_/g, ' ')}
+${rejectionReason ? `\nReason: ${rejectionReason}` : ''}
+
+${status === 'approved' ? 'You can now access your vendor dashboard and start listing products.' : ''}
+${status === 'rejected' ? 'You can resubmit your verification documents after addressing the issues mentioned above.' : ''}
+
+If you have any questions, please contact our support team.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: ${statusInfo.color}; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .status-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid ${statusInfo.color}; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Verification Status Update</h1>
+    </div>
+    <div class="content">
+      <p>Hello ${vendorName},</p>
+      <div class="status-box">
+        <p>${statusInfo.message}</p>
+        <p><strong>Status:</strong> ${status.toUpperCase().replace(/_/g, ' ')}</p>
+        ${rejectionReason ? `<p><strong>Reason:</strong> ${rejectionReason}</p>` : ''}
+      </div>
+      ${status === 'approved' ? '<p>You can now access your vendor dashboard and start listing products.</p>' : ''}
+      ${status === 'rejected' ? '<p>You can resubmit your verification documents after addressing the issues mentioned above.</p>' : ''}
+      <p>If you have any questions, please contact our support team.</p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for dispute filed notification
+ */
+export function createDisputeFiledEmail(
+  to: string,
+  recipientName: string,
+  disputeId: string,
+  orderNumber: string,
+  disputeType: string,
+  isVendor: boolean
+): EmailTemplate {
+  return {
+    to,
+    subject: `${isVendor ? '⚠️ New' : '✓ Your'} Dispute Filed - Order ${orderNumber}`,
+    template: 'dispute_filed',
+    text: `
+Hello ${recipientName},
+
+${isVendor 
+  ? 'A customer has filed a dispute for one of your orders.' 
+  : 'Your dispute has been successfully filed.'}
+
+Order Number: ${orderNumber}
+Dispute Type: ${disputeType.replace(/_/g, ' ').toUpperCase()}
+Dispute ID: ${disputeId}
+
+${isVendor 
+  ? 'Please review the dispute and respond within 48 hours to avoid escalation to admin review.' 
+  : 'We will notify you when the vendor responds. You can track the dispute status in your account.'}
+
+View dispute details in your ${isVendor ? 'vendor' : 'account'} dashboard.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: ${isVendor ? '#FF9800' : '#2196F3'}; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .dispute-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid ${isVendor ? '#FF9800' : '#2196F3'}; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>${isVendor ? '⚠️ New Dispute Filed' : '✓ Dispute Filed Successfully'}</h1>
+    </div>
+    <div class="content">
+      <p>Hello ${recipientName},</p>
+      <p>${isVendor 
+        ? 'A customer has filed a dispute for one of your orders.' 
+        : 'Your dispute has been successfully filed.'}</p>
+      <div class="dispute-box">
+        <p><strong>Order Number:</strong> ${orderNumber}</p>
+        <p><strong>Dispute Type:</strong> ${disputeType.replace(/_/g, ' ').toUpperCase()}</p>
+        <p><strong>Dispute ID:</strong> ${disputeId}</p>
+      </div>
+      <p>${isVendor 
+        ? 'Please review the dispute and respond within 48 hours to avoid escalation to admin review.' 
+        : 'We will notify you when the vendor responds. You can track the dispute status in your account.'}</p>
+      <p>View dispute details in your ${isVendor ? 'vendor' : 'account'} dashboard.</p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for dispute response notification
+ */
+export function createDisputeRespondedEmail(
+  to: string,
+  recipientName: string,
+  disputeId: string,
+  orderNumber: string,
+  responderName: string
+): EmailTemplate {
+  return {
+    to,
+    subject: `💬 New Response on Dispute - Order ${orderNumber}`,
+    template: 'dispute_responded',
+    text: `
+Hello ${recipientName},
+
+${responderName} has responded to your dispute.
+
+Order Number: ${orderNumber}
+Dispute ID: ${disputeId}
+
+Please review the response and continue the conversation if needed.
+
+View the dispute in your account dashboard.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #9C27B0; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .message-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #9C27B0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💬 New Dispute Response</h1>
+    </div>
+    <div class="content">
+      <p>Hello ${recipientName},</p>
+      <p>${responderName} has responded to your dispute.</p>
+      <div class="message-box">
+        <p><strong>Order Number:</strong> ${orderNumber}</p>
+        <p><strong>Dispute ID:</strong> ${disputeId}</p>
+      </div>
+      <p>Please review the response and continue the conversation if needed.</p>
+      <p>View the dispute in your account dashboard.</p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for dispute escalated notification
+ */
+export function createDisputeEscalatedEmail(
+  to: string,
+  recipientName: string,
+  disputeId: string,
+  orderNumber: string,
+  isAdmin: boolean
+): EmailTemplate {
+  return {
+    to,
+    subject: `🔺 Dispute Escalated ${isAdmin ? 'for Review' : ''} - Order ${orderNumber}`,
+    template: 'dispute_escalated',
+    text: `
+Hello ${recipientName},
+
+${isAdmin 
+  ? 'A dispute has been escalated and requires admin review.' 
+  : 'Your dispute has been escalated to admin review due to no response from the vendor.'}
+
+Order Number: ${orderNumber}
+Dispute ID: ${disputeId}
+
+${isAdmin 
+  ? 'Please review and resolve the dispute as soon as possible.' 
+  : 'Our admin team will review the dispute and make a decision. You will be notified of the outcome.'}
+
+${isAdmin ? 'View the dispute in the admin dashboard.' : 'You can track the status in your account dashboard.'}
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #f44336; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .escalation-box { background-color: #ffebee; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #f44336; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔺 Dispute Escalated</h1>
+    </div>
+    <div class="content">
+      <p>Hello ${recipientName},</p>
+      <div class="escalation-box">
+        <p>${isAdmin 
+          ? 'A dispute has been escalated and requires admin review.' 
+          : 'Your dispute has been escalated to admin review due to no response from the vendor.'}</p>
+        <p><strong>Order Number:</strong> ${orderNumber}</p>
+        <p><strong>Dispute ID:</strong> ${disputeId}</p>
+      </div>
+      <p>${isAdmin 
+        ? 'Please review and resolve the dispute as soon as possible.' 
+        : 'Our admin team will review the dispute and make a decision. You will be notified of the outcome.'}</p>
+      <p>${isAdmin ? 'View the dispute in the admin dashboard.' : 'You can track the status in your account dashboard.'}</p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for dispute resolved notification
+ */
+export function createDisputeResolvedEmail(
+  to: string,
+  recipientName: string,
+  disputeId: string,
+  orderNumber: string,
+  resolution: string,
+  outcome: 'customer_favor' | 'vendor_favor' | 'partial_refund' | 'other'
+): EmailTemplate {
+  const outcomeMessages = {
+    customer_favor: 'The dispute has been resolved in your favor.',
+    vendor_favor: 'The dispute has been resolved.',
+    partial_refund: 'The dispute has been resolved with a partial refund.',
+    other: 'The dispute has been resolved.',
+  };
+
+  return {
+    to,
+    subject: `✓ Dispute Resolved - Order ${orderNumber}`,
+    template: 'dispute_resolved',
+    text: `
+Hello ${recipientName},
+
+${outcomeMessages[outcome]}
+
+Order Number: ${orderNumber}
+Dispute ID: ${disputeId}
+
+Resolution:
+${resolution}
+
+If you have any questions about this resolution, please contact our support team.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .resolution-box { background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #4CAF50; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✓ Dispute Resolved</h1>
+    </div>
+    <div class="content">
+      <p>Hello ${recipientName},</p>
+      <p>${outcomeMessages[outcome]}</p>
+      <div class="resolution-box">
+        <p><strong>Order Number:</strong> ${orderNumber}</p>
+        <p><strong>Dispute ID:</strong> ${disputeId}</p>
+        <p><strong>Resolution:</strong></p>
+        <p>${resolution}</p>
+      </div>
+      <p>If you have any questions about this resolution, please contact our support team.</p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}

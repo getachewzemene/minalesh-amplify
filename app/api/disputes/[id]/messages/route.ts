@@ -141,7 +141,66 @@ async function sendMessageHandler(
       });
     }
 
-    // TODO: Send email notification to other party
+    // Send email notification to other party
+    const senderProfile = await prisma.profile.findUnique({
+      where: { userId: user.userId },
+      select: {
+        displayName: true,
+        user: { select: { email: true } },
+      },
+    });
+
+    // Get recipient info
+    let recipientEmail: string | null = null;
+    let recipientName: string | null = null;
+
+    if (isCustomer || isAdmin) {
+      // Notify vendor
+      const vendorProfile = await prisma.profile.findUnique({
+        where: { id: dispute.vendorId },
+        select: {
+          displayName: true,
+          user: { select: { email: true } },
+        },
+      });
+      if (vendorProfile) {
+        recipientEmail = vendorProfile.user.email;
+        recipientName = vendorProfile.displayName || 'Vendor';
+      }
+    } else if (isVendor) {
+      // Notify customer
+      const customerProfile = await prisma.profile.findUnique({
+        where: { userId: dispute.userId },
+        select: {
+          displayName: true,
+          user: { select: { email: true } },
+        },
+      });
+      if (customerProfile) {
+        recipientEmail = customerProfile.user.email;
+        recipientName = customerProfile.displayName || 'Customer';
+      }
+    }
+
+    if (recipientEmail && recipientName && senderProfile) {
+      const orderInfo = await prisma.order.findUnique({
+        where: { id: dispute.orderId },
+        select: { orderNumber: true },
+      });
+
+      if (orderInfo) {
+        const { queueEmail, createDisputeRespondedEmail } = await import('@/lib/email');
+        const senderName = senderProfile.displayName || (isAdmin ? 'Admin' : 'User');
+        const emailTemplate = createDisputeRespondedEmail(
+          recipientEmail,
+          recipientName,
+          disputeId,
+          orderInfo.orderNumber,
+          senderName
+        );
+        await queueEmail(emailTemplate);
+      }
+    }
 
     return NextResponse.json(
       {
