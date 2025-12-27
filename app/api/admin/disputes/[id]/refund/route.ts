@@ -56,11 +56,7 @@ async function processRefundHandler(
     const dispute = await prisma.dispute.findUnique({
       where: { id: disputeId },
       include: {
-        order: {
-          include: {
-            payment: true,
-          },
-        },
+        order: true,
       },
     });
 
@@ -79,16 +75,16 @@ async function processRefundHandler(
       );
     }
 
-    // Get payment details
-    const payment = dispute.order.payment;
-    if (!payment) {
+    // Get payment details from order
+    const order = dispute.order;
+    if (!order.paymentMethod || !order.paymentReference) {
       return NextResponse.json(
         { error: 'No payment information found for this order' },
         { status: 400 }
       );
     }
 
-    if (payment.status === 'refunded') {
+    if (order.paymentStatus === 'refunded') {
       return NextResponse.json(
         { error: 'Order has already been refunded' },
         { status: 400 }
@@ -96,9 +92,9 @@ async function processRefundHandler(
     }
 
     // Determine refund amount
-    const refundAmount = customAmount || dispute.order.totalAmount;
+    const refundAmount = customAmount || Number(order.totalAmount);
 
-    if (refundAmount > dispute.order.totalAmount) {
+    if (refundAmount > Number(order.totalAmount)) {
       return NextResponse.json(
         { error: 'Refund amount cannot exceed order total' },
         { status: 400 }
@@ -109,8 +105,8 @@ async function processRefundHandler(
     const refundResult = await processAutoRefund(
       dispute.orderId,
       refundAmount,
-      payment.method || 'stripe',
-      payment.transactionId || payment.id
+      order.paymentMethod || 'stripe',
+      order.paymentReference || order.stripeSessionId || order.id
     );
 
     if (!refundResult.success) {
@@ -132,7 +128,7 @@ async function processRefundHandler(
       );
     }
 
-    // Update dispute and payment records
+    // Update dispute and order records
     await Promise.all([
       prisma.dispute.update({
         where: { id: disputeId },
@@ -142,18 +138,13 @@ async function processRefundHandler(
           refundTransactionId: refundResult.refundId,
         },
       }),
-      prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: 'refunded',
-          refundedAt: new Date(),
-        },
-      }),
       // Update order status
       prisma.order.update({
         where: { id: dispute.orderId },
         data: {
           status: 'refunded',
+          paymentStatus: 'refunded',
+          refundedAt: new Date(),
         },
       }),
     ]);

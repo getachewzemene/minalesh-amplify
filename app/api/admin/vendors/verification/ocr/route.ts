@@ -105,9 +105,9 @@ async function runOCRVerificationHandler(request: Request): Promise<NextResponse
       where: { id: verification.id },
       data: {
         ocrVerified: ocrPassed,
-        ocrVerificationData: ocrResults,
+        ocrVerificationData: ocrResults as any,
         govApiVerified: govResults.allVerified,
-        govApiVerificationData: govResults,
+        govApiVerificationData: govResults as any,
       },
     });
 

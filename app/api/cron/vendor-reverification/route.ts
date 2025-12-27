@@ -101,9 +101,9 @@ export async function GET(request: Request) {
           where: { id: verification.id },
           data: {
             ocrVerified: ocrPassed,
-            ocrVerificationData: ocrResults,
+            ocrVerificationData: ocrResults as any,
             govApiVerified: govPassed,
-            govApiVerificationData: govResults,
+            govApiVerificationData: govResults as any,
             lastReverifiedAt: now,
             nextReverificationAt: nextReverification,
             // If verification fails, mark for review
