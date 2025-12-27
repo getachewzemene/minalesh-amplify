@@ -386,7 +386,7 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-10 text-xs md:text-sm">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-10 text-xs md:text-sm overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="advanced">Advanced</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>

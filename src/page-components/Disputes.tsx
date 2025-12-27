@@ -95,8 +95,6 @@ export default function DisputesPage() {
     }
   }, [user, statusFilter]);
 
-  const filteredDisputes = disputes;
-
   return (
     <>
       <Navbar />
@@ -130,7 +128,7 @@ export default function DisputesPage() {
               </Card>
             ))}
           </div>
-        ) : filteredDisputes.length === 0 ? (
+        ) : disputes.length === 0 ? (
           <Card>
             <CardContent className="py-12">
               <div className="text-center">
@@ -146,7 +144,7 @@ export default function DisputesPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {filteredDisputes.map((dispute) => (
+            {disputes.map((dispute) => (
               <Card key={dispute.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -172,7 +170,12 @@ export default function DisputesPage() {
                     </div>
                   </div>
 
-                  <p className="text-sm mb-4 line-clamp-2">{dispute.description}</p>
+                  <p className="text-sm mb-4 overflow-hidden" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    maxHeight: '3em'
+                  }}>{dispute.description}</p>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

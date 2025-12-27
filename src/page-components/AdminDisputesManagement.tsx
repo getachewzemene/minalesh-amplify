@@ -299,7 +299,12 @@ export default function AdminDisputesManagement() {
                   </div>
                 </div>
 
-                <p className="text-sm mb-4 line-clamp-2">{dispute.description}</p>
+                <p className="text-sm mb-4 overflow-hidden" style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  maxHeight: '3em'
+                }}>{dispute.description}</p>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
