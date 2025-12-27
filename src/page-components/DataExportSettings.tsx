@@ -13,9 +13,13 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 import { 
   Download, FileText, Clock, CheckCircle2, XCircle, 
-  AlertCircle, ArrowLeft, RefreshCw, Calendar, FileJson, FileSpreadsheet
+  AlertCircle, ArrowLeft, RefreshCw, Calendar, FileJson, FileSpreadsheet,
+  FilePdf, Repeat
 } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -24,6 +28,10 @@ interface DataExportRequest {
   id: string
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired'
   format: string
+  categories?: string[]
+  isRecurring?: boolean
+  recurringSchedule?: string
+  nextRunAt?: string
   downloadUrl?: string
   fileSize?: number
   expiresAt: string
@@ -83,6 +91,18 @@ export default function DataExportSettings() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState<string>('json')
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [recurringSchedule, setRecurringSchedule] = useState('weekly')
+
+  const availableCategories = [
+    { value: 'orders', label: 'Order History', description: 'All your orders and transactions' },
+    { value: 'reviews', label: 'Reviews & Ratings', description: 'Your product reviews' },
+    { value: 'addresses', label: 'Saved Addresses', description: 'Shipping and billing addresses' },
+    { value: 'wishlists', label: 'Wishlist Items', description: 'Products you\'ve saved' },
+    { value: 'preferences', label: 'User Preferences', description: 'Account settings and preferences' },
+    { value: 'loyalty', label: 'Loyalty Account', description: 'Points and rewards history' },
+  ]
 
   useEffect(() => {
     if (!user) {
@@ -118,14 +138,22 @@ export default function DataExportSettings() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ format: selectedFormat })
+        body: JSON.stringify({ 
+          format: selectedFormat,
+          categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+          isRecurring,
+          recurringSchedule: isRecurring ? (recurringSchedule === 'weekly' ? '0 0 * * 0' : '0 0 1 * *') : undefined
+        })
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        toast.success('Export request created successfully! You will be notified when your data is ready.')
+        toast.success(isRecurring ? 'Recurring export scheduled successfully!' : 'Export request created successfully! You will be notified when your data is ready.')
         fetchExportRequests()
+        // Reset form
+        setSelectedCategories([])
+        setIsRecurring(false)
       } else if (response.status === 429) {
         toast.error(data.error || 'You already have a pending export request')
       } else {
@@ -230,7 +258,90 @@ export default function DataExportSettings() {
                         </p>
                       </Label>
                     </div>
+                    <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                      <RadioGroupItem value="pdf" id="pdf" className="mt-1" />
+                      <Label htmlFor="pdf" className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FilePdf className="h-5 w-5" />
+                          <span className="font-semibold">PDF Format</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Human-readable document format, perfect for printing and archiving
+                        </p>
+                      </Label>
+                    </div>
                   </RadioGroup>
+                </div>
+
+                <Separator />
+
+                {/* Category Selection */}
+                <div>
+                  <Label className="text-base font-semibold mb-4 block">
+                    Select Data Categories (Optional)
+                  </Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Leave all unchecked to export all data, or select specific categories
+                  </p>
+                  <div className="space-y-3">
+                    {availableCategories.map((category) => (
+                      <div key={category.value} className="flex items-start space-x-3 p-3 border rounded-lg">
+                        <Checkbox
+                          id={category.value}
+                          checked={selectedCategories.includes(category.value)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedCategories([...selectedCategories, category.value])
+                            } else {
+                              setSelectedCategories(selectedCategories.filter(c => c !== category.value))
+                            }
+                          }}
+                          className="mt-0.5"
+                        />
+                        <Label htmlFor={category.value} className="flex-1 cursor-pointer">
+                          <span className="font-medium block mb-1">{category.label}</span>
+                          <span className="text-sm text-muted-foreground">{category.description}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Recurring Export */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="space-y-1">
+                      <Label className="text-base font-semibold flex items-center gap-2">
+                        <Repeat className="h-4 w-4" />
+                        Recurring Export
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically generate exports on a schedule
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isRecurring}
+                      onCheckedChange={setIsRecurring}
+                    />
+                  </div>
+
+                  {isRecurring && (
+                    <div className="space-y-2 pl-6 border-l-2">
+                      <Label htmlFor="schedule" className="text-sm font-medium">Schedule</Label>
+                      <RadioGroup value={recurringSchedule} onValueChange={setRecurringSchedule}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="weekly" id="weekly" />
+                          <Label htmlFor="weekly" className="cursor-pointer">Weekly (Every Sunday)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="monthly" id="monthly" />
+                          <Label htmlFor="monthly" className="cursor-pointer">Monthly (1st of each month)</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
@@ -312,21 +423,38 @@ export default function DataExportSettings() {
                             <div className="flex items-start gap-3">
                               {getStatusIcon(request.status)}
                               <div>
-                                <div className="flex items-center gap-2 mb-1">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
                                   <h3 className="font-semibold">
                                     {request.format.toUpperCase()} Export
                                   </h3>
                                   {getStatusBadge(request.status)}
+                                  {request.isRecurring && (
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                      <Repeat className="h-3 w-3" />
+                                      Recurring
+                                    </Badge>
+                                  )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   Requested on {formatDate(request.createdAt)}
                                 </p>
+                                {request.categories && request.categories.length > 0 && (
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Categories: {request.categories.join(', ')}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
 
                           {/* Status Details */}
                           <div className="space-y-2 mb-4">
+                            {request.isRecurring && request.nextRunAt && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="h-4 w-4 text-blue-500" />
+                                <span>Next run: {formatDate(request.nextRunAt)}</span>
+                              </div>
+                            )}
                             {request.status === 'completed' && (
                               <>
                                 <div className="flex items-center gap-2 text-sm">

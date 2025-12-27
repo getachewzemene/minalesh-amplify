@@ -57,6 +57,7 @@
     "ioredis": "^5.8.2",
     "jose": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.4",
     "lucide-react": "^0.462.0",
     "next": "^14.2.33",
     "next-intl": "^4.6.1",
@@ -79,6 +80,7 @@
     "swagger-ui-dist": "^5.30.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^7.0.0",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },

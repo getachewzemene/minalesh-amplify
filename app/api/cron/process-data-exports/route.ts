@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logEvent, logError } from '@/lib/logger';
+import { generatePDFExport, generateCategoryPDFExport } from '@/lib/pdf-export';
 
 /**
  * Data Export Worker
@@ -122,20 +123,49 @@ async function processDataExport(exportRequest: any): Promise<void> {
       data: { status: 'processing' },
     });
 
-    // Generate export data
-    const exportData = await generateUserDataExport(exportRequest.userId);
+    // Generate export data - filtered by categories if specified
+    let exportData = await generateUserDataExport(exportRequest.userId);
+    
+    // Filter by categories if specified
+    if (exportRequest.categories && exportRequest.categories.length > 0) {
+      const filteredData: any = {
+        user: exportData.user,
+        profile: exportData.profile,
+      };
+      
+      exportRequest.categories.forEach((category: string) => {
+        if (category === 'orders') filteredData.orders = exportData.orders;
+        if (category === 'reviews') filteredData.reviews = exportData.reviews;
+        if (category === 'addresses') filteredData.addresses = exportData.addresses;
+        if (category === 'wishlists') filteredData.wishlists = exportData.wishlists;
+        if (category === 'preferences') filteredData.preferences = exportData.preferences;
+        if (category === 'loyalty') filteredData.loyaltyAccount = exportData.loyaltyAccount;
+      });
+      
+      exportData = filteredData;
+    }
 
     // Convert to requested format
-    let fileContent: string;
+    let fileContent: string | Buffer;
     let fileName: string;
+    let mimeType: string;
     
     if (exportRequest.format === 'csv') {
       fileContent = convertToCSV(exportData);
       fileName = `user-data-export-${exportRequest.userId}.csv`;
+      mimeType = 'text/csv';
+    } else if (exportRequest.format === 'pdf') {
+      // Generate PDF
+      fileContent = exportRequest.categories && exportRequest.categories.length > 0
+        ? await generateCategoryPDFExport(exportData, exportRequest.categories)
+        : await generatePDFExport(exportData);
+      fileName = `user-data-export-${exportRequest.userId}.pdf`;
+      mimeType = 'application/pdf';
     } else {
       // JSON format (default)
       fileContent = JSON.stringify(exportData, null, 2);
       fileName = `user-data-export-${exportRequest.userId}.json`;
+      mimeType = 'application/json';
     }
 
     // In a production environment, you would:
@@ -143,24 +173,39 @@ async function processDataExport(exportRequest: any): Promise<void> {
     // 2. Generate a signed URL with expiration
     // For now, we'll store it as base64 data URL (not recommended for production)
     
-    const fileSize = Buffer.byteLength(fileContent, 'utf8');
-    const base64Content = Buffer.from(fileContent).toString('base64');
-    const mimeType = exportRequest.format === 'csv' ? 'text/csv' : 'application/json';
+    const fileSize = Buffer.isBuffer(fileContent) 
+      ? fileContent.length 
+      : Buffer.byteLength(fileContent, 'utf8');
+    const base64Content = Buffer.isBuffer(fileContent)
+      ? fileContent.toString('base64')
+      : Buffer.from(fileContent).toString('base64');
     const downloadUrl = `data:${mimeType};base64,${base64Content}`;
 
     // TODO: In production, replace with actual file upload to S3:
     // const s3Url = await uploadToS3(fileContent, fileName);
     // const downloadUrl = await generateSignedUrl(s3Url, exportRequest.expiresAt);
 
+    // For recurring exports, schedule next run
+    let updateData: any = {
+      status: 'completed',
+      downloadUrl,
+      fileSize,
+      completedAt: new Date(),
+    };
+
+    if (exportRequest.isRecurring && exportRequest.recurringSchedule) {
+      // Calculate next run time based on schedule
+      // For simplicity, we'll just add 7 days (should use proper cron parser in production)
+      const nextRun = new Date();
+      nextRun.setDate(nextRun.getDate() + 7);
+      updateData.nextRunAt = nextRun;
+      updateData.status = 'pending'; // Reset to pending for next run
+    }
+
     // Mark as completed
     await prisma.dataExportRequest.update({
       where: { id: exportRequest.id },
-      data: {
-        status: 'completed',
-        downloadUrl,
-        fileSize,
-        completedAt: new Date(),
-      },
+      data: updateData,
     });
 
     // Send email notification to user with download link
@@ -208,6 +253,8 @@ async function processDataExport(exportRequest: any): Promise<void> {
 }
 
 export async function GET(request: Request) {
+  const startTime = Date.now();
+  
   try {
     // Verify cron secret
     const authHeader = request.headers.get('authorization');
@@ -274,6 +321,21 @@ export async function GET(request: Request) {
       total: pendingExports.length,
     };
 
+    const duration = Date.now() - startTime;
+
+    // Log execution to monitoring
+    await prisma.cronJobExecution.create({
+      data: {
+        jobName: 'process-data-exports',
+        status: 'success',
+        startedAt: new Date(startTime),
+        completedAt: new Date(),
+        duration,
+        recordsProcessed: processed,
+        metadata: result,
+      },
+    });
+
     logEvent('data_export_cron_completed', result);
 
     return NextResponse.json({
@@ -281,6 +343,24 @@ export async function GET(request: Request) {
       ...result,
     });
   } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    // Log failed execution
+    try {
+      await prisma.cronJobExecution.create({
+        data: {
+          jobName: 'process-data-exports',
+          status: 'failed',
+          startedAt: new Date(startTime),
+          completedAt: new Date(),
+          duration,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+    } catch (logError) {
+      console.error('Failed to log cron execution:', logError);
+    }
+
     logError(error, { operation: 'process-data-exports-cron' });
     return NextResponse.json(
       { error: 'Failed to process data exports' },
