@@ -21,8 +21,21 @@ import { withApiLogger } from '@/lib/api-logger';
  *             properties:
  *               format:
  *                 type: string
- *                 enum: [json, csv]
+ *                 enum: [json, csv, pdf]
  *                 default: json
+ *               categories:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [orders, reviews, addresses, wishlists, preferences, loyalty]
+ *                 description: Specific data categories to export (empty array exports all)
+ *               isRecurring:
+ *                 type: boolean
+ *                 default: false
+ *                 description: Whether this should be a recurring export
+ *               recurringSchedule:
+ *                 type: string
+ *                 description: Cron expression for recurring exports (required if isRecurring is true)
  *     responses:
  *       201:
  *         description: Export request created successfully
@@ -73,42 +86,74 @@ async function createDataExportHandler(request: Request): Promise<NextResponse> 
 
     const body = await request.json();
     const format = body.format || 'json';
+    const categories = body.categories || []; // Specific categories to export
+    const isRecurring = body.isRecurring || false;
+    const recurringSchedule = body.recurringSchedule; // e.g., "0 0 * * 0" for weekly
 
-    if (!['json', 'csv'].includes(format)) {
+    if (!['json', 'csv', 'pdf'].includes(format)) {
       return NextResponse.json(
-        { error: 'Invalid format. Must be json or csv' },
+        { error: 'Invalid format. Must be json, csv, or pdf' },
         { status: 400 }
       );
     }
 
-    // Check for existing pending/processing requests
-    const existingRequest = await prisma.dataExportRequest.findFirst({
-      where: {
-        userId: user.userId,
-        status: {
-          in: ['pending', 'processing'],
-        },
-      },
-    });
+    // Validate categories if provided
+    const validCategories = ['orders', 'reviews', 'addresses', 'wishlists', 'preferences', 'loyalty'];
+    if (categories.length > 0) {
+      const invalidCategories = categories.filter((c: string) => !validCategories.includes(c));
+      if (invalidCategories.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid categories: ${invalidCategories.join(', ')}. Valid categories are: ${validCategories.join(', ')}` },
+          { status: 400 }
+        );
+      }
+    }
 
-    if (existingRequest) {
+    // Validate recurring schedule if provided
+    if (isRecurring && !recurringSchedule) {
       return NextResponse.json(
-        {
-          error: 'You already have a pending export request',
-          requestId: existingRequest.id,
-        },
-        { status: 429 }
+        { error: 'Recurring schedule is required for recurring exports' },
+        { status: 400 }
       );
+    }
+
+    // Check for existing pending/processing requests (only for non-recurring)
+    if (!isRecurring) {
+      const existingRequest = await prisma.dataExportRequest.findFirst({
+        where: {
+          userId: user.userId,
+          status: {
+            in: ['pending', 'processing'],
+          },
+          isRecurring: false,
+        },
+      });
+
+      if (existingRequest) {
+        return NextResponse.json(
+          {
+            error: 'You already have a pending export request',
+            requestId: existingRequest.id,
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // Create new export request
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
 
+    const nextRunAt = isRecurring ? new Date() : undefined;
+
     const exportRequest = await prisma.dataExportRequest.create({
       data: {
         userId: user.userId,
         format,
+        categories,
+        isRecurring,
+        recurringSchedule,
+        nextRunAt,
         status: 'pending',
         expiresAt,
       },
@@ -119,9 +164,12 @@ async function createDataExportHandler(request: Request): Promise<NextResponse> 
 
     return NextResponse.json(
       {
-        message: 'Data export request created successfully. You will receive an email when your data is ready.',
+        message: isRecurring 
+          ? 'Recurring data export scheduled successfully. You will receive emails when your data is ready.'
+          : 'Data export request created successfully. You will receive an email when your data is ready.',
         requestId: exportRequest.id,
         status: exportRequest.status,
+        isRecurring,
       },
       { status: 201 }
     );

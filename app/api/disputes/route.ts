@@ -25,6 +25,11 @@ import { withApiLogger } from '@/lib/api-logger';
  *             properties:
  *               orderId:
  *                 type: string
+ *               orderItemIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional array of specific order item IDs for multi-item disputes
  *               type:
  *                 type: string
  *                 enum: [not_received, not_as_described, damaged, wrong_item, refund_issue, other]
@@ -34,6 +39,11 @@ import { withApiLogger } from '@/lib/api-logger';
  *                 type: array
  *                 items:
  *                   type: string
+ *               videoEvidenceUrls:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: URLs to video evidence
  *     responses:
  *       201:
  *         description: Dispute created successfully
@@ -81,7 +91,7 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
     }
 
     const body = await request.json();
-    const { orderId, type, description, evidenceUrls = [] } = body;
+    const { orderId, orderItemIds = [], type, description, evidenceUrls = [], videoEvidenceUrls = [] } = body;
 
     // Validate required fields
     if (!orderId || !type || !description) {
@@ -173,11 +183,13 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
     const dispute = await prisma.dispute.create({
       data: {
         orderId,
+        orderItemIds,
         userId: user.userId,
         vendorId,
         type,
         description,
         evidenceUrls,
+        videoEvidenceUrls,
         status: 'pending_vendor_response',
       },
       include: {

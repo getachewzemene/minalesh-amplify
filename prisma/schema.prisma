@@ -1012,19 +1012,24 @@ enum DisputeStatus {
 }
 
 model Dispute {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId       String        @map("order_id") @db.Uuid
-  userId        String        @map("user_id") @db.Uuid
-  vendorId      String        @map("vendor_id") @db.Uuid
-  type          DisputeType
-  description   String
-  evidenceUrls  String[]      @map("evidence_urls")
-  status        DisputeStatus @default(open)
-  resolution    String?
-  resolvedBy    String?       @map("resolved_by") @db.Uuid
-  resolvedAt    DateTime?     @map("resolved_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId           String        @map("order_id") @db.Uuid
+  orderItemIds      String[]      @default([]) @map("order_item_ids") @db.Uuid // For multi-item disputes
+  userId            String        @map("user_id") @db.Uuid
+  vendorId          String        @map("vendor_id") @db.Uuid
+  type              DisputeType
+  description       String
+  evidenceUrls      String[]      @map("evidence_urls")
+  videoEvidenceUrls String[]      @default([]) @map("video_evidence_urls") // Video evidence support
+  status            DisputeStatus @default(open)
+  resolution        String?
+  resolvedBy        String?       @map("resolved_by") @db.Uuid
+  resolvedAt        DateTime?     @map("resolved_at")
+  refundProcessed   Boolean       @default(false) @map("refund_processed")
+  refundAmount      Float?        @map("refund_amount")
+  refundTransactionId String?     @map("refund_transaction_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
 
   order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1034,6 +1039,8 @@ model Dispute {
   @@index([status])
   @@index([userId])
   @@index([vendorId])
+  @@index([createdAt])
+  @@index([resolvedAt])
   @@map("disputes")
 }
 
@@ -1083,15 +1090,22 @@ model VendorVerification {
   tinNumber             String?             @map("tin_number")
   businessRegUrl        String?             @map("business_reg_url")
   ownerIdUrl            String?             @map("owner_id_url")
+  ocrVerified           Boolean             @default(false) @map("ocr_verified")
+  ocrVerificationData   Json?               @map("ocr_verification_data")
+  govApiVerified        Boolean             @default(false) @map("gov_api_verified")
+  govApiVerificationData Json?              @map("gov_api_verification_data")
   status                VerificationStatus  @default(pending)
   rejectionReason       String?             @map("rejection_reason")
   reviewedBy            String?             @map("reviewed_by") @db.Uuid
   reviewedAt            DateTime?           @map("reviewed_at")
+  nextReverificationAt  DateTime?           @map("next_reverification_at")
+  lastReverifiedAt      DateTime?           @map("last_reverified_at")
   submittedAt           DateTime            @default(now()) @map("submitted_at")
   updatedAt             DateTime            @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([vendorId])
+  @@index([nextReverificationAt])
   @@map("vendor_verifications")
 }
 
@@ -1108,7 +1122,11 @@ model DataExportRequest {
   id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId        String            @map("user_id") @db.Uuid
   status        DataExportStatus  @default(pending)
-  format        String            @default("json") // json or csv
+  format        String            @default("json") // json, csv, or pdf
+  categories    String[]          @default([]) // Specific data categories to export (empty = all)
+  isRecurring   Boolean           @default(false) @map("is_recurring")
+  recurringSchedule String?       @map("recurring_schedule") // cron expression for recurring exports
+  nextRunAt     DateTime?         @map("next_run_at")
   downloadUrl   String?           @map("download_url")
   fileSize      Int?              @map("file_size")
   expiresAt     DateTime          @map("expires_at")
@@ -1120,5 +1138,42 @@ model DataExportRequest {
   @@index([userId])
   @@index([status])
   @@index([expiresAt])
+  @@index([isRecurring])
+  @@index([nextRunAt])
   @@map("data_export_requests")
+}
+
+// Cron Job Monitoring
+model CronJobExecution {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobName       String   @map("job_name")
+  status        String   // success, failed, running
+  startedAt     DateTime @default(now()) @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  duration      Int?     // Duration in milliseconds
+  recordsProcessed Int?  @map("records_processed")
+  errorMessage  String?  @map("error_message")
+  metadata      Json?    // Additional job-specific data
+
+  @@index([jobName])
+  @@index([status])
+  @@index([startedAt])
+  @@map("cron_job_executions")
+}
+
+// Dispute Analytics
+model DisputeAnalytics {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date                  DateTime @unique // Daily aggregation
+  totalDisputes         Int      @default(0) @map("total_disputes")
+  openDisputes          Int      @default(0) @map("open_disputes")
+  resolvedDisputes      Int      @default(0) @map("resolved_disputes")
+  avgResolutionTimeHours Float?   @map("avg_resolution_time_hours")
+  disputesByType        Json     @map("disputes_by_type") // { not_received: 5, damaged: 3, ... }
+  refundsProcessed      Int      @default(0) @map("refunds_processed")
+  totalRefundAmount     Float    @default(0) @map("total_refund_amount")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@index([date])
+  @@map("dispute_analytics")
 }
