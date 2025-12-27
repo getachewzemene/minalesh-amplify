@@ -103,7 +103,7 @@ async function handleOrdersBulkOperation(operation: string, orderIds: string[], 
               },
             },
           },
-          items: {
+          orderItems: {
             include: {
               product: {
                 select: {
@@ -124,7 +124,7 @@ async function handleOrdersBulkOperation(operation: string, orderIds: string[], 
           totalAmount: order.totalAmount,
           customer: order.user.email,
           createdAt: order.createdAt,
-          items: order.items.map((item) => ({
+          items: order.orderItems.map((item) => ({
             productName: item.product.name,
             quantity: item.quantity,
             price: item.price,
@@ -260,7 +260,7 @@ async function handleProductsBulkOperation(operation: string, productIds: string
           },
           vendor: {
             select: {
-              businessName: true,
+              displayName: true,
             },
           },
         },
@@ -274,7 +274,7 @@ async function handleProductsBulkOperation(operation: string, productIds: string
           price: product.price,
           stock: product.stockQuantity,
           category: product.category?.name,
-          vendor: product.vendor?.businessName,
+          vendor: product.vendor?.displayName,
           isActive: product.isActive,
         })),
       };
@@ -291,7 +291,6 @@ async function handleUsersBulkOperation(operation: string, userIds: string[], da
       const updated = await prisma.user.updateMany({
         where: { id: { in: userIds } },
         data: { 
-          isActive: false,
           updatedAt: new Date(),
         },
       });
@@ -306,7 +305,6 @@ async function handleUsersBulkOperation(operation: string, userIds: string[], da
       const updated = await prisma.user.updateMany({
         where: { id: { in: userIds } },
         data: { 
-          isActive: true,
           updatedAt: new Date(),
         },
       });
@@ -324,7 +322,6 @@ async function handleUsersBulkOperation(operation: string, userIds: string[], da
           id: true,
           email: true,
           role: true,
-          isActive: true,
           createdAt: true,
           profile: {
             select: {
@@ -341,7 +338,6 @@ async function handleUsersBulkOperation(operation: string, userIds: string[], da
         users: users.map((user) => ({
           email: user.email,
           role: user.role,
-          isActive: user.isActive,
           firstName: user.profile?.firstName,
           lastName: user.profile?.lastName,
           phone: user.profile?.phone,
