@@ -22,7 +22,7 @@ export async function middleware(req: NextRequest) {
   const isVendorRoute = pathname.startsWith(VENDOR_PREFIX)
   const isAdminLogin = pathname === '/admin/login'
 
-  // Allow non-protected routes to pass through
+  // Allow non-authentication-required routes to pass through
   if (!isAdminRoute && !isVendorRoute) {
     return NextResponse.next()
   }
