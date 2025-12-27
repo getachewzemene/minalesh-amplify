@@ -17,6 +17,9 @@ import { comprehensiveGovVerification } from '@/lib/gov-api-integration';
  * Security: Protected by CRON_SECRET environment variable
  */
 
+// Configuration
+const VENDORS_PER_BATCH = parseInt(process.env.REVERIFICATION_BATCH_SIZE || '5');
+
 export async function GET(request: Request) {
   try {
     // Verify cron secret
@@ -47,7 +50,7 @@ export async function GET(request: Request) {
           lte: now,
         },
       },
-      take: 5, // Process 5 vendors at a time to avoid overload
+      take: VENDORS_PER_BATCH, // Process configurable number of vendors at a time
     });
 
     let processed = 0;

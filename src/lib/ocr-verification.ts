@@ -5,6 +5,14 @@ import Tesseract from 'tesseract.js';
  * Extracts text from uploaded documents and verifies information
  */
 
+// Configuration constants
+const MIN_CONFIDENCE_THRESHOLD = 60;
+const MAX_EXTRACTED_NAMES = 5;
+
+// Ethiopian document patterns
+const ETHIOPIAN_LICENSE_PATTERN = /[A-Z]{2,4}[\s-]?\d{5,10}/i;
+const ETHIOPIAN_TIN_PATTERN = /\b\d{10}\b/;
+
 export interface OCRResult {
   success: boolean;
   text: string;
@@ -64,13 +72,13 @@ function extractStructuredData(text: string): OCRResult['extractedData'] {
   };
 
   // Extract license number (Ethiopian format: starts with letters followed by numbers)
-  const licenseMatch = text.match(/[A-Z]{2,4}[\s-]?\d{5,10}/i);
+  const licenseMatch = text.match(ETHIOPIAN_LICENSE_PATTERN);
   if (licenseMatch) {
     data.licenseNumber = licenseMatch[0];
   }
 
   // Extract TIN number (Ethiopian TIN: 10 digits)
-  const tinMatch = text.match(/\b\d{10}\b/);
+  const tinMatch = text.match(ETHIOPIAN_TIN_PATTERN);
   if (tinMatch) {
     data.tinNumber = tinMatch[0];
   }
@@ -84,7 +92,7 @@ function extractStructuredData(text: string): OCRResult['extractedData'] {
   // Extract names (capitalized words that could be names)
   const nameMatches = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g);
   if (nameMatches) {
-    data.names = nameMatches.slice(0, 5); // Limit to first 5 potential names
+    data.names = nameMatches.slice(0, MAX_EXTRACTED_NAMES);
   }
 
   // Extract dates (various formats)
@@ -114,7 +122,7 @@ export async function verifyTradeLicense(imageUrl: string, expectedLicenseNumber
     matchesExpected = extracted.includes(expected) || expected.includes(extracted);
   }
 
-  const verified = ocrResult.success && ocrResult.confidence > 60 && (
+  const verified = ocrResult.success && ocrResult.confidence > MIN_CONFIDENCE_THRESHOLD && (
     !expectedLicenseNumber || matchesExpected
   );
 
@@ -140,7 +148,7 @@ export async function verifyTINCertificate(imageUrl: string, expectedTIN?: strin
     matchesExpected = ocrResult.extractedData.tinNumber === expectedTIN;
   }
 
-  const verified = ocrResult.success && ocrResult.confidence > 60 && (
+  const verified = ocrResult.success && ocrResult.confidence > MIN_CONFIDENCE_THRESHOLD && (
     !expectedTIN || matchesExpected
   );
 
@@ -150,6 +158,9 @@ export async function verifyTINCertificate(imageUrl: string, expectedTIN?: strin
     matchesExpected,
   };
 }
+
+// Business-related keywords for document verification
+const BUSINESS_KEYWORDS = ['business', 'registration', 'certificate', 'license', 'commercial'];
 
 /**
  * Verify business registration document
@@ -161,12 +172,11 @@ export async function verifyBusinessRegistration(imageUrl: string): Promise<{
   const ocrResult = await extractTextFromImage(imageUrl);
 
   // Basic verification: check if document contains business-related keywords
-  const businessKeywords = ['business', 'registration', 'certificate', 'license', 'commercial'];
-  const hasBusinessKeywords = businessKeywords.some(keyword => 
+  const hasBusinessKeywords = BUSINESS_KEYWORDS.some(keyword => 
     ocrResult.text.toLowerCase().includes(keyword)
   );
 
-  const verified = ocrResult.success && ocrResult.confidence > 60 && hasBusinessKeywords;
+  const verified = ocrResult.success && ocrResult.confidence > MIN_CONFIDENCE_THRESHOLD && hasBusinessKeywords;
 
   return {
     verified,

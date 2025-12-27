@@ -144,7 +144,14 @@ async function createDataExportHandler(request: Request): Promise<NextResponse> 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
 
-    const nextRunAt = isRecurring ? new Date() : undefined;
+    // Calculate next run time for recurring exports
+    let nextRunAt: Date | undefined;
+    if (isRecurring && recurringSchedule) {
+      // TODO: Use proper cron parser to calculate next run time
+      // For now, schedule for next day at the same time
+      nextRunAt = new Date();
+      nextRunAt.setDate(nextRunAt.getDate() + 1);
+    }
 
     const exportRequest = await prisma.dataExportRequest.create({
       data: {

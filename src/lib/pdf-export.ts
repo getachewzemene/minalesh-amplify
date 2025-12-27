@@ -5,16 +5,60 @@ import jsPDF from 'jspdf';
  * Converts user data to a formatted PDF document
  */
 
-interface ExportData {
-  user: any;
-  profile: any;
-  orders?: any[];
-  reviews?: any[];
-  addresses?: any[];
-  wishlists?: any[];
+interface UserData {
+  email?: string;
+  role?: string;
+  createdAt?: Date | string;
+}
+
+interface ProfileData {
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}
+
+interface OrderData {
+  id: string;
+  orderNumber?: string;
+  totalAmount?: number;
+  status?: string;
+}
+
+interface ReviewData {
+  rating?: number;
+}
+
+interface WishlistData {
+  product?: {
+    name?: string;
+    price?: number;
+  };
+}
+
+interface LoyaltyAccountData {
+  points?: number;
+  tier?: string;
+  transactions?: any[];
+}
+
+interface AddressData {
+  label?: string;
+  street?: string;
+  city?: string;
+  country?: string;
+}
+
+export interface ExportData {
+  user: UserData | null;
+  profile: ProfileData | null;
+  orders?: OrderData[];
+  reviews?: ReviewData[];
+  addresses?: AddressData[];
+  wishlists?: WishlistData[];
   preferences?: any;
   notificationPreferences?: any;
-  loyaltyAccount?: any;
+  loyaltyAccount?: LoyaltyAccountData | null;
 }
 
 export async function generatePDFExport(data: ExportData): Promise<Buffer> {
