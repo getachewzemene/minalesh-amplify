@@ -235,6 +235,15 @@ async function createDisputeHandler(request: Request): Promise<NextResponse> {
         false // isVendor
       );
       await queueEmail(customerEmail);
+    } else {
+      // Log warning if profiles are missing
+      const { logEvent } = await import('@/lib/logger');
+      logEvent('dispute_filed_notification_skipped', {
+        disputeId: dispute.id,
+        customerProfileMissing: !customerProfile,
+        vendorProfileMissing: !vendorProfile,
+        message: 'Email notification skipped due to missing profile data',
+      });
     }
 
     return NextResponse.json(

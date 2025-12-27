@@ -113,8 +113,8 @@ export async function GET(request: Request) {
             await queueEmail(customerEmail);
           }
 
-          // Notify admin (use configured admin email or a default)
-          const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM;
+          // Notify admin (use configured admin email)
+          const adminEmail = process.env.ADMIN_EMAIL;
           if (adminEmail) {
             const adminEmailTemplate = createDisputeEscalatedEmail(
               adminEmail,
@@ -124,6 +124,11 @@ export async function GET(request: Request) {
               true // isAdmin
             );
             await queueEmail(adminEmailTemplate);
+          } else {
+            logEvent('admin_email_not_configured', {
+              disputeId: dispute.id,
+              message: 'ADMIN_EMAIL not set, skipping admin notification',
+            });
           }
         }
 
