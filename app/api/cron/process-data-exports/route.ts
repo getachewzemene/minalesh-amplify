@@ -163,7 +163,23 @@ async function processDataExport(exportRequest: any): Promise<void> {
       },
     });
 
-    // TODO: Send email notification to user with download link
+    // Send email notification to user with download link
+    const user = await prisma.user.findUnique({
+      where: { id: exportRequest.userId },
+      select: { email: true },
+    });
+
+    if (user) {
+      const { queueEmail, createDataExportReadyEmail } = await import('@/lib/email');
+      const emailTemplate = createDataExportReadyEmail(
+        user.email,
+        downloadUrl,
+        exportRequest.expiresAt,
+        exportRequest.format
+      );
+      await queueEmail(emailTemplate);
+    }
+
     logEvent('data_export_completed', {
       requestId: exportRequest.id,
       userId: exportRequest.userId,
