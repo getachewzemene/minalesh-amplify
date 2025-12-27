@@ -17,6 +17,7 @@ import AdminShippingManagement from "@/page-components/AdminShippingManagement";
 import AdminOrdersManagement from "@/page-components/AdminOrdersManagement";
 import AdminVendorVerification from "@/page-components/AdminVendorVerification";
 import AdvancedAdminFeatures from "@/page-components/AdvancedAdminFeatures";
+import AdminDisputesManagement from "@/page-components/AdminDisputesManagement";
 import { 
   Users, 
   Store, 
@@ -385,12 +386,13 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 text-xs md:text-sm">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-10 text-xs md:text-sm">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="advanced">Advanced</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="vendors">Vendors</TabsTrigger>
+              <TabsTrigger value="disputes">Disputes</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="coupons">Coupons</TabsTrigger>
               <TabsTrigger value="shipping">Shipping</TabsTrigger>
@@ -513,6 +515,10 @@ export default function AdminDashboard() {
 
             <TabsContent value="vendors" className="space-y-6">
               <AdminVendorVerification />
+            </TabsContent>
+
+            <TabsContent value="disputes" className="space-y-6">
+              <AdminDisputesManagement />
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
