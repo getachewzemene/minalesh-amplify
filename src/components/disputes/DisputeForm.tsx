@@ -142,6 +142,7 @@ export function DisputeForm({ orderId, orderNumber, onSuccess, onCancel }: Dispu
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={5}
+              maxLength={1000}
               required
             />
             <p className="text-sm text-muted-foreground">

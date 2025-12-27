@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { AlertCircle, ArrowLeft, CheckCircle, ExternalLink, Package, User } from 'lucide-react';
 import Link from 'next/link';
@@ -115,10 +116,6 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
   }, [user, disputeId]);
 
   const handleCloseDispute = async () => {
-    if (!confirm('Are you sure you want to close this dispute?')) {
-      return;
-    }
-
     setActionLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
@@ -355,14 +352,27 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
                   <CardTitle className="text-base">Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleCloseDispute}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'Closing...' : 'Close Dispute'}
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        Close Dispute
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Close Dispute?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to close this dispute? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCloseDispute} disabled={actionLoading}>
+                          {actionLoading ? 'Closing...' : 'Close Dispute'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </CardContent>
               </Card>
             )}
