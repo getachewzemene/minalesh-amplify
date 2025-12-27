@@ -214,6 +214,18 @@ export default function Dashboard() {
     }
   }
 
+  const getVerificationStatusText = (status?: string) => {
+    if (status === 'pending') return 'Verification Pending'
+    if (status === 'rejected') return 'Verification Rejected'
+    return 'Not Verified'
+  }
+
+  const getVerificationButtonText = (status?: string) => {
+    if (status === 'rejected') return 'Resubmit Verification'
+    if (status === 'pending') return 'View Status'
+    return 'Start Verification'
+  }
+
   const handleAddProduct = async () => {
     // Check if vendor is verified
     if (!profile?.isVendor || profile?.vendorStatus !== 'approved') {
@@ -530,7 +542,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2">
                       <Badge variant="destructive">
                         <AlertCircle className="h-4 w-4 mr-1" />
-                        {profile?.vendorStatus === 'pending' ? 'Verification Pending' : profile?.vendorStatus === 'rejected' ? 'Verification Rejected' : 'Not Verified'}
+                        {getVerificationStatusText(profile?.vendorStatus)}
                       </Badge>
                       <Button 
                         variant="secondary" 
@@ -538,7 +550,7 @@ export default function Dashboard() {
                         onClick={handleVerifyVendor}
                         className="ml-2"
                       >
-                        {profile?.vendorStatus === 'rejected' ? 'Resubmit Verification' : profile?.vendorStatus === 'pending' ? 'View Status' : 'Start Verification'}
+                        {getVerificationButtonText(profile?.vendorStatus)}
                       </Button>
                     </div>
                   )}

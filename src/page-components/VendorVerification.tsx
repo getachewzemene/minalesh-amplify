@@ -45,6 +45,7 @@ export default function VendorVerification() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [verification, setVerification] = useState<VerificationData | null>(null)
+  const [showResubmitForm, setShowResubmitForm] = useState(false)
   const [tradeLicenseNumber, setTradeLicenseNumber] = useState("")
   const [tinNumber, setTinNumber] = useState("")
   
@@ -58,6 +59,17 @@ export default function VendorVerification() {
   useEffect(() => {
     fetchVerificationStatus()
   }, [])
+
+  // Cleanup blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(documents).forEach(doc => {
+        if (doc.preview) {
+          URL.revokeObjectURL(doc.preview)
+        }
+      })
+    }
+  }, [documents])
 
   const fetchVerificationStatus = async () => {
     setLoading(true)
@@ -109,6 +121,12 @@ export default function VendorVerification() {
         variant: "destructive",
       })
       return
+    }
+
+    // Revoke previous blob URL to prevent memory leak
+    const prevDoc = documents[documentType]
+    if (prevDoc.preview) {
+      URL.revokeObjectURL(prevDoc.preview)
     }
 
     // Create preview for images
@@ -266,8 +284,8 @@ export default function VendorVerification() {
   }
 
   const canSubmit = () => {
-    // Can submit if no verification exists OR if status is rejected
-    return !verification || verification.status === 'rejected'
+    // Can submit if no verification exists OR if status is rejected OR showing resubmit form
+    return !verification || verification.status === 'rejected' || showResubmitForm
   }
 
   const formatDate = (dateString?: string) => {
@@ -351,7 +369,7 @@ export default function VendorVerification() {
             {verification.status === 'rejected' && (
               <div className="mt-4">
                 <Button 
-                  onClick={() => setVerification(null)} 
+                  onClick={() => setShowResubmitForm(true)} 
                   variant="outline"
                   className="w-full md:w-auto"
                 >
