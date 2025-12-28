@@ -10,17 +10,17 @@ import { Container } from '@/components/ui/container'
 
 export default function AdminMonitoringPage() {
   const router = useRouter()
-  const { loading, user } = useAuth()
+  const { loading, user, profile } = useAuth()
 
   useEffect(() => {
     if (!loading) {
-      if (!user || user.role !== 'admin') {
+      if (!user || !profile?.isAdmin) {
         router.replace('/admin/login')
       }
     }
-  }, [loading, user, router])
+  }, [loading, user, profile, router])
 
-  if (loading || !user || user.role !== 'admin') {
+  if (loading || !user || !profile?.isAdmin) {
     return null
   }
 

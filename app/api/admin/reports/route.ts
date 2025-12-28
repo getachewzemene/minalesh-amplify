@@ -92,10 +92,10 @@ async function generateSalesReport(dateFilter: any) {
   const orders = await prisma.order.findMany({
     where: {
       createdAt: dateFilter,
-      status: { in: ['delivered', 'completed'] },
+      status: { in: ['delivered'] as const },
     },
     include: {
-      items: {
+      orderItems: {
         include: {
           product: {
             select: {
@@ -122,7 +122,7 @@ async function generateSalesReport(dateFilter: any) {
   const summary = {
     totalOrders: orders.length,
     totalRevenue: orders.reduce((sum, order) => sum + Number(order.totalAmount), 0),
-    totalItems: orders.reduce((sum, order) => sum + order.items.length, 0),
+    totalItems: orders.reduce((sum, order) => sum + order.orderItems.length, 0),
     averageOrderValue: 0,
     topProducts: [] as any[],
     salesByDay: {} as any,
@@ -135,7 +135,7 @@ async function generateSalesReport(dateFilter: any) {
   // Calculate top products
   const productSales: any = {};
   orders.forEach((order) => {
-    order.items.forEach((item) => {
+    order.orderItems.forEach((item) => {
       const productName = item.product.name;
       if (!productSales[productName]) {
         productSales[productName] = {
@@ -172,7 +172,7 @@ async function generateSalesReport(dateFilter: any) {
       orderNumber: order.orderNumber,
       date: order.createdAt,
       customer: order.user.email,
-      items: order.items.length,
+      items: order.orderItems.length,
       total: Number(order.totalAmount),
       status: order.status,
     })),
@@ -189,7 +189,7 @@ async function generateInventoryReport() {
         select: { name: true },
       },
       vendor: {
-        select: { businessName: true },
+        select: { displayName: true },
       },
     },
   });
@@ -226,7 +226,7 @@ async function generateInventoryReport() {
       name: product.name,
       sku: product.sku,
       category: product.category?.name,
-      vendor: product.vendor?.businessName,
+      vendor: product.vendor?.displayName,
       stock: product.stockQuantity,
       price: Number(product.price),
       stockValue: Number(product.price) * product.stockQuantity,
@@ -298,14 +298,14 @@ async function generateVendorsReport(dateFilter: any) {
   return {
     summary: {
       totalVendors: vendors.length,
-      approvedVendors: vendors.filter((v) => v.isApproved).length,
+      approvedVendors: vendors.filter((v) => v.vendorStatus === 'approved').length,
       totalProducts: vendors.reduce((sum, v) => sum + v.products.length, 0),
     },
     vendors: vendors.map((vendor) => ({
-      businessName: vendor.businessName,
+      businessName: vendor.displayName,
       email: vendor.user.email,
       tradeLicense: vendor.tradeLicense,
-      isApproved: vendor.isApproved,
+      isApproved: vendor.vendorStatus === 'approved',
       productCount: vendor.products.length,
       joinedAt: vendor.createdAt,
     })),
