@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Container } from "@/components/ui/container"
@@ -16,7 +17,7 @@ export default function AuthLogin() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, profile, logout } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -34,15 +35,24 @@ export default function AuthLogin() {
     const success = await login(email, password)
     
     if (success) {
+      // Block admin accounts from using vendor/customer login
+      if (profile?.isAdmin) {
+        toast.error("Admin accounts must use the Admin Login page")
+        await logout()
+        router.push('/admin/login')
+        setIsLoading(false)
+        return
+      }
+
       // Refresh router to ensure cookies are synced
       router.refresh()
       
       // Redirect to the originally requested page or default to home
       const next = searchParams.get('next')
       const redirectUrl = 
-        isValidRedirectUrl(next) && !next.startsWith('/admin') 
-          ? next 
-          : '/'
+        isValidRedirectUrl(next) && !next.startsWith('/admin')
+          ? next
+          : (profile?.isVendor ? '/vendor/dashboard' : '/')
       router.push(redirectUrl)
     }
     
@@ -55,8 +65,8 @@ export default function AuthLogin() {
       <main className="py-16">
         <Container className="max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to your account</p>
+            <h1 className="text-3xl font-bold mb-2">Vendor Login</h1>
+            <p className="text-muted-foreground">Sign in to access vendor tools</p>
           </div>
           
           <form onSubmit={onSubmit} className="space-y-6" aria-label="Login form">
