@@ -127,6 +127,10 @@ export default function AuthLogin() {
               )}
             </Button>
 
+            <p className="text-center text-sm text-muted-foreground">
+              New vendors should register first.
+            </p>
+
             <div className="text-center space-y-4">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
@@ -138,12 +142,12 @@ export default function AuthLogin() {
                 </Link>
               </p>
               <p className="text-sm text-muted-foreground">
-                Administrator?{" "}
+                Vendor?{" "}
                 <Link 
-                  href="/admin/login" 
+                  href="/auth/register-vendor" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
-                  Admin Login
+                  Vendor Registration
                 </Link>
               </p>
               <div className="text-xs text-muted-foreground">
