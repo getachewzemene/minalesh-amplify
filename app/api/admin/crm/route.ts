@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         orders: {
           where: {
             status: {
-              in: ['delivered', 'completed'],
+              in: ['delivered'] as const,
             },
           },
           select: {

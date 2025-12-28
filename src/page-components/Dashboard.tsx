@@ -72,6 +72,7 @@ import {
 import { formatCurrency } from "@/lib/utils"
 import heroImage from "@/assets/hero-marketplace.jpg"
 import VendorAdvancedDashboard from "./VendorAdvancedDashboard"
+import EnhancedAnalytics from "@/components/vendor/EnhancedAnalytics"
 
 // TypeScript interfaces for API responses
 interface VendorStatement {
@@ -742,105 +743,7 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'analytics' && (
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Sales Chart */}
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Sales Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={mockMetrics.salesData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="date" className="text-xs" />
-                        <YAxis className="text-xs" />
-                        <ChartTooltip 
-                          content={<ChartTooltipContent 
-                            formatter={(value, name) => [
-                              formatCurrency(typeof value === 'number' ? value : 0),
-                              name
-                            ]}
-                          />} 
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="sales"
-                          stroke="hsl(var(--primary))"
-                          fill="hsl(var(--primary))"
-                          fillOpacity={0.3}
-                          name="Sales"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              {/* Product Performance */}
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Product Performance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RBarChart data={mockMetrics.productPerformance.slice(0, 6)}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="name" className="text-xs" angle={-45} textAnchor="end" height={100} />
-                        <YAxis className="text-xs" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <ChartLegend content={<ChartLegendContent />} />
-                        <Bar dataKey="sales" fill="hsl(var(--primary))" name="Units Sold" />
-                      </RBarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              {/* Conversion Rates */}
-              <Card className="bg-gradient-card shadow-card lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChart className="h-5 w-5" />
-                    Conversion Rates by Product
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RPieChart>
-                        <Pie
-                          data={mockMetrics.productPerformance.slice(0, 5)}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          dataKey="conversion"
-                          nameKey="name"
-                          label={({ name, value }) => `${name}: ${value}%`}
-                        >
-                          {mockMetrics.productPerformance.slice(0, 5).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip 
-                          content={<ChartTooltipContent 
-                            formatter={(value, name) => [`${value}%`, `${name} conversion`]}
-                          />} 
-                        />
-                        <ChartLegend content={<ChartLegendContent />} />
-                      </RPieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </div>
+            <EnhancedAnalytics />
           )}
 
           {activeTab === 'products' && (

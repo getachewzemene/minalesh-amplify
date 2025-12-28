@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       prisma.order.aggregate({
         where: {
           createdAt: { gte: todayStart },
-          status: { in: ['confirmed', 'processing', 'shipped', 'delivered', 'completed'] },
+          status: { in: ['confirmed', 'processing', 'shipped', 'delivered'] as const },
         },
         _sum: { totalAmount: true },
       }),
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
       prisma.profile.count({
         where: {
           user: { role: 'vendor' },
-          isApproved: false,
+          vendorStatus: 'pending',
         },
       }),
       

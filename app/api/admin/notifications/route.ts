@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
         stockQuantity: true,
         vendor: {
           select: {
-            businessName: true,
+            displayName: true,
           },
         },
       },
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
           productId: product.id,
           productName: product.name,
           stock: product.stockQuantity,
-          vendor: product.vendor?.businessName,
+          vendor: product.vendor?.displayName,
         },
         timestamp: now.toISOString(),
         actionUrl: `/admin/dashboard?tab=products&productId=${product.id}`,
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     const pendingVendors = await prisma.profile.count({
       where: {
         user: { role: 'vendor' },
-        isApproved: false,
+        vendorStatus: 'pending',
       },
     });
 
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
     // Check for failed payments in last 24 hours
     const failedPayments = await prisma.order.count({
       where: {
-        status: 'payment_failed',
+        status: 'cancelled',
         updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
       },
     });
