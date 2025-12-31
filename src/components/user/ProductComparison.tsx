@@ -87,9 +87,18 @@ export function ProductComparison() {
             </CardTitle>
             <CardDescription>Compare up to {MAX_COMPARE} products</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={clearAll}>
-            Clear All
-          </Button>
+          <div className="flex gap-2">
+            {compareProducts.length >= 2 && (
+              <Button asChild>
+                <Link href={`/products/compare?ids=${compareProducts.map(p => p.id).join(',')}`}>
+                  View Full Comparison
+                </Link>
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={clearAll}>
+              Clear All
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

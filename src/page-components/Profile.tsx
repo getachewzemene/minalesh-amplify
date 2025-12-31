@@ -19,12 +19,13 @@ import {
   Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned,
   Heart, Clock, Star, ShoppingBag, Bell, Shield, Store, Eye,
   TrendingUp, Search, CreditCard, Gift, History, Settings, GitCompare,
-  Download, Trash2, Database
+  Download, Trash2, Database, Share2
 } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
 import { LoyaltyRewards } from "@/components/user/LoyaltyRewards"
 import { ProductComparison } from "@/components/user/ProductComparison"
+import { ReferralModal } from "@/components/user/ReferralModal"
 
 interface ProductRecommendation {
   id: string
@@ -85,6 +86,7 @@ export default function Profile() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [loadingRecommendations, setLoadingRecommendations] = useState(true)
   const [loadingRecentlyViewed, setLoadingRecentlyViewed] = useState(true)
+  const [referralModalOpen, setReferralModalOpen] = useState(false)
 
   // Fetch recommendations
   useEffect(() => {
@@ -767,7 +769,69 @@ export default function Profile() {
               <TabsContent value="rewards" className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <LoyaltyRewards userId={user?.id} />
+                  
+                  {/* Referral Program Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Share2 className="h-5 w-5" />
+                        Referral Program
+                      </CardTitle>
+                      <CardDescription>
+                        Invite friends and earn rewards when they make their first purchase
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Share your unique referral code with friends
+                          </p>
+                          <p className="text-sm font-medium">
+                            Earn 200 bonus points for each successful referral
+                          </p>
+                        </div>
+                        <Button onClick={() => setReferralModalOpen(true)}>
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Share Referral Code
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Gift Cards Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Gift className="h-5 w-5" />
+                        Gift Cards
+                      </CardTitle>
+                      <CardDescription>
+                        Purchase gift cards for yourself or others
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Send the perfect gift with Minalesh gift cards
+                          </p>
+                          <p className="text-sm font-medium">
+                            Available in amounts from 50 to 10,000 ETB
+                          </p>
+                        </div>
+                        <Link href="/gift-cards">
+                          <Button>
+                            <Gift className="h-4 w-4 mr-2" />
+                            Manage Gift Cards
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <ProductComparison />
+                </div>
                 </div>
               </TabsContent>
 
@@ -883,6 +947,7 @@ export default function Profile() {
         </Container>
       </main>
       <Footer />
+      <ReferralModal open={referralModalOpen} onOpenChange={setReferralModalOpen} />
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { NotificationCenter } from "./notifications/NotificationCenter"
 import { Container } from "./ui/container"
 import { OfflineBadge } from "./ui/offline-indicator"
 import { SearchWithAutocomplete } from "./search/SearchWithAutocomplete"
+import { LoyaltyBadge } from "./user/LoyaltyBadge"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
@@ -83,6 +84,7 @@ export function Navbar() {
             {/* Desktop actions */}
             <div className="hidden md:flex items-center space-x-2">
               <NotificationCenter />
+              <LoyaltyBadge />
               {showWishlistAndCart && (
                 <>
                   <Button variant="ghost" size="icon" onClick={() => router.push('/wishlist')} className="relative">
@@ -110,6 +112,7 @@ export function Navbar() {
                     <DropdownMenuItem onClick={() => router.push('/profile')}>Profile</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/addresses')}>Addresses</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/orders')}>Orders</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/gift-cards')}>Gift Cards</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
                     {profile?.isAdmin && (
                       <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>Admin Dashboard</DropdownMenuItem>
