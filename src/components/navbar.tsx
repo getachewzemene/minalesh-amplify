@@ -112,6 +112,7 @@ export function Navbar() {
                     <DropdownMenuItem onClick={() => router.push('/profile')}>Profile</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/addresses')}>Addresses</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/orders')}>Orders</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/gift-cards')}>Gift Cards</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
                     {profile?.isAdmin && (
                       <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>Admin Dashboard</DropdownMenuItem>
