@@ -325,7 +325,11 @@ export default function Product() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => displayProduct.vendor?.id && router.push(`/vendor/store/${displayProduct.vendor.id}`)}
+                    onClick={() => {
+                      if (displayProduct.vendor?.id) {
+                        router.push(`/vendor/store/${displayProduct.vendor.id}`)
+                      }
+                    }}
                   >
                     View Store
                   </Button>

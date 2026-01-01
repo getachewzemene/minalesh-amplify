@@ -26,7 +26,6 @@ import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBlurDataURL } from "@/lib/image-utils"
-import phoneImg from "@/assets/products/phone.jpg"
 
 interface VendorProfile {
   id: string
