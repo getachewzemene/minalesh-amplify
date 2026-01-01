@@ -19,6 +19,13 @@ export function Footer() {
       return
     }
 
+    // Simple email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       // TODO: Implement newsletter signup API
@@ -27,7 +34,9 @@ export function Footer() {
       toast.success('Successfully subscribed to newsletter!')
       setEmail('')
     } catch (error) {
-      toast.error('Failed to subscribe. Please try again.')
+      console.error('Newsletter signup error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to subscribe. Please try again.'
+      toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
