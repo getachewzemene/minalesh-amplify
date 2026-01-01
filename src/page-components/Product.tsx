@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Star, Heart, Share2, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -59,6 +59,7 @@ interface ProductData {
 
 export default function Product() {
   const params = useParams()
+  const router = useRouter()
   const productId = params?.id as string
   
   const [selectedImage, setSelectedImage] = useState(0)
@@ -321,7 +322,11 @@ export default function Product() {
                       </div>
                     )}
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => displayProduct.vendor?.id && router.push(`/vendor/store/${displayProduct.vendor.id}`)}
+                  >
                     View Store
                   </Button>
                 </div>
