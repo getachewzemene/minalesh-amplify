@@ -3,6 +3,7 @@ import { jwtVerify } from 'jose'
 
 const ADMIN_PREFIX = '/admin'
 const VENDOR_PREFIX = '/vendor'
+const VENDOR_STORE_PREFIX = '/vendor/store' // Public vendor store pages
 const AUTH_COOKIE = 'auth_token'
 
 async function verifyJWT(token: string) {
@@ -19,8 +20,14 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX)
-  const isVendorRoute = pathname.startsWith(VENDOR_PREFIX)
+  const isVendorStoreRoute = pathname.startsWith(VENDOR_STORE_PREFIX)
+  const isVendorRoute = pathname.startsWith(VENDOR_PREFIX) && !isVendorStoreRoute
   const isAdminLogin = pathname === '/admin/login'
+
+  // Allow vendor store pages to be accessed publicly (customer-facing)
+  if (isVendorStoreRoute) {
+    return NextResponse.next()
+  }
 
   // Allow non-authentication-required routes to pass through
   if (!isAdminRoute && !isVendorRoute) {
