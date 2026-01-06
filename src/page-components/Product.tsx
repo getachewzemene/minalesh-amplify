@@ -25,6 +25,9 @@ import { ProductQA } from "@/components/product/ProductQA"
 import { StockAlert } from "@/components/product/StockAlert"
 import { RecentlyViewedProducts, trackProductView } from "@/components/product/RecentlyViewedProducts"
 import { DeliveryEstimator } from "@/components/product/DeliveryEstimator"
+import { SocialShare } from "@/components/social/SocialShare"
+import { PriceAlertButton } from "@/components/product/PriceAlertButton"
+import { trackViewItem } from "@/components/analytics/GoogleAnalytics"
 
 interface ProductData {
   id: string
@@ -94,6 +97,14 @@ export default function Product() {
             salePrice: data.product.salePrice,
             image: productImages[0] || '/placeholder-product.jpg'
           })
+          
+          // Track Google Analytics view_item event
+          trackViewItem(
+            data.product.id,
+            data.product.name,
+            data.product.salePrice || data.product.price,
+            data.product.category?.name
+          )
         } else if (response.status === 404) {
           setError('Product not found')
         } else {
@@ -419,10 +430,20 @@ export default function Product() {
                   >
                     <Heart className="h-5 w-5" />
                   </Button>
-                  <Button variant="outline" size="lg">
-                    <Share2 className="h-5 w-5" />
-                  </Button>
+                  <SocialShare
+                    title={displayProduct.name}
+                    description={displayProduct.shortDescription || displayProduct.description || `Check out ${displayProduct.name} on Minalesh`}
+                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                    imageUrl={firstImage}
+                  />
                 </div>
+
+                {/* Price Alert */}
+                <PriceAlertButton
+                  productId={displayProduct.id}
+                  productName={displayProduct.name}
+                  currentPrice={currentPrice}
+                />
               </div>
 
               {/* Features */}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { formatCurrency } from "@/lib/utils"
+import { STORAGE_KEYS, PRODUCT_LIMITS } from "@/lib/product-constants"
 
 interface ViewedProduct {
   id: string

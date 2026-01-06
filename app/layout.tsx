@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/auth-context"
 import { LanguageProvider } from "@/context/language-context"
 import { ShopProvider } from "@/context/shop-context"
 import { AIHelper } from "@/components/ai-helper"
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics"
 import '@/index.css'
 import Providers from './providers'
 
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <GoogleAnalytics />
         <Providers>
           <TooltipProvider>
             <LanguageProvider>
