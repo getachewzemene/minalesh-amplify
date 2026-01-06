@@ -23,6 +23,7 @@ import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { AdvancedSearch } from "@/components/search/AdvancedSearch"
+import { SaveSearchButton } from "@/components/search/SaveSearchButton"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { LoadingState, ProductCardSkeleton } from "@/components/ui/loading-state"
 import { ErrorState } from "@/components/ui/error-state"
@@ -322,16 +323,19 @@ function ProductsContent() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl md:text-4xl font-bold">All Products</h1>
-              <Button
-                onClick={handleRefresh}
-                disabled={loading}
-                variant="outline"
-                size="default"
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
+              <div className="flex items-center gap-2">
+                <SaveSearchButton />
+                <Button
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  variant="outline"
+                  size="default"
+                  className="gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </div>
             <AdvancedSearch />
           </div>
