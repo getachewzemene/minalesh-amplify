@@ -17,6 +17,9 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/utils'
 
+// Suggested discount percentages for quick price selection
+const SUGGESTED_DISCOUNTS = [0.10, 0.20, 0.30] // 10%, 20%, 30% off
+
 interface PriceAlertButtonProps {
   productId: string
   productName: string
@@ -74,11 +77,9 @@ export function PriceAlertButton({
     }
   }
 
-  const suggestedPrices = [
-    Math.round(currentPrice * 0.9), // 10% off
-    Math.round(currentPrice * 0.8), // 20% off
-    Math.round(currentPrice * 0.7), // 30% off
-  ].filter(price => price > 0)
+  const suggestedPrices = SUGGESTED_DISCOUNTS
+    .map(discount => Math.round(currentPrice * (1 - discount)))
+    .filter(price => price > 0)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

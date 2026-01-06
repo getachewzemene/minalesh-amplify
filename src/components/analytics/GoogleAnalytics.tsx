@@ -60,11 +60,20 @@ function GoogleAnalyticsInner({ measurementId }: GoogleAnalyticsProps) {
   )
 }
 
+// Validate Google Analytics measurement ID format
+function isValidGAId(id: string): boolean {
+  // GA4 format: G-XXXXXXXXXX or UA-XXXXXXXX-X
+  const ga4Pattern = /^G-[A-Z0-9]{10,12}$/
+  const uaPattern = /^UA-\d{4,10}-\d{1,4}$/
+  return ga4Pattern.test(id) || uaPattern.test(id)
+}
+
 // Main component with Suspense boundary
 export function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps) {
   const gaId = measurementId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
-  if (!gaId) return null
+  // Validate ID format for security
+  if (!gaId || !isValidGAId(gaId)) return null
 
   return (
     <Suspense fallback={null}>

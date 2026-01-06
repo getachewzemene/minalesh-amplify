@@ -30,6 +30,10 @@ export function SaveSearchButton({ className }: SaveSearchButtonProps) {
 
   const query = searchParams.get('q') || ''
   const hasActiveSearch = query.length > 0 || Array.from(searchParams.entries()).length > 0
+  
+  // Check if there are active filters (excluding q and page params)
+  const hasActiveFilters = Object.keys(Object.fromEntries(searchParams.entries()))
+    .filter(k => k !== 'q' && k !== 'page').length > 0
 
   const handleSaveSearch = async () => {
     if (!searchName.trim()) {
@@ -119,7 +123,7 @@ export function SaveSearchButton({ className }: SaveSearchButtonProps) {
             <p className="font-medium">
               {query ? `"${query}"` : 'All Products'}
             </p>
-            {Object.keys(Object.fromEntries(searchParams.entries())).filter(k => k !== 'q' && k !== 'page').length > 0 && (
+            {hasActiveFilters && (
               <p className="text-xs text-muted-foreground mt-1">
                 + filters applied
               </p>

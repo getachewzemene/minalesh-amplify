@@ -124,13 +124,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Limit number of saved searches per user
+    const MAX_SAVED_SEARCHES_PER_USER = 20
     const existingCount = await prisma.savedSearch.count({
       where: { userId: user.userId },
     })
 
-    if (existingCount >= 20) {
+    if (existingCount >= MAX_SAVED_SEARCHES_PER_USER) {
       return NextResponse.json(
-        { error: 'Maximum number of saved searches (20) reached. Please delete some to save new ones.' },
+        { error: `Maximum number of saved searches (${MAX_SAVED_SEARCHES_PER_USER}) reached. Please delete some to save new ones.` },
         { status: 400 }
       )
     }

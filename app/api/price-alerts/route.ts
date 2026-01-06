@@ -2,10 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import prisma from '@/lib/prisma'
+import { JsonValue } from '@prisma/client/runtime/library'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
 )
+
+const PLACEHOLDER_IMAGE = '/placeholder-product.jpg'
+
+/**
+ * Extract the first image URL from a product's images field
+ * Handles both array and JSON string formats
+ */
+function getFirstImageUrl(images: JsonValue): string {
+  if (Array.isArray(images) && images.length > 0) {
+    return String(images[0])
+  }
+  if (typeof images === 'string') {
+    try {
+      const parsed = JSON.parse(images)
+      return Array.isArray(parsed) && parsed.length > 0 ? String(parsed[0]) : PLACEHOLDER_IMAGE
+    } catch {
+      return PLACEHOLDER_IMAGE
+    }
+  }
+  return PLACEHOLDER_IMAGE
+}
 
 async function verifyAuth(req: NextRequest) {
   const cookieStore = await cookies()
@@ -74,36 +96,25 @@ export async function GET(req: NextRequest) {
 
     const productMap = new Map(products.map(p => [p.id, p]))
 
-    const alertsWithProducts = priceAlerts.map(alert => ({
-      id: alert.id,
-      targetPrice: Number(alert.targetPrice),
-      isActive: alert.isActive,
-      triggered: alert.triggered,
-      triggeredAt: alert.triggeredAt,
-      createdAt: alert.createdAt,
-      product: productMap.get(alert.productId) ? {
-        id: productMap.get(alert.productId)!.id,
-        name: productMap.get(alert.productId)!.name,
-        slug: productMap.get(alert.productId)!.slug,
-        price: Number(productMap.get(alert.productId)!.price),
-        salePrice: productMap.get(alert.productId)!.salePrice ? Number(productMap.get(alert.productId)!.salePrice) : null,
-        image: (() => {
-          const images = productMap.get(alert.productId)!.images
-          if (Array.isArray(images) && images.length > 0) {
-            return images[0]
-          }
-          if (typeof images === 'string') {
-            try {
-              const parsed = JSON.parse(images)
-              return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : '/placeholder-product.jpg'
-            } catch {
-              return '/placeholder-product.jpg'
-            }
-          }
-          return '/placeholder-product.jpg'
-        })(),
-      } : null,
-    }))
+    const alertsWithProducts = priceAlerts.map(alert => {
+      const product = productMap.get(alert.productId)
+      return {
+        id: alert.id,
+        targetPrice: Number(alert.targetPrice),
+        isActive: alert.isActive,
+        triggered: alert.triggered,
+        triggeredAt: alert.triggeredAt,
+        createdAt: alert.createdAt,
+        product: product ? {
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: Number(product.price),
+          salePrice: product.salePrice ? Number(product.salePrice) : null,
+          image: getFirstImageUrl(product.images),
+        } : null,
+      }
+    })
 
     return NextResponse.json({ alerts: alertsWithProducts })
   } catch (error) {
