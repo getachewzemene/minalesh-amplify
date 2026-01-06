@@ -26,6 +26,8 @@ import Image from "next/image"
 import { LoyaltyRewards } from "@/components/user/LoyaltyRewards"
 import { ProductComparison } from "@/components/user/ProductComparison"
 import { ReferralModal } from "@/components/user/ReferralModal"
+import { SavedSearches } from "@/components/user/SavedSearches"
+import { PriceAlerts } from "@/components/user/PriceAlerts"
 
 interface ProductRecommendation {
   id: string
@@ -831,7 +833,12 @@ export default function Profile() {
                   </Card>
 
                   <ProductComparison />
-                </div>
+
+                  {/* Price Alerts */}
+                  <PriceAlerts />
+
+                  {/* Saved Searches */}
+                  <SavedSearches />
                 </div>
               </TabsContent>
 
