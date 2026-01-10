@@ -105,6 +105,8 @@ model User {
   emailSubscriptions      EmailSubscription[]
   premiumSubscription     PremiumSubscription?
   productSubscriptions    ProductSubscription[]
+  savedSearches           SavedSearch[]
+  priceAlerts             PriceAlert[]
 
   @@map("users")
 }
@@ -225,6 +227,7 @@ model Product {
   reservations  InventoryReservation[]
   media         Media[]
   productSubscriptions ProductSubscription[]
+  priceAlerts   PriceAlert[]
 
   @@map("products")
 }
@@ -1528,4 +1531,47 @@ model DeploymentRecord {
   @@index([status])
   @@index([startedAt])
   @@map("deployment_records")
+}
+
+// ============================================
+// Price Alerts & Saved Searches
+// ============================================
+
+// Saved Search for users to save their favorite search queries
+model SavedSearch {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  query     String
+  filters   Json     @default("{}") // category, price range, rating, etc.
+  notifyNew Boolean  @default(false) @map("notify_new") // Email digest of new matching products
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_searches")
+}
+
+// Price Alert for users to track price drops
+model PriceAlert {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  targetPrice Decimal   @map("target_price") @db.Decimal(10, 2)
+  isActive    Boolean   @default(true) @map("is_active")
+  triggered   Boolean   @default(false)
+  triggeredAt DateTime? @map("triggered_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@index([isActive, triggered])
+  @@map("price_alerts")
 }

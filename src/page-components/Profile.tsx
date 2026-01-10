@@ -832,7 +832,6 @@ export default function Profile() {
 
                   <ProductComparison />
                 </div>
-                </div>
               </TabsContent>
 
               {/* Privacy & Data Tab */}
