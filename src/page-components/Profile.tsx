@@ -19,13 +19,15 @@ import {
   Upload, User, Mail, Phone, MapPin, FileText, Package, MapPinned,
   Heart, Clock, Star, ShoppingBag, Bell, Shield, Store, Eye,
   TrendingUp, Search, CreditCard, Gift, History, Settings, GitCompare,
-  Download, Trash2, Database, Share2
+  Download, Trash2, Database, Share2, Bookmark
 } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
 import { LoyaltyRewards } from "@/components/user/LoyaltyRewards"
 import { ProductComparison } from "@/components/user/ProductComparison"
 import { ReferralModal } from "@/components/user/ReferralModal"
+import { PriceAlertsList } from "@/components/user/PriceAlertsList"
+import { SavedSearchesList } from "@/components/user/SavedSearches"
 
 interface ProductRecommendation {
   id: string
@@ -421,6 +423,12 @@ export default function Profile() {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Price Alerts */}
+                <PriceAlertsList />
+
+                {/* Saved Searches */}
+                <SavedSearchesList />
               </TabsContent>
 
               {/* Profile Tab */}
@@ -831,7 +839,6 @@ export default function Profile() {
                   </Card>
 
                   <ProductComparison />
-                </div>
                 </div>
               </TabsContent>
 

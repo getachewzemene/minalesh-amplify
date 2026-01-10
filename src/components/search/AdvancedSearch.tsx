@@ -21,6 +21,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useRouter, usePathname } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { SearchWithAutocomplete } from "./SearchWithAutocomplete";
+import { SaveSearchButton } from "@/components/user/SavedSearches";
+import { useAuth } from "@/context/auth-context";
 
 interface SearchFilters {
   query: string;
@@ -86,6 +88,7 @@ export function AdvancedSearch() {
   const [appliedFiltersCount, setAppliedFiltersCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Parse URL parameters on component mount (client-side only)
@@ -423,6 +426,24 @@ export function AdvancedSearch() {
             </div>
           </DialogContent>
         </Dialog>
+        {/* Save Search Button - shown when logged in and has query or filters */}
+        {user && (filters.query || appliedFiltersCount > 0) && (
+          <SaveSearchButton 
+            query={filters.query || 'All Products'} 
+            filters={{
+              category: filters.category !== 'all' ? filters.category : undefined,
+              brand: filters.brand || undefined,
+              minPrice: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
+              maxPrice: filters.priceRange[1] < 200000 ? filters.priceRange[1] : undefined,
+              rating: filters.rating > 0 ? filters.rating : undefined,
+              vendor: filters.vendor || undefined,
+              location: filters.location || undefined,
+              inStock: filters.inStock || undefined,
+              hasAR: filters.hasAR || undefined,
+              isVerified: filters.isVerified || undefined,
+            }}
+          />
+        )}
       </div>
 
       {/* Applied Filters */}

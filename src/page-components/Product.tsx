@@ -25,6 +25,8 @@ import { ProductQA } from "@/components/product/ProductQA"
 import { StockAlert } from "@/components/product/StockAlert"
 import { RecentlyViewedProducts, trackProductView } from "@/components/product/RecentlyViewedProducts"
 import { DeliveryEstimator } from "@/components/product/DeliveryEstimator"
+import { PriceAlertButton } from "@/components/user/PriceAlertButton"
+import { useAuth } from "@/context/auth-context"
 
 interface ProductData {
   id: string
@@ -70,6 +72,7 @@ export default function Product() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { addToCart, addToWishlist } = useShop()
+  const { user } = useAuth()
 
   // Fetch product data from API
   useEffect(() => {
@@ -419,6 +422,13 @@ export default function Product() {
                   >
                     <Heart className="h-5 w-5" />
                   </Button>
+                  <PriceAlertButton
+                    productId={displayProduct.id}
+                    productName={displayProduct.name}
+                    currentPrice={currentPrice}
+                    isLoggedIn={!!user}
+                    onLoginRequired={() => router.push('/auth/login?redirect=' + encodeURIComponent(window.location.pathname))}
+                  />
                   <Button variant="outline" size="lg">
                     <Share2 className="h-5 w-5" />
                   </Button>

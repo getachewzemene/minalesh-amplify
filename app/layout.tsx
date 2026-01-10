@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/auth-context"
 import { LanguageProvider } from "@/context/language-context"
 import { ShopProvider } from "@/context/shop-context"
 import { AIHelper } from "@/components/ai-helper"
+import { GoogleAnalytics } from "@/components/analytics"
 import '@/index.css'
 import Providers from './providers'
 
@@ -39,6 +40,7 @@ export default function RootLayout({
                 <ShopProvider>
                   {children}
                   <AIHelper />
+                  <GoogleAnalytics />
                   <Toaster />
                   <Sonner />
                 </ShopProvider>
