@@ -49,6 +49,23 @@ New Prisma models added:
 - `SubscriptionOrder` - Links subscriptions to orders
 - `SubscriptionPayment` - Premium subscription payment history
 
+### UI Components
+
+#### User-Facing Components
+- `PremiumSubscriptionCard` (`src/components/subscriptions/`) - Premium membership signup and management card
+- `ProductSubscriptionsList` (`src/components/subscriptions/`) - List of product subscriptions with actions
+- `SubscribeAndSaveButton` (`src/components/subscriptions/`) - Button for product pages
+
+#### Admin Components
+- `AdminSubscriptionAnalytics` (`src/page-components/`) - Subscription analytics dashboard
+
+### Pages
+
+| Route | Description |
+|-------|-------------|
+| `/subscriptions` | User subscription management (Premium + Subscribe & Save) |
+| `/admin/subscriptions` | Admin subscription analytics and management |
+
 ### API Endpoints
 
 #### Premium Subscription
@@ -149,6 +166,16 @@ Backup management system for tracking and scheduling database backups.
 - Storage usage tracking
 - Backup integrity verification
 - Automated cleanup of expired backups
+
+### UI Components
+
+- `AdminBackupManagement` (`src/page-components/`) - Backup management admin panel
+
+### Pages
+
+| Route | Description |
+|-------|-------------|
+| `/admin/backups` | Admin backup management dashboard |
 
 ### Database Models
 
@@ -273,6 +300,16 @@ Controlled rollout system for new features.
 - User targeting (specific user IDs)
 - Role-based targeting
 - Complex conditions support
+
+### UI Components
+
+- `AdminFeatureFlagsManagement` (`src/page-components/`) - Feature flags management panel
+
+### Pages
+
+| Route | Description |
+|-------|-------------|
+| `/admin/feature-flags` | Admin feature flags management |
 
 ### Database Models
 
