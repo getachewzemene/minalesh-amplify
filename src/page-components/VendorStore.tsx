@@ -26,6 +26,7 @@ import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBlurDataURL } from "@/lib/image-utils"
+import { SellerRatingsDisplay } from "@/components/seller-ratings"
 
 interface VendorProfile {
   id: string
@@ -321,6 +322,11 @@ function VendorStoreContent() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Seller Ratings Section */}
+        <div className="mb-8">
+          <SellerRatingsDisplay vendorId={vendorId} maxRatings={5} />
         </div>
 
         {/* Products Section */}

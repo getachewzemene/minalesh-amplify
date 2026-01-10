@@ -6,11 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, MapPin, Package } from 'lucide-react'
+import { ArrowLeft, MapPin, Package, Star } from 'lucide-react'
 import { format } from 'date-fns'
 import OrderTrackingTimeline from '@/components/orders/OrderTrackingTimeline'
 import { formatCurrency } from '@/lib/utils'
 import Image from 'next/image'
+import { SellerRatingForm } from '@/components/seller-ratings'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 interface OrderItem {
   id: string
@@ -18,8 +26,13 @@ interface OrderItem {
   productName: string
   price: number
   quantity: number
+  vendorId: string
   product: {
     images: string[]
+  }
+  vendor: {
+    id: string
+    displayName: string
   }
 }
 
@@ -47,6 +60,11 @@ interface Order {
   orderItems: OrderItem[]
 }
 
+interface ExistingRating {
+  vendorId: string
+  hasRated: boolean
+}
+
 export default function OrderDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -54,6 +72,8 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [existingRatings, setExistingRatings] = useState<Map<string, boolean>>(new Map())
+  const [ratingDialogOpen, setRatingDialogOpen] = useState<string | null>(null)
 
   useEffect(() => {
     if (orderId) {
@@ -80,11 +100,56 @@ export default function OrderDetailPage() {
 
       const data = await response.json()
       setOrder(data)
+      
+      // Check which vendors have already been rated for this order
+      if (data.status === 'delivered') {
+        checkExistingRatings(data.orderItems)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
+  }
+
+  const checkExistingRatings = async (orderItems: OrderItem[]) => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      // Get unique vendor IDs
+      const vendorIds = [...new Set(orderItems.map(item => item.vendorId))]
+      
+      const ratingsMap = new Map<string, boolean>()
+      
+      // For each vendor, check if a rating exists for this order
+      for (const vendorId of vendorIds) {
+        const response = await fetch(
+          `/api/seller-ratings?vendorId=${vendorId}&orderId=${orderId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          // Check if any of the ratings is for this specific order
+          const hasRated = data.ratings?.some((r: { orderId?: string }) => r.orderId === orderId) || false
+          ratingsMap.set(vendorId, hasRated)
+        } else {
+          ratingsMap.set(vendorId, false)
+        }
+      }
+      
+      setExistingRatings(ratingsMap)
+    } catch (err) {
+      console.error('Error checking existing ratings:', err)
+    }
+  }
+
+  const handleRatingSuccess = (vendorId: string) => {
+    setExistingRatings(prev => new Map(prev).set(vendorId, true))
+    setRatingDialogOpen(null)
   }
 
   const getStatusColor = (status: string) => {
@@ -105,6 +170,18 @@ export default function OrderDetailPage() {
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  // Get unique vendors from order items
+  const getUniqueVendors = () => {
+    if (!order) return []
+    const vendorMap = new Map<string, { id: string; displayName: string }>()
+    order.orderItems.forEach(item => {
+      if (item.vendor && !vendorMap.has(item.vendor.id)) {
+        vendorMap.set(item.vendor.id, item.vendor)
+      }
+    })
+    return Array.from(vendorMap.values())
   }
 
   if (loading) {
@@ -140,6 +217,9 @@ export default function OrderDetailPage() {
       </div>
     )
   }
+
+  const uniqueVendors = getUniqueVendors()
+  const canRateSellers = order.status === 'delivered'
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
@@ -187,6 +267,11 @@ export default function OrderDetailPage() {
                         <p className="text-sm text-muted-foreground mt-1">
                           Quantity: {item.quantity}
                         </p>
+                        {item.vendor?.displayName && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Sold by: {item.vendor.displayName}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">
@@ -202,6 +287,67 @@ export default function OrderDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Rate Sellers Section - Only show for delivered orders */}
+          {canRateSellers && uniqueVendors.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-yellow-500" />
+                  Rate Your Sellers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Help other customers by rating your experience with the sellers.
+                </p>
+                <div className="space-y-3">
+                  {uniqueVendors.map((vendor) => {
+                    const hasRated = existingRatings.get(vendor.id) || false
+                    return (
+                      <div key={vendor.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{vendor.displayName}</p>
+                          {hasRated && (
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-green-600" />
+                              Rated
+                            </p>
+                          )}
+                        </div>
+                        <Dialog 
+                          open={ratingDialogOpen === vendor.id} 
+                          onOpenChange={(open) => setRatingDialogOpen(open ? vendor.id : null)}
+                        >
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant={hasRated ? "outline" : "default"} 
+                              size="sm"
+                              disabled={hasRated}
+                            >
+                              {hasRated ? 'Already Rated' : 'Rate Seller'}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Rate Seller</DialogTitle>
+                            </DialogHeader>
+                            <SellerRatingForm
+                              orderId={orderId}
+                              vendorId={vendor.id}
+                              vendorName={vendor.displayName}
+                              onSuccess={() => handleRatingSuccess(vendor.id)}
+                              onCancel={() => setRatingDialogOpen(null)}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}

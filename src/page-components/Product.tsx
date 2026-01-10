@@ -27,6 +27,7 @@ import { RecentlyViewedProducts, trackProductView } from "@/components/product/R
 import { DeliveryEstimator } from "@/components/product/DeliveryEstimator"
 import { PriceAlertButton } from "@/components/user/PriceAlertButton"
 import { useAuth } from "@/context/auth-context"
+import { VendorStatsCard } from "@/components/seller-ratings"
 
 interface ProductData {
   id: string
@@ -307,27 +308,13 @@ export default function Product() {
                 </div>
               </div>
 
-              {/* Vendor Info */}
-              <div className="bg-gradient-card p-4 rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{vendorName}</h3>
-                      {isVendorVerified && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                          Verified
-                        </span>
-                      )}
-                    </div>
-                    {displayProduct.vendor?.city && (
-                      <div className="text-sm text-muted-foreground">
-                        {displayProduct.vendor.city}
-                      </div>
-                    )}
-                  </div>
+              {/* Vendor Info with Seller Ratings */}
+              {displayProduct.vendor?.id && (
+                <div className="space-y-3">
+                  <VendorStatsCard vendorId={displayProduct.vendor.id} compact />
                   <Button 
                     variant="outline" 
-                    size="sm"
+                    className="w-full"
                     onClick={() => {
                       if (displayProduct.vendor?.id) {
                         router.push(`/vendor/store/${displayProduct.vendor.id}`)
@@ -337,7 +324,7 @@ export default function Product() {
                     View Store
                   </Button>
                 </div>
-              </div>
+              )}
 
               {/* Stock Status */}
               <div className="flex items-center gap-2">
