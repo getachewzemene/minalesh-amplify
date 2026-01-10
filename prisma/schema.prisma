@@ -103,6 +103,8 @@ model User {
   disputes                Dispute[]
   comparisons             ProductComparison[]
   emailSubscriptions      EmailSubscription[]
+  premiumSubscription     PremiumSubscription?
+  productSubscriptions    ProductSubscription[]
 
   @@map("users")
 }
@@ -222,6 +224,7 @@ model Product {
   flashSales    FlashSale[]
   reservations  InventoryReservation[]
   media         Media[]
+  productSubscriptions ProductSubscription[]
 
   @@map("products")
 }
@@ -245,6 +248,7 @@ model ProductVariant {
   carts        Cart[]
   orderItems   OrderItem[]
   reservations InventoryReservation[]
+  productSubscriptions ProductSubscription[]
 
   @@map("product_variants")
 }
@@ -311,6 +315,7 @@ model Order {
   giftCardTransactions GiftCardTransaction[]
   sellerRatings        SellerRating[]
   disputes             Dispute[]
+  subscriptionOrders   SubscriptionOrder[]
 
   @@map("orders")
 }
@@ -1258,4 +1263,269 @@ model EmailSubscription {
   @@index([userId])
   @@index([isSubscribed])
   @@map("email_subscriptions")
+}
+
+// ============================================
+// Subscription Features
+// ============================================
+
+// Subscription Plan Types
+enum SubscriptionPlanType {
+  premium_monthly
+  premium_yearly
+  subscribe_save
+}
+
+// Subscription Status
+enum SubscriptionStatus {
+  active
+  paused
+  cancelled
+  expired
+  past_due
+}
+
+// Subscription Frequency for Subscribe & Save
+enum SubscriptionFrequency {
+  weekly
+  biweekly
+  monthly
+  bimonthly
+  quarterly
+}
+
+// Minalesh Premium Subscription
+model PremiumSubscription {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String             @unique @map("user_id") @db.Uuid
+  planType           SubscriptionPlanType @default(premium_monthly) @map("plan_type")
+  status             SubscriptionStatus @default(active)
+  priceAmount        Decimal            @map("price_amount") @db.Decimal(10, 2)
+  currency           String             @default("ETB")
+  startDate          DateTime           @map("start_date")
+  currentPeriodStart DateTime           @map("current_period_start")
+  currentPeriodEnd   DateTime           @map("current_period_end")
+  cancelledAt        DateTime?          @map("cancelled_at")
+  pausedAt           DateTime?          @map("paused_at")
+  resumeAt           DateTime?          @map("resume_at")
+  stripeSubscriptionId String?          @unique @map("stripe_subscription_id")
+  paymentMethod      String?            @map("payment_method")
+  autoRenew          Boolean            @default(true) @map("auto_renew")
+  trialEndsAt        DateTime?          @map("trial_ends_at")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments SubscriptionPayment[]
+
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("premium_subscriptions")
+}
+
+// Product Subscription (Subscribe & Save)
+model ProductSubscription {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String                @map("user_id") @db.Uuid
+  productId            String                @map("product_id") @db.Uuid
+  variantId            String?               @map("variant_id") @db.Uuid
+  quantity             Int                   @default(1)
+  frequency            SubscriptionFrequency @default(monthly)
+  status               SubscriptionStatus    @default(active)
+  discountPercent      Decimal               @default(10) @map("discount_percent") @db.Decimal(5, 2)
+  priceAtSubscription  Decimal               @map("price_at_subscription") @db.Decimal(10, 2)
+  nextDeliveryDate     DateTime              @map("next_delivery_date")
+  lastDeliveryDate     DateTime?             @map("last_delivery_date")
+  shippingAddressId    String?               @map("shipping_address_id") @db.Uuid
+  deliveryInstructions String?               @map("delivery_instructions")
+  skippedDates         DateTime[]            @default([]) @map("skipped_dates")
+  pausedAt             DateTime?             @map("paused_at")
+  resumeAt             DateTime?             @map("resume_at")
+  cancelledAt          DateTime?             @map("cancelled_at")
+  cancellationReason   String?               @map("cancellation_reason")
+  totalDeliveries      Int                   @default(0) @map("total_deliveries")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  user     User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product  Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant  ProductVariant?          @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  orders   SubscriptionOrder[]
+
+  @@index([userId])
+  @@index([productId])
+  @@index([status])
+  @@index([nextDeliveryDate])
+  @@map("product_subscriptions")
+}
+
+// Subscription Orders (links subscriptions to actual orders)
+model SubscriptionOrder {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productSubscriptionId String              @map("product_subscription_id") @db.Uuid
+  orderId               String              @map("order_id") @db.Uuid
+  deliveryDate          DateTime            @map("delivery_date")
+  status                String              @default("pending") // pending, completed, failed, skipped
+  createdAt             DateTime            @default(now()) @map("created_at")
+
+  subscription ProductSubscription @relation(fields: [productSubscriptionId], references: [id], onDelete: Cascade)
+  order        Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([productSubscriptionId])
+  @@index([orderId])
+  @@map("subscription_orders")
+}
+
+// Subscription Payments
+model SubscriptionPayment {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  premiumSubscriptionId String   @map("premium_subscription_id") @db.Uuid
+  amount               Decimal  @db.Decimal(10, 2)
+  currency             String   @default("ETB")
+  status               String   @default("pending") // pending, completed, failed, refunded
+  paymentMethod        String?  @map("payment_method")
+  paymentReference     String?  @map("payment_reference")
+  periodStart          DateTime @map("period_start")
+  periodEnd            DateTime @map("period_end")
+  paidAt               DateTime? @map("paid_at")
+  failedAt             DateTime? @map("failed_at")
+  failureReason        String?  @map("failure_reason")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  subscription PremiumSubscription @relation(fields: [premiumSubscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([premiumSubscriptionId])
+  @@index([status])
+  @@map("subscription_payments")
+}
+
+// ============================================
+// System Monitoring & Backup
+// ============================================
+
+// System Health Metrics
+model SystemHealthMetric {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  metricType   String   @map("metric_type") // cpu, memory, disk, api_latency, error_rate, etc.
+  metricValue  Float    @map("metric_value")
+  metricUnit   String?  @map("metric_unit")
+  threshold    Float?   // Alert threshold
+  status       String   @default("healthy") // healthy, warning, critical
+  metadata     Json?    // Additional context
+  recordedAt   DateTime @default(now()) @map("recorded_at")
+
+  @@index([metricType])
+  @@index([recordedAt])
+  @@index([status])
+  @@map("system_health_metrics")
+}
+
+// Backup Records
+model BackupRecord {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  backupType    String    @map("backup_type") // full, incremental, differential
+  status        String    @default("pending") // pending, in_progress, completed, failed
+  size          BigInt?   // Size in bytes
+  location      String?   // S3 URL or storage path
+  encryptionKey String?   @map("encryption_key")
+  checksum      String?   // For integrity verification
+  retentionDays Int       @default(30) @map("retention_days")
+  expiresAt     DateTime  @map("expires_at")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  errorMessage  String?   @map("error_message")
+  metadata      Json?     // Additional backup info
+
+  @@index([backupType])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("backup_records")
+}
+
+// Alert Configuration
+model AlertConfig {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  description  String?
+  metricType   String   @map("metric_type")
+  condition    String   // gt, lt, eq, gte, lte
+  threshold    Float
+  severity     String   @default("warning") // info, warning, critical
+  isEnabled    Boolean  @default(true) @map("is_enabled")
+  cooldownMinutes Int   @default(15) @map("cooldown_minutes")
+  notifyEmail  Boolean  @default(true) @map("notify_email")
+  notifySlack  Boolean  @default(false) @map("notify_slack")
+  webhookUrl   String?  @map("webhook_url")
+  lastTriggeredAt DateTime? @map("last_triggered_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  alerts AlertHistory[]
+
+  @@index([metricType])
+  @@index([isEnabled])
+  @@map("alert_configs")
+}
+
+// Alert History
+model AlertHistory {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  alertConfigId String   @map("alert_config_id") @db.Uuid
+  metricValue  Float    @map("metric_value")
+  threshold    Float
+  severity     String
+  message      String
+  acknowledged Boolean  @default(false)
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  acknowledgedBy String?  @map("acknowledged_by") @db.Uuid
+  resolvedAt   DateTime? @map("resolved_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  alertConfig AlertConfig @relation(fields: [alertConfigId], references: [id], onDelete: Cascade)
+
+  @@index([alertConfigId])
+  @@index([acknowledged])
+  @@index([createdAt])
+  @@map("alert_history")
+}
+
+// Feature Flags for CI/CD
+model FeatureFlag {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key          String   @unique
+  name         String
+  description  String?
+  isEnabled    Boolean  @default(false) @map("is_enabled")
+  percentage   Int?     @default(100) // For gradual rollout (0-100)
+  targetUsers  String[] @default([]) @map("target_users") // Specific user IDs
+  targetRoles  String[] @default([]) @map("target_roles") // customer, vendor, admin
+  conditions   Json?    // Complex conditions for targeting
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([key])
+  @@index([isEnabled])
+  @@map("feature_flags")
+}
+
+// Deployment Records
+model DeploymentRecord {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  version       String
+  environment   String    // staging, production
+  status        String    @default("pending") // pending, deploying, deployed, failed, rolled_back
+  commitHash    String?   @map("commit_hash")
+  commitMessage String?   @map("commit_message")
+  deployedBy    String?   @map("deployed_by")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  rollbackOf    String?   @map("rollback_of") @db.Uuid // Reference to deployment being rolled back
+  smokeTestPassed Boolean? @map("smoke_test_passed")
+  errorMessage  String?   @map("error_message")
+  metadata      Json?     // Build info, change list, etc.
+
+  @@index([environment])
+  @@index([status])
+  @@index([startedAt])
+  @@map("deployment_records")
 }

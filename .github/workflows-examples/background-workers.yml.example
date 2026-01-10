@@ -8,6 +8,8 @@ on:
     - cron: '*/10 * * * *'
     # Inventory cleanup - every 5 minutes
     - cron: '*/5 * * * *'
+    # Subscription processing - daily at 8 AM
+    - cron: '0 8 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -43,3 +45,14 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -f \
             ${{ secrets.APP_URL }}/api/cron/cleanup-reservations
+
+  process-subscriptions:
+    if: github.event.schedule == '0 8 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Subscription Deliveries
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f \
+            ${{ secrets.APP_URL }}/api/cron/process-subscriptions
