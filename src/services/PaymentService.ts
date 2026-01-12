@@ -7,6 +7,7 @@
 
 import prisma from '@/lib/prisma';
 import { createReservation } from './InventoryService';
+import { calculateProtectionFee } from '@/lib/buyer-protection';
 import Stripe from 'stripe';
 
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -27,6 +28,9 @@ export interface CreatePaymentIntentRequest {
   couponCode?: string;
   shippingMethodId?: string;
   captureMethod?: 'automatic' | 'manual';
+  // Buyer Protection options
+  enableBuyerProtection?: boolean;
+  enableInsurance?: boolean;
 }
 
 export interface PaymentIntentResult {
@@ -56,6 +60,8 @@ export async function createPaymentIntent(
     couponCode,
     shippingMethodId,
     captureMethod = 'automatic',
+    enableBuyerProtection = false,
+    enableInsurance = false,
   } = request;
 
   try {
@@ -223,7 +229,14 @@ export async function createPaymentIntent(
       taxAmount = (subtotalAfterDiscount + shippingAmount) * 0.15;
     }
 
-    const totalAmount = subtotalAfterDiscount + shippingAmount + taxAmount;
+    // Calculate buyer protection fees
+    const protectionResult = await calculateProtectionFee(
+      subtotalAfterDiscount,
+      enableBuyerProtection,
+      enableInsurance
+    );
+
+    const totalAmount = subtotalAfterDiscount + shippingAmount + taxAmount + protectionResult.totalFee;
 
     // Create order with pending status
     const orderNumber = `MIN-${Date.now()}`;
@@ -245,6 +258,12 @@ export async function createPaymentIntent(
         couponId,
         shippingMethodId: shippingMethodId || null,
         shippingZoneId,
+        // Buyer protection fields
+        buyerProtectionEnabled: enableBuyerProtection,
+        protectionFee: protectionResult.protectionFee.toFixed(2),
+        insuranceEnabled: enableInsurance && protectionResult.isHighValue,
+        insuranceFee: protectionResult.insuranceFee.toFixed(2),
+        shippingDeadline: enableBuyerProtection ? protectionResult.shippingDeadline : null,
         orderItems: {
           create: orderItemsData,
         },
@@ -271,6 +290,7 @@ export async function createPaymentIntent(
             orderNumber: order.orderNumber,
             userId,
             captureMethod,
+            buyerProtectionEnabled: enableBuyerProtection ? 'true' : 'false',
           },
           automatic_payment_methods: {
             enabled: true,
@@ -305,6 +325,16 @@ export async function createPaymentIntent(
         taxAmount: order.taxAmount,
         totalAmount: order.totalAmount,
         currency: order.currency,
+        // Buyer protection info
+        buyerProtection: {
+          enabled: enableBuyerProtection,
+          protectionFee: protectionResult.protectionFee,
+          insuranceEnabled: enableInsurance && protectionResult.isHighValue,
+          insuranceFee: protectionResult.insuranceFee,
+          totalFee: protectionResult.totalFee,
+          shippingDeadline: protectionResult.shippingDeadline?.toISOString() || null,
+          isHighValue: protectionResult.isHighValue,
+        },
       },
       reservations,
       stripePaymentIntent: stripePaymentIntent || undefined,
