@@ -332,7 +332,7 @@ export async function createPaymentIntent(
           insuranceEnabled: enableInsurance && protectionResult.isHighValue,
           insuranceFee: protectionResult.insuranceFee,
           totalFee: protectionResult.totalFee,
-          shippingDeadline: protectionResult.shippingDeadline.toISOString(),
+          shippingDeadline: protectionResult.shippingDeadline?.toISOString() || null,
           isHighValue: protectionResult.isHighValue,
         },
       },

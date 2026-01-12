@@ -116,10 +116,8 @@ export async function calculateProtectionFee(
   const isHighValue = orderValue >= settings.insuranceThresholdAmount;
   let insuranceFee = 0;
 
-  // Auto-enable insurance for high-value items or if explicitly requested
+  // Add insurance fee for high-value items when not explicitly disabled
   if (isHighValue && enableInsurance !== false) {
-    insuranceFee = (orderValue * settings.insuranceFeePercent) / 100;
-  } else if (enableInsurance && isHighValue) {
     insuranceFee = (orderValue * settings.insuranceFeePercent) / 100;
   }
 
@@ -210,8 +208,8 @@ export async function fileProtectionClaim(
       return { success: false, error: 'Order not found' };
     }
 
-    // Calculate refund amount (order total minus protection fee)
-    const requestedRefundAmount = Number(order.totalAmount);
+    // Calculate refund amount (full order total - the protection fee is non-refundable)
+    const requestedRefundAmount = Number(order.totalAmount) - Number(order.protectionFee || 0);
 
     const claim = await prisma.protectionClaim.create({
       data: {

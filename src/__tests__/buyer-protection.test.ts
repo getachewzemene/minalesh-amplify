@@ -256,13 +256,13 @@ describe('Buyer Protection', () => {
         protectionClaims: [],
       } as any);
 
-      // Mock order lookup for total amount
+      // Mock order lookup for total amount (total 1000, protection fee 25)
       vi.mocked(prisma.order.findUnique).mockResolvedValue({
-        totalAmount: { toNumber: () => 1000 } as any,
-        protectionFee: { toNumber: () => 25 } as any,
+        totalAmount: 1000 as any,
+        protectionFee: 25 as any,
       } as any);
 
-      // Mock claim creation
+      // Mock claim creation (refund amount should be 1000 - 25 = 975)
       vi.mocked(prisma.protectionClaim.create).mockResolvedValue({
         id: 'claim-123',
         orderId: 'order-123',
@@ -271,7 +271,7 @@ describe('Buyer Protection', () => {
         status: 'pending',
         description: 'I did not receive my order',
         evidenceUrls: [],
-        requestedRefundAmount: { toNumber: () => 1000 } as any,
+        requestedRefundAmount: 975 as any,
         approvedRefundAmount: null,
         refundTransactionId: null,
         resolution: null,
