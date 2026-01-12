@@ -215,19 +215,19 @@ model Product {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  vendor        Profile                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  category      Category?              @relation(fields: [categoryId], references: [id])
-  variants      ProductVariant[]
-  carts         Cart[]
-  orderItems    OrderItem[]
-  reviews       Review[]
-  wishlists     Wishlist[]
-  tieredPricing TieredPricing[]
-  flashSales    FlashSale[]
-  reservations  InventoryReservation[]
-  media         Media[]
+  vendor               Profile                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category             Category?              @relation(fields: [categoryId], references: [id])
+  variants             ProductVariant[]
+  carts                Cart[]
+  orderItems           OrderItem[]
+  reviews              Review[]
+  wishlists            Wishlist[]
+  tieredPricing        TieredPricing[]
+  flashSales           FlashSale[]
+  reservations         InventoryReservation[]
+  media                Media[]
   productSubscriptions ProductSubscription[]
-  priceAlerts   PriceAlert[]
+  priceAlerts          PriceAlert[]
 
   @@map("products")
 }
@@ -247,10 +247,10 @@ model ProductVariant {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  product      Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
-  carts        Cart[]
-  orderItems   OrderItem[]
-  reservations InventoryReservation[]
+  product              Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  carts                Cart[]
+  orderItems           OrderItem[]
+  reservations         InventoryReservation[]
   productSubscriptions ProductSubscription[]
 
   @@map("product_variants")
@@ -273,33 +273,40 @@ model Cart {
 }
 
 model Order {
-  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId           String?       @map("user_id") @db.Uuid
-  orderNumber      String        @unique @map("order_number")
-  status           OrderStatus   @default(pending)
-  paymentStatus    PaymentStatus @default(pending) @map("payment_status")
-  paymentMethod    String?       @map("payment_method")
-  paymentReference String?       @map("payment_reference")
-  stripeSessionId  String?       @map("stripe_session_id")
-  subtotal         Decimal       @db.Decimal(10, 2)
-  shippingAmount   Decimal       @default(0) @map("shipping_amount") @db.Decimal(10, 2)
-  taxAmount        Decimal       @default(0) @map("tax_amount") @db.Decimal(10, 2)
-  discountAmount   Decimal       @default(0) @map("discount_amount") @db.Decimal(10, 2)
-  totalAmount      Decimal       @map("total_amount") @db.Decimal(10, 2)
-  currency         String        @default("ETB")
-  shippingAddress  Json?         @map("shipping_address")
-  billingAddress   Json?         @map("billing_address")
-  notes            String?
-  paidAt           DateTime?     @map("paid_at")
-  confirmedAt      DateTime?     @map("confirmed_at")
-  processingAt     DateTime?     @map("processing_at")
-  fulfilledAt      DateTime?     @map("fulfilled_at")
-  shippedAt        DateTime?     @map("shipped_at")
-  deliveredAt      DateTime?     @map("delivered_at")
-  cancelledAt      DateTime?     @map("cancelled_at")
-  refundedAt       DateTime?     @map("refunded_at")
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
+  id                     String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String?       @map("user_id") @db.Uuid
+  orderNumber            String        @unique @map("order_number")
+  status                 OrderStatus   @default(pending)
+  paymentStatus          PaymentStatus @default(pending) @map("payment_status")
+  paymentMethod          String?       @map("payment_method")
+  paymentReference       String?       @map("payment_reference")
+  stripeSessionId        String?       @map("stripe_session_id")
+  subtotal               Decimal       @db.Decimal(10, 2)
+  shippingAmount         Decimal       @default(0) @map("shipping_amount") @db.Decimal(10, 2)
+  taxAmount              Decimal       @default(0) @map("tax_amount") @db.Decimal(10, 2)
+  discountAmount         Decimal       @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  totalAmount            Decimal       @map("total_amount") @db.Decimal(10, 2)
+  currency               String        @default("ETB")
+  shippingAddress        Json?         @map("shipping_address")
+  billingAddress         Json?         @map("billing_address")
+  notes                  String?
+  // Buyer Protection fields
+  buyerProtectionEnabled Boolean       @default(false) @map("buyer_protection_enabled")
+  protectionFee          Decimal       @default(0) @map("protection_fee") @db.Decimal(10, 2)
+  protectionExpiresAt    DateTime?     @map("protection_expires_at")
+  insuranceEnabled       Boolean       @default(false) @map("insurance_enabled")
+  insuranceFee           Decimal       @default(0) @map("insurance_fee") @db.Decimal(10, 2)
+  shippingDeadline       DateTime?     @map("shipping_deadline")
+  paidAt                 DateTime?     @map("paid_at")
+  confirmedAt            DateTime?     @map("confirmed_at")
+  processingAt           DateTime?     @map("processing_at")
+  fulfilledAt            DateTime?     @map("fulfilled_at")
+  shippedAt              DateTime?     @map("shipped_at")
+  deliveredAt            DateTime?     @map("delivered_at")
+  cancelledAt            DateTime?     @map("cancelled_at")
+  refundedAt             DateTime?     @map("refunded_at")
+  createdAt              DateTime      @default(now()) @map("created_at")
+  updatedAt              DateTime      @updatedAt @map("updated_at")
 
   user                 User?                 @relation(fields: [userId], references: [id])
   orderItems           OrderItem[]
@@ -319,6 +326,7 @@ model Order {
   sellerRatings        SellerRating[]
   disputes             Dispute[]
   subscriptionOrders   SubscriptionOrder[]
+  protectionClaims     ProtectionClaim[]
 
   @@map("orders")
 }
@@ -1299,26 +1307,26 @@ enum SubscriptionFrequency {
 
 // Minalesh Premium Subscription
 model PremiumSubscription {
-  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String             @unique @map("user_id") @db.Uuid
-  planType           SubscriptionPlanType @default(premium_monthly) @map("plan_type")
-  status             SubscriptionStatus @default(active)
-  priceAmount        Decimal            @map("price_amount") @db.Decimal(10, 2)
-  currency           String             @default("ETB")
-  startDate          DateTime           @map("start_date")
-  currentPeriodStart DateTime           @map("current_period_start")
-  currentPeriodEnd   DateTime           @map("current_period_end")
-  cancelledAt        DateTime?          @map("cancelled_at")
-  pausedAt           DateTime?          @map("paused_at")
-  resumeAt           DateTime?          @map("resume_at")
-  stripeSubscriptionId String?          @unique @map("stripe_subscription_id")
-  paymentMethod      String?            @map("payment_method")
-  autoRenew          Boolean            @default(true) @map("auto_renew")
-  trialEndsAt        DateTime?          @map("trial_ends_at")
-  createdAt          DateTime           @default(now()) @map("created_at")
-  updatedAt          DateTime           @updatedAt @map("updated_at")
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String               @unique @map("user_id") @db.Uuid
+  planType             SubscriptionPlanType @default(premium_monthly) @map("plan_type")
+  status               SubscriptionStatus   @default(active)
+  priceAmount          Decimal              @map("price_amount") @db.Decimal(10, 2)
+  currency             String               @default("ETB")
+  startDate            DateTime             @map("start_date")
+  currentPeriodStart   DateTime             @map("current_period_start")
+  currentPeriodEnd     DateTime             @map("current_period_end")
+  cancelledAt          DateTime?            @map("cancelled_at")
+  pausedAt             DateTime?            @map("paused_at")
+  resumeAt             DateTime?            @map("resume_at")
+  stripeSubscriptionId String?              @unique @map("stripe_subscription_id")
+  paymentMethod        String?              @map("payment_method")
+  autoRenew            Boolean              @default(true) @map("auto_renew")
+  trialEndsAt          DateTime?            @map("trial_ends_at")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
 
-  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments SubscriptionPayment[]
 
   @@index([status])
@@ -1350,10 +1358,10 @@ model ProductSubscription {
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
 
-  user     User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product  Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant  ProductVariant?          @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  orders   SubscriptionOrder[]
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant?     @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  orders  SubscriptionOrder[]
 
   @@index([userId])
   @@index([productId])
@@ -1364,12 +1372,12 @@ model ProductSubscription {
 
 // Subscription Orders (links subscriptions to actual orders)
 model SubscriptionOrder {
-  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productSubscriptionId String              @map("product_subscription_id") @db.Uuid
-  orderId               String              @map("order_id") @db.Uuid
-  deliveryDate          DateTime            @map("delivery_date")
-  status                String              @default("pending") // pending, completed, failed, skipped
-  createdAt             DateTime            @default(now()) @map("created_at")
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productSubscriptionId String   @map("product_subscription_id") @db.Uuid
+  orderId               String   @map("order_id") @db.Uuid
+  deliveryDate          DateTime @map("delivery_date")
+  status                String   @default("pending") // pending, completed, failed, skipped
+  createdAt             DateTime @default(now()) @map("created_at")
 
   subscription ProductSubscription @relation(fields: [productSubscriptionId], references: [id], onDelete: Cascade)
   order        Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -1381,19 +1389,19 @@ model SubscriptionOrder {
 
 // Subscription Payments
 model SubscriptionPayment {
-  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  premiumSubscriptionId String   @map("premium_subscription_id") @db.Uuid
-  amount               Decimal  @db.Decimal(10, 2)
-  currency             String   @default("ETB")
-  status               String   @default("pending") // pending, completed, failed, refunded
-  paymentMethod        String?  @map("payment_method")
-  paymentReference     String?  @map("payment_reference")
-  periodStart          DateTime @map("period_start")
-  periodEnd            DateTime @map("period_end")
-  paidAt               DateTime? @map("paid_at")
-  failedAt             DateTime? @map("failed_at")
-  failureReason        String?  @map("failure_reason")
-  createdAt            DateTime @default(now()) @map("created_at")
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  premiumSubscriptionId String    @map("premium_subscription_id") @db.Uuid
+  amount                Decimal   @db.Decimal(10, 2)
+  currency              String    @default("ETB")
+  status                String    @default("pending") // pending, completed, failed, refunded
+  paymentMethod         String?   @map("payment_method")
+  paymentReference      String?   @map("payment_reference")
+  periodStart           DateTime  @map("period_start")
+  periodEnd             DateTime  @map("period_end")
+  paidAt                DateTime? @map("paid_at")
+  failedAt              DateTime? @map("failed_at")
+  failureReason         String?   @map("failure_reason")
+  createdAt             DateTime  @default(now()) @map("created_at")
 
   subscription PremiumSubscription @relation(fields: [premiumSubscriptionId], references: [id], onDelete: Cascade)
 
@@ -1408,14 +1416,14 @@ model SubscriptionPayment {
 
 // System Health Metrics
 model SystemHealthMetric {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  metricType   String   @map("metric_type") // cpu, memory, disk, api_latency, error_rate, etc.
-  metricValue  Float    @map("metric_value")
-  metricUnit   String?  @map("metric_unit")
-  threshold    Float?   // Alert threshold
-  status       String   @default("healthy") // healthy, warning, critical
-  metadata     Json?    // Additional context
-  recordedAt   DateTime @default(now()) @map("recorded_at")
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  metricType  String   @map("metric_type") // cpu, memory, disk, api_latency, error_rate, etc.
+  metricValue Float    @map("metric_value")
+  metricUnit  String?  @map("metric_unit")
+  threshold   Float? // Alert threshold
+  status      String   @default("healthy") // healthy, warning, critical
+  metadata    Json? // Additional context
+  recordedAt  DateTime @default(now()) @map("recorded_at")
 
   @@index([metricType])
   @@index([recordedAt])
@@ -1428,16 +1436,16 @@ model BackupRecord {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   backupType    String    @map("backup_type") // full, incremental, differential
   status        String    @default("pending") // pending, in_progress, completed, failed
-  size          BigInt?   // Size in bytes
-  location      String?   // S3 URL or storage path
+  size          BigInt? // Size in bytes
+  location      String? // S3 URL or storage path
   encryptionKey String?   @map("encryption_key")
-  checksum      String?   // For integrity verification
+  checksum      String? // For integrity verification
   retentionDays Int       @default(30) @map("retention_days")
   expiresAt     DateTime  @map("expires_at")
   startedAt     DateTime  @default(now()) @map("started_at")
   completedAt   DateTime? @map("completed_at")
   errorMessage  String?   @map("error_message")
-  metadata      Json?     // Additional backup info
+  metadata      Json? // Additional backup info
 
   @@index([backupType])
   @@index([status])
@@ -1447,21 +1455,21 @@ model BackupRecord {
 
 // Alert Configuration
 model AlertConfig {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  description  String?
-  metricType   String   @map("metric_type")
-  condition    String   // gt, lt, eq, gte, lte
-  threshold    Float
-  severity     String   @default("warning") // info, warning, critical
-  isEnabled    Boolean  @default(true) @map("is_enabled")
-  cooldownMinutes Int   @default(15) @map("cooldown_minutes")
-  notifyEmail  Boolean  @default(true) @map("notify_email")
-  notifySlack  Boolean  @default(false) @map("notify_slack")
-  webhookUrl   String?  @map("webhook_url")
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  description     String?
+  metricType      String    @map("metric_type")
+  condition       String // gt, lt, eq, gte, lte
+  threshold       Float
+  severity        String    @default("warning") // info, warning, critical
+  isEnabled       Boolean   @default(true) @map("is_enabled")
+  cooldownMinutes Int       @default(15) @map("cooldown_minutes")
+  notifyEmail     Boolean   @default(true) @map("notify_email")
+  notifySlack     Boolean   @default(false) @map("notify_slack")
+  webhookUrl      String?   @map("webhook_url")
   lastTriggeredAt DateTime? @map("last_triggered_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   alerts AlertHistory[]
 
@@ -1472,17 +1480,17 @@ model AlertConfig {
 
 // Alert History
 model AlertHistory {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  alertConfigId String   @map("alert_config_id") @db.Uuid
-  metricValue  Float    @map("metric_value")
-  threshold    Float
-  severity     String
-  message      String
-  acknowledged Boolean  @default(false)
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  alertConfigId  String    @map("alert_config_id") @db.Uuid
+  metricValue    Float     @map("metric_value")
+  threshold      Float
+  severity       String
+  message        String
+  acknowledged   Boolean   @default(false)
   acknowledgedAt DateTime? @map("acknowledged_at")
-  acknowledgedBy String?  @map("acknowledged_by") @db.Uuid
-  resolvedAt   DateTime? @map("resolved_at")
-  createdAt    DateTime @default(now()) @map("created_at")
+  acknowledgedBy String?   @map("acknowledged_by") @db.Uuid
+  resolvedAt     DateTime? @map("resolved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   alertConfig AlertConfig @relation(fields: [alertConfigId], references: [id], onDelete: Cascade)
 
@@ -1494,17 +1502,17 @@ model AlertHistory {
 
 // Feature Flags for CI/CD
 model FeatureFlag {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  key          String   @unique
-  name         String
-  description  String?
-  isEnabled    Boolean  @default(false) @map("is_enabled")
-  percentage   Int?     @default(100) // For gradual rollout (0-100)
-  targetUsers  String[] @default([]) @map("target_users") // Specific user IDs
-  targetRoles  String[] @default([]) @map("target_roles") // customer, vendor, admin
-  conditions   Json?    // Complex conditions for targeting
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  name        String
+  description String?
+  isEnabled   Boolean  @default(false) @map("is_enabled")
+  percentage  Int?     @default(100) // For gradual rollout (0-100)
+  targetUsers String[] @default([]) @map("target_users") // Specific user IDs
+  targetRoles String[] @default([]) @map("target_roles") // customer, vendor, admin
+  conditions  Json? // Complex conditions for targeting
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([key])
   @@index([isEnabled])
@@ -1513,19 +1521,19 @@ model FeatureFlag {
 
 // Deployment Records
 model DeploymentRecord {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  version       String
-  environment   String    // staging, production
-  status        String    @default("pending") // pending, deploying, deployed, failed, rolled_back
-  commitHash    String?   @map("commit_hash")
-  commitMessage String?   @map("commit_message")
-  deployedBy    String?   @map("deployed_by")
-  startedAt     DateTime  @default(now()) @map("started_at")
-  completedAt   DateTime? @map("completed_at")
-  rollbackOf    String?   @map("rollback_of") @db.Uuid // Reference to deployment being rolled back
-  smokeTestPassed Boolean? @map("smoke_test_passed")
-  errorMessage  String?   @map("error_message")
-  metadata      Json?     // Build info, change list, etc.
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  version         String
+  environment     String // staging, production
+  status          String    @default("pending") // pending, deploying, deployed, failed, rolled_back
+  commitHash      String?   @map("commit_hash")
+  commitMessage   String?   @map("commit_message")
+  deployedBy      String?   @map("deployed_by")
+  startedAt       DateTime  @default(now()) @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  rollbackOf      String?   @map("rollback_of") @db.Uuid // Reference to deployment being rolled back
+  smokeTestPassed Boolean?  @map("smoke_test_passed")
+  errorMessage    String?   @map("error_message")
+  metadata        Json? // Build info, change list, etc.
 
   @@index([environment])
   @@index([status])
@@ -1574,4 +1582,68 @@ model PriceAlert {
   @@index([productId])
   @@index([isActive, triggered])
   @@map("price_alerts")
+}
+
+// ============================================
+// Buyer Protection Program
+// ============================================
+
+// Protection Claim Type
+enum ProtectionClaimType {
+  not_received
+  not_as_described
+  auto_refund_sla // Automatic refund due to vendor not shipping within SLA
+}
+
+// Protection Claim Status
+enum ProtectionClaimStatus {
+  pending
+  under_review
+  approved
+  rejected
+  refunded
+  cancelled
+}
+
+// Protection Claim for Buyer Protection Program
+model ProtectionClaim {
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId               String                @map("order_id") @db.Uuid
+  userId                String                @map("user_id") @db.Uuid
+  claimType             ProtectionClaimType   @map("claim_type")
+  status                ProtectionClaimStatus @default(pending)
+  description           String?
+  evidenceUrls          String[]              @default([]) @map("evidence_urls")
+  requestedRefundAmount Decimal               @map("requested_refund_amount") @db.Decimal(10, 2)
+  approvedRefundAmount  Decimal?              @map("approved_refund_amount") @db.Decimal(10, 2)
+  refundTransactionId   String?               @map("refund_transaction_id")
+  resolution            String?
+  reviewedBy            String?               @map("reviewed_by") @db.Uuid
+  reviewedAt            DateTime?             @map("reviewed_at")
+  refundedAt            DateTime?             @map("refunded_at")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("protection_claims")
+}
+
+// Buyer Protection Settings (global configuration)
+model BuyerProtectionSettings {
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  protectionFeePercent     Decimal  @default(2.5) @map("protection_fee_percent") @db.Decimal(5, 2) // 2-3%
+  protectionPeriodDays     Int      @default(30) @map("protection_period_days")
+  vendorShippingSLAHours   Int      @default(72) @map("vendor_shipping_sla_hours") // 72 hours (3 days)
+  insuranceThresholdAmount Decimal  @default(5000) @map("insurance_threshold_amount") @db.Decimal(10, 2) // High-value threshold
+  insuranceFeePercent      Decimal  @default(1.5) @map("insurance_fee_percent") @db.Decimal(5, 2)
+  isEnabled                Boolean  @default(true) @map("is_enabled")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  @@map("buyer_protection_settings")
 }

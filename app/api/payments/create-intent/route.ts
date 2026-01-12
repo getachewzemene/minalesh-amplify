@@ -34,6 +34,9 @@ const createIntentSchema = z.object({
   couponCode: z.string().optional(),
   shippingMethodId: z.string().uuid().optional(),
   captureMethod: z.enum(['automatic', 'manual']).default('automatic'),
+  // Buyer Protection options
+  enableBuyerProtection: z.boolean().optional().default(false),
+  enableInsurance: z.boolean().optional().default(false),
 });
 
 /**
@@ -76,6 +79,12 @@ const createIntentSchema = z.object({
  *               captureMethod:
  *                 type: string
  *                 enum: [automatic, manual]
+ *               enableBuyerProtection:
+ *                 type: boolean
+ *                 description: Enable buyer protection (2.5% fee)
+ *               enableInsurance:
+ *                 type: boolean
+ *                 description: Enable insurance for high-value items (1.5% fee)
  *     responses:
  *       200:
  *         description: Payment intent created successfully
@@ -99,7 +108,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const { items, shippingAddress, billingAddress, couponCode, shippingMethodId, captureMethod } = parsed.data;
+    const { 
+      items, 
+      shippingAddress, 
+      billingAddress, 
+      couponCode, 
+      shippingMethodId, 
+      captureMethod,
+      enableBuyerProtection,
+      enableInsurance,
+    } = parsed.data;
 
     // Call PaymentService to create payment intent
     const result = await PaymentService.createPaymentIntent({
@@ -110,6 +128,8 @@ export async function POST(request: Request) {
       couponCode,
       shippingMethodId,
       captureMethod,
+      enableBuyerProtection,
+      enableInsurance,
     });
 
     if (!result.success) {
