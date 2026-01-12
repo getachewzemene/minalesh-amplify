@@ -6,19 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, MapPin, Package, Star } from 'lucide-react'
+import { ArrowLeft, MapPin, Package, Star, AlertTriangle, MessageSquare } from 'lucide-react'
 import { format } from 'date-fns'
 import OrderTrackingTimeline from '@/components/orders/OrderTrackingTimeline'
 import { formatCurrency } from '@/lib/utils'
 import Image from 'next/image'
 import { SellerRatingForm } from '@/components/seller-ratings'
+import { DisputeForm } from '@/components/disputes/DisputeForm'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import Link from 'next/link'
 
 interface OrderItem {
   id: string
@@ -47,6 +50,7 @@ interface Order {
   taxAmount: number
   discountAmount: number
   createdAt: string
+  deliveredAt?: string
   shippingAddress: {
     fullName: string
     addressLine1: string
@@ -74,12 +78,76 @@ export default function OrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [existingRatings, setExistingRatings] = useState<Map<string, boolean>>(new Map())
   const [ratingDialogOpen, setRatingDialogOpen] = useState<string | null>(null)
+  const [disputeDialogOpen, setDisputeDialogOpen] = useState(false)
+  const [existingDispute, setExistingDispute] = useState<{ id: string; status: string } | null>(null)
 
   useEffect(() => {
     if (orderId) {
       fetchOrderDetails()
+      checkExistingDispute()
     }
   }, [orderId])
+
+  const checkExistingDispute = async () => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) return
+
+      const response = await fetch('/api/disputes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Check if there's an existing dispute for this order
+        const dispute = data.disputes?.find((d: { order: { orderNumber: string }; id: string; status: string }) => {
+          // Match by order ID from the dispute's order reference
+          return d.order?.orderNumber === order?.orderNumber || 
+                 data.disputes.some((disp: { order: { orderNumber: string }; id: string; status: string }) => 
+                   disp.id === d.id)
+        })
+        if (dispute) {
+          setExistingDispute({ id: dispute.id, status: dispute.status })
+        }
+      }
+    } catch (err) {
+      console.error('Error checking existing dispute:', err)
+    }
+  }
+
+  // Re-check for disputes when order loads
+  useEffect(() => {
+    if (order) {
+      const checkDisputeForOrder = async () => {
+        try {
+          const token = localStorage.getItem('auth_token')
+          if (!token) return
+
+          const response = await fetch('/api/disputes', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            // Find dispute for this specific order
+            const dispute = data.disputes?.find((d: { order: { orderNumber: string }; id: string; status: string }) => 
+              d.order?.orderNumber === order.orderNumber
+            )
+            if (dispute) {
+              setExistingDispute({ id: dispute.id, status: dispute.status })
+            }
+          }
+        } catch (err) {
+          console.error('Error checking existing dispute:', err)
+        }
+      }
+      checkDisputeForOrder()
+    }
+  }, [order])
 
   const fetchOrderDetails = async () => {
     try {
@@ -152,6 +220,49 @@ export default function OrderDetailPage() {
     setRatingDialogOpen(null)
   }
 
+  const handleDisputeSuccess = () => {
+    setDisputeDialogOpen(false)
+    // Refresh dispute status
+    const refreshDispute = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (!token || !order) return
+
+        const response = await fetch('/api/disputes', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const dispute = data.disputes?.find((d: { order: { orderNumber: string }; id: string; status: string }) => 
+            d.order?.orderNumber === order.orderNumber
+          )
+          if (dispute) {
+            setExistingDispute({ id: dispute.id, status: dispute.status })
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing dispute:', err)
+      }
+    }
+    refreshDispute()
+  }
+
+  // Check if order is eligible for dispute (delivered within 30 days)
+  const isEligibleForDispute = () => {
+    if (!order) return false
+    if (order.status !== 'delivered') return false
+    if (!order.deliveredAt) return true // If no delivered date, allow dispute for delivered orders
+    
+    const deliveredDate = new Date(order.deliveredAt)
+    const daysSinceDelivery = Math.floor(
+      (Date.now() - deliveredDate.getTime()) / (1000 * 60 * 60 * 24)
+    )
+    return daysSinceDelivery <= 30
+  }
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -220,6 +331,7 @@ export default function OrderDetailPage() {
 
   const uniqueVendors = getUniqueVendors()
   const canRateSellers = order.status === 'delivered'
+  const canFileDispute = isEligibleForDispute()
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
@@ -345,6 +457,72 @@ export default function OrderDetailPage() {
                     )
                   })}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* File Dispute Section - Only show for delivered orders within 30 days */}
+          {canFileDispute && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                  Having an Issue?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {existingDispute ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <p className="font-medium">Dispute Filed</p>
+                        <p className="text-xs text-muted-foreground">
+                          Status: {existingDispute.status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                        </p>
+                      </div>
+                      <Link href={`/disputes/${existingDispute.id}`}>
+                        <Button variant="outline" size="sm">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          View Dispute
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      If you have any issues with this order such as damaged items, wrong items received, or items not received, 
+                      you can file a dispute within 30 days of delivery.
+                    </p>
+                    <Dialog open={disputeDialogOpen} onOpenChange={setDisputeDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full">
+                          <AlertTriangle className="h-4 w-4 mr-2" />
+                          File a Dispute
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>File a Dispute</DialogTitle>
+                          <DialogDescription>
+                            Please provide details about your issue. The vendor will have 3 days to respond.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DisputeForm
+                          orderId={orderId}
+                          orderNumber={order.orderNumber}
+                          orderItems={order.orderItems.map(item => ({
+                            id: item.id,
+                            name: item.productName,
+                            quantity: item.quantity
+                          }))}
+                          onSuccess={handleDisputeSuccess}
+                          onCancel={() => setDisputeDialogOpen(false)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
