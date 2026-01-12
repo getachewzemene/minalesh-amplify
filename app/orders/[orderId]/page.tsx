@@ -84,11 +84,11 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (orderId) {
       fetchOrderDetails()
-      checkExistingDispute()
     }
   }, [orderId])
 
-  const checkExistingDispute = async () => {
+  // Helper function to check for existing disputes
+  const checkExistingDisputeForOrder = async (orderNumber: string) => {
     try {
       const token = localStorage.getItem('auth_token')
       if (!token) return
@@ -101,13 +101,10 @@ export default function OrderDetailPage() {
 
       if (response.ok) {
         const data = await response.json()
-        // Check if there's an existing dispute for this order
-        const dispute = data.disputes?.find((d: { order: { orderNumber: string }; id: string; status: string }) => {
-          // Match by order ID from the dispute's order reference
-          return d.order?.orderNumber === order?.orderNumber || 
-                 data.disputes.some((disp: { order: { orderNumber: string }; id: string; status: string }) => 
-                   disp.id === d.id)
-        })
+        // Find dispute for this specific order by order number
+        const dispute = data.disputes?.find((d: { order: { orderNumber: string }; id: string; status: string }) => 
+          d.order?.orderNumber === orderNumber
+        )
         if (dispute) {
           setExistingDispute({ id: dispute.id, status: dispute.status })
         }
@@ -117,35 +114,10 @@ export default function OrderDetailPage() {
     }
   }
 
-  // Re-check for disputes when order loads
+  // Check for disputes when order loads
   useEffect(() => {
-    if (order) {
-      const checkDisputeForOrder = async () => {
-        try {
-          const token = localStorage.getItem('auth_token')
-          if (!token) return
-
-          const response = await fetch('/api/disputes', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          })
-
-          if (response.ok) {
-            const data = await response.json()
-            // Find dispute for this specific order
-            const dispute = data.disputes?.find((d: { order: { orderNumber: string }; id: string; status: string }) => 
-              d.order?.orderNumber === order.orderNumber
-            )
-            if (dispute) {
-              setExistingDispute({ id: dispute.id, status: dispute.status })
-            }
-          }
-        } catch (err) {
-          console.error('Error checking existing dispute:', err)
-        }
-      }
-      checkDisputeForOrder()
+    if (order?.orderNumber) {
+      checkExistingDisputeForOrder(order.orderNumber)
     }
   }, [order])
 

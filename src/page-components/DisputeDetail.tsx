@@ -244,7 +244,8 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
   }
 
   const isCustomer = dispute.user.id === user?.id;
-  const isVendor = dispute.vendor.id === profile?.id || dispute.vendorId === profile?.id;
+  // Check if current user's profile is the vendor (dispute.vendorId is the profile ID)
+  const isVendor = dispute.vendorId === profile?.id;
   const vendorDeadline = getVendorDeadline();
 
   return (
