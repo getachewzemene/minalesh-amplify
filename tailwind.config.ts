@@ -99,10 +99,10 @@ export default {
 				},
 				'shimmer': {
 					'0%': {
-						backgroundPosition: '-200% 0'
+						transform: 'translateX(-100%)'
 					},
 					'100%': {
-						backgroundPosition: '200% 0'
+						transform: 'translateX(100%)'
 					}
 				}
 			},
