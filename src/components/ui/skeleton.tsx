@@ -7,7 +7,16 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement> & {
   variant?: "shimmer" | "pulse"
 }) {
-  const shimmerClasses = "animate-shimmer bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%]"
+  const shimmerClasses = [
+    "before:absolute",
+    "before:inset-0",
+    "before:-translate-x-full",
+    "before:animate-shimmer",
+    "before:bg-gradient-to-r",
+    "before:from-transparent",
+    "before:via-white/20",
+    "before:to-transparent"
+  ].join(" ")
   const pulseClasses = "animate-pulse"
   
   return (
