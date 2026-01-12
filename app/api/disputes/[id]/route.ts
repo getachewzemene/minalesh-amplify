@@ -198,14 +198,56 @@ async function updateDisputeHandler(
       );
     }
 
-    // Vendors can escalate to admin review
-    if (isVendor && status === 'pending_admin_review') {
+    // Both vendors and customers can escalate to admin review
+    if ((isVendor || isCustomer) && status === 'pending_admin_review') {
+      // Only allow escalation from open or pending_vendor_response status
+      if (!['open', 'pending_vendor_response'].includes(dispute.status)) {
+        return NextResponse.json(
+          { error: 'This dispute cannot be escalated in its current status' },
+          { status: 400 }
+        );
+      }
+
       const updated = await prisma.dispute.update({
         where: { id },
         data: { status: 'pending_admin_review' },
       });
 
-      // TODO: Send notification to admin
+      // Add an automated message about escalation
+      const escalatedBy = isVendor ? 'vendor' : 'customer';
+      await prisma.disputeMessage.create({
+        data: {
+          disputeId: id,
+          senderId: user.userId,
+          message: `This dispute has been escalated to admin review by the ${escalatedBy}.`,
+          isAdmin: false,
+        },
+      });
+
+      // Send notification to admin
+      const orderInfo = await prisma.order.findUnique({
+        where: { id: dispute.orderId },
+        select: { orderNumber: true },
+      });
+
+      if (orderInfo) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (adminEmail) {
+          try {
+            const { queueEmail, createDisputeEscalatedEmail } = await import('@/lib/email');
+            const adminEmailTemplate = createDisputeEscalatedEmail(
+              adminEmail,
+              'Admin',
+              dispute.id,
+              orderInfo.orderNumber,
+              true
+            );
+            await queueEmail(adminEmailTemplate);
+          } catch (emailError) {
+            console.error('Failed to send admin escalation email:', emailError);
+          }
+        }
+      }
 
       return NextResponse.json({
         message: 'Dispute escalated to admin review',

@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
-import { AlertCircle, ArrowLeft, CheckCircle, ExternalLink, Package, User } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, ExternalLink, Package, User, ArrowUpRight, Clock, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DisputeMessaging } from '@/components/disputes/DisputeMessaging';
@@ -25,6 +25,7 @@ interface DisputeDetail {
   status: string;
   description: string;
   evidenceUrls: string[];
+  vendorId: string;
   resolution?: string;
   resolvedAt?: string;
   createdAt: string;
@@ -80,7 +81,7 @@ interface DisputeDetailPageProps {
 }
 
 export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [dispute, setDispute] = useState<DisputeDetail | null>(null);
@@ -152,6 +153,56 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
     }
   };
 
+  const handleEscalateToAdmin = async () => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/disputes/${disputeId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          status: 'pending_admin_review',
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Escalated to Admin',
+          description: 'This dispute has been escalated to admin for review',
+        });
+        await fetchDispute();
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to escalate dispute');
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to escalate dispute',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Helper to calculate vendor response deadline
+  const getVendorDeadline = () => {
+    if (!dispute) return null;
+    const createdDate = new Date(dispute.createdAt);
+    const deadline = new Date(createdDate.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days
+    return deadline;
+  };
+
+  const isVendorDeadlinePassed = () => {
+    const deadline = getVendorDeadline();
+    if (!deadline) return false;
+    return new Date() > deadline;
+  };
+
   if (loading) {
     return (
       <>
@@ -192,7 +243,10 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
     );
   }
 
-  const isCustomer = dispute.user.id === user?.userId;
+  const isCustomer = dispute.user.id === user?.id;
+  // Check if current user's profile is the vendor (dispute.vendorId is the profile ID)
+  const isVendor = dispute.vendorId === profile?.id;
+  const vendorDeadline = getVendorDeadline();
 
   return (
     <>
@@ -269,7 +323,7 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
 
             {/* Messaging */}
             {dispute.status !== 'closed' && dispute.status !== 'resolved' && (
-              <DisputeMessaging disputeId={dispute.id} currentUserId={user?.userId || ''} />
+              <DisputeMessaging disputeId={dispute.id} currentUserId={user?.id || ''} />
             )}
           </div>
 
@@ -338,6 +392,18 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
                   <p className="text-muted-foreground">Filed</p>
                   <p className="font-medium">{format(new Date(dispute.createdAt), 'MMM d, yyyy h:mm a')}</p>
                 </div>
+                {vendorDeadline && dispute.status === 'pending_vendor_response' && (
+                  <div>
+                    <p className="text-muted-foreground">Vendor Response Deadline</p>
+                    <p className={`font-medium flex items-center gap-1 ${isVendorDeadlinePassed() ? 'text-red-600' : 'text-yellow-600'}`}>
+                      <Clock className="h-4 w-4" />
+                      {format(vendorDeadline, 'MMM d, yyyy h:mm a')}
+                    </p>
+                    {isVendorDeadlinePassed() && (
+                      <p className="text-xs text-red-500 mt-1">Deadline passed - will be escalated to admin</p>
+                    )}
+                  </div>
+                )}
                 <div>
                   <p className="text-muted-foreground">Last Updated</p>
                   <p className="font-medium">{format(new Date(dispute.updatedAt), 'MMM d, yyyy h:mm a')}</p>
@@ -345,13 +411,90 @@ export default function DisputeDetailPage({ disputeId }: DisputeDetailPageProps)
               </CardContent>
             </Card>
 
-            {/* Actions */}
+            {/* Vendor Actions */}
+            {isVendor && dispute.status !== 'closed' && dispute.status !== 'resolved' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4" />
+                    Vendor Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {dispute.status === 'pending_vendor_response' && (
+                    <Alert>
+                      <Clock className="h-4 w-4" />
+                      <AlertTitle>Response Required</AlertTitle>
+                      <AlertDescription>
+                        Please respond to this dispute by sending a message. You have until{' '}
+                        {vendorDeadline && format(vendorDeadline, 'MMM d, yyyy h:mm a')} to respond.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {(dispute.status === 'open' || dispute.status === 'pending_vendor_response') && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="w-full">
+                          <ArrowUpRight className="h-4 w-4 mr-2" />
+                          Escalate to Admin
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Escalate to Admin?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will escalate the dispute to an admin for review and mediation. 
+                            Use this if you believe the dispute requires admin intervention.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleEscalateToAdmin} disabled={actionLoading}>
+                            {actionLoading ? 'Escalating...' : 'Escalate to Admin'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Customer Actions */}
             {isCustomer && dispute.status !== 'closed' && dispute.status !== 'resolved' && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Actions</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
+                  {/* Customer can also escalate if needed */}
+                  {dispute.status === 'open' && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="w-full">
+                          <ArrowUpRight className="h-4 w-4 mr-2" />
+                          Request Admin Review
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Request Admin Review?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will request an admin to review and help resolve your dispute. 
+                            An admin will be notified and will review the case.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleEscalateToAdmin} disabled={actionLoading}>
+                            {actionLoading ? 'Requesting...' : 'Request Admin Review'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" className="w-full">

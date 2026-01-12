@@ -68,7 +68,10 @@ export default function AdminDisputesManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedDispute, setSelectedDispute] = useState<string | null>(null);
+  const [selectedDisputeData, setSelectedDisputeData] = useState<Dispute | null>(null);
   const [resolution, setResolution] = useState('');
+  const [resolutionType, setResolutionType] = useState<'refund' | 'replacement' | 'partial_refund' | 'no_action'>('no_action');
+  const [refundAmount, setRefundAmount] = useState<string>('');
   const [resolutionStatus, setResolutionStatus] = useState<'resolved' | 'closed'>('resolved');
   const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
@@ -112,19 +115,48 @@ export default function AdminDisputesManagement() {
       return;
     }
 
+    // Validate refund amount if refund-related resolution type
+    if ((resolutionType === 'refund' || resolutionType === 'partial_refund') && !refundAmount) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please provide a refund amount',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Build resolution text based on type
+    let fullResolution = resolution.trim();
+    if (resolutionType === 'refund') {
+      fullResolution = `Full Refund (ETB ${refundAmount}): ${resolution.trim()}`;
+    } else if (resolutionType === 'partial_refund') {
+      fullResolution = `Partial Refund (ETB ${refundAmount}): ${resolution.trim()}`;
+    } else if (resolutionType === 'replacement') {
+      fullResolution = `Order Replacement: ${resolution.trim()}`;
+    } else if (resolutionType === 'no_action') {
+      fullResolution = `No Action Required: ${resolution.trim()}`;
+    }
+
     setActionLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
+      const requestBody: { status: string; resolution: string; refundAmount?: number } = {
+        status: resolutionStatus,
+        resolution: fullResolution,
+      };
+
+      // Include refund amount if applicable
+      if ((resolutionType === 'refund' || resolutionType === 'partial_refund') && refundAmount) {
+        requestBody.refundAmount = parseFloat(refundAmount);
+      }
+
       const response = await fetch(`/api/admin/disputes/${selectedDispute}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          status: resolutionStatus,
-          resolution: resolution.trim(),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -133,7 +165,10 @@ export default function AdminDisputesManagement() {
           description: `Dispute ${resolutionStatus === 'resolved' ? 'resolved' : 'closed'} successfully`,
         });
         setSelectedDispute(null);
+        setSelectedDisputeData(null);
         setResolution('');
+        setRefundAmount('');
+        setResolutionType('no_action');
         await fetchDisputes();
       } else {
         const error = await response.json();
@@ -331,7 +366,10 @@ export default function AdminDisputesManagement() {
                             size="sm"
                             onClick={() => {
                               setSelectedDispute(dispute.id);
+                              setSelectedDisputeData(dispute);
                               setResolution('');
+                              setRefundAmount('');
+                              setResolutionType('no_action');
                               setResolutionStatus('resolved');
                             }}
                           >
@@ -339,14 +377,55 @@ export default function AdminDisputesManagement() {
                             Resolve
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-lg">
                           <DialogHeader>
                             <DialogTitle>Resolve Dispute</DialogTitle>
                             <DialogDescription>
                               Provide a resolution for this dispute between the customer and vendor.
+                              {selectedDisputeData && (
+                                <span className="block mt-1 text-xs">
+                                  Order #{selectedDisputeData.order.orderNumber} • Total: ETB {selectedDisputeData.order.totalAmount.toLocaleString()}
+                                </span>
+                              )}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>Resolution Type</Label>
+                              <Select value={resolutionType} onValueChange={(v) => setResolutionType(v as 'refund' | 'replacement' | 'partial_refund' | 'no_action')}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="refund">Full Refund</SelectItem>
+                                  <SelectItem value="partial_refund">Partial Refund</SelectItem>
+                                  <SelectItem value="replacement">Order Replacement</SelectItem>
+                                  <SelectItem value="no_action">No Action Required</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {(resolutionType === 'refund' || resolutionType === 'partial_refund') && (
+                              <div className="space-y-2">
+                                <Label htmlFor="refundAmount">
+                                  Refund Amount (ETB)
+                                  {selectedDisputeData && resolutionType === 'refund' && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      Max: {selectedDisputeData.order.totalAmount.toLocaleString()}
+                                    </span>
+                                  )}
+                                </Label>
+                                <Input
+                                  id="refundAmount"
+                                  type="number"
+                                  placeholder="Enter refund amount"
+                                  value={refundAmount}
+                                  onChange={(e) => setRefundAmount(e.target.value)}
+                                  max={selectedDisputeData?.order.totalAmount}
+                                />
+                              </div>
+                            )}
+                            
                             <div className="space-y-2">
                               <Label>Resolution Status</Label>
                               <Select value={resolutionStatus} onValueChange={(v) => setResolutionStatus(v as 'resolved' | 'closed')}>
@@ -363,7 +442,7 @@ export default function AdminDisputesManagement() {
                               <Label htmlFor="resolution">Resolution Details</Label>
                               <Textarea
                                 id="resolution"
-                                placeholder="Enter the resolution details..."
+                                placeholder="Explain the resolution decision and any actions taken..."
                                 value={resolution}
                                 onChange={(e) => setResolution(e.target.value)}
                                 rows={4}
@@ -375,7 +454,10 @@ export default function AdminDisputesManagement() {
                               variant="outline"
                               onClick={() => {
                                 setSelectedDispute(null);
+                                setSelectedDisputeData(null);
                                 setResolution('');
+                                setRefundAmount('');
+                                setResolutionType('no_action');
                               }}
                               disabled={actionLoading}
                             >
