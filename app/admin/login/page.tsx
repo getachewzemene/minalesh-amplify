@@ -152,12 +152,18 @@ export default function AdminLogin() {
               )}
             </Button>
 
-            <div className="text-center text-sm text-slate-500 pt-4 border-t">
+            <div className="text-center text-sm text-slate-500 pt-4 border-t space-y-2">
               <Link 
                 href="/auth/login" 
-                className="text-primary hover:text-primary/80 font-medium"
+                className="text-primary hover:text-primary/80 font-medium block"
               >
-                ← Back to customer login
+                ← Customer login
+              </Link>
+              <Link 
+                href="/vendor/login" 
+                className="text-primary hover:text-primary/80 font-medium block"
+              >
+                Vendor login
               </Link>
             </div>
           </form>

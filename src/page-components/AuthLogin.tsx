@@ -1,35 +1,91 @@
 'use client'
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Container } from "@/components/ui/container";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, User } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AuthLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Validate redirect URL to prevent open redirect vulnerabilities
+  const isValidRedirectUrl = (url: string | null): boolean => {
+    if (!url) return false;
+    // Must start with / but not //, and not contain ://
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    const success = await login(email, password);
-    
-    if (success) {
-      router.push('/');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Login failed');
+        setIsLoading(false);
+        return;
+      }
+
+      // Block admin accounts from using customer login
+      if (data.user.role === 'admin') {
+        toast.error("Admin accounts must use the Admin Login page");
+        router.push('/admin/login');
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirect vendors to vendor dashboard
+      if (data.user.role === 'vendor') {
+        localStorage.setItem('auth_token', data.token);
+        toast.success("Login successful! Redirecting to vendor dashboard...");
+        router.refresh();
+        router.push('/vendor/dashboard');
+        setIsLoading(false);
+        return;
+      }
+
+      // Store token in localStorage
+      localStorage.setItem('auth_token', data.token);
+      
+      toast.success("Login successful!");
+      
+      // Refresh router to ensure cookies are synced
+      router.refresh();
+      
+      // Redirect to the originally requested page or default to home
+      const next = searchParams.get('next');
+      const redirectUrl = 
+        isValidRedirectUrl(next) && !next.startsWith('/admin') && !next.startsWith('/vendor')
+          ? next
+          : '/';
+      router.push(redirectUrl);
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error("An error occurred during login");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -38,6 +94,11 @@ export default function AuthLogin() {
       <main className="py-16">
         <Container className="max-w-md">
           <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <div className="bg-primary/10 p-3 rounded-full">
+                <User className="h-12 w-12 text-primary" />
+              </div>
+            </div>
             <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
             <p className="text-muted-foreground">Sign in to your account</p>
           </div>
@@ -79,6 +140,7 @@ export default function AuthLogin() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   disabled={isLoading}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -100,14 +162,23 @@ export default function AuthLogin() {
               )}
             </Button>
 
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-4 pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link 
                   href="/auth/register" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
                   Sign up
+                </Link>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Are you a vendor?{" "}
+                <Link 
+                  href="/vendor/login" 
+                  className="text-primary hover:text-primary/80 font-medium underline"
+                >
+                  Vendor login
                 </Link>
               </p>
             </div>
