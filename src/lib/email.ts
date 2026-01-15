@@ -1150,3 +1150,207 @@ Minalesh Team
     `.trim(),
   };
 }
+
+/**
+ * Email template for price drop alert notification
+ */
+export function createPriceDropAlertEmail(
+  to: string,
+  productName: string,
+  currentPrice: number,
+  targetPrice: number,
+  originalPrice: number,
+  discountPercent: number,
+  productUrl: string,
+  imageUrl?: string
+): EmailTemplate {
+  const formattedCurrentPrice = currentPrice.toLocaleString();
+  const formattedTargetPrice = targetPrice.toLocaleString();
+  const formattedOriginalPrice = originalPrice.toLocaleString();
+
+  return {
+    to,
+    subject: `🎉 Price Drop Alert: ${productName} is now ${formattedCurrentPrice} ETB!`,
+    template: 'price_drop_alert',
+    text: `
+Great news! A product you've been watching has dropped to your target price!
+
+Product: ${productName}
+Current Price: ${formattedCurrentPrice} ETB
+Your Target Price: ${formattedTargetPrice} ETB
+Original Price: ${formattedOriginalPrice} ETB
+Discount: ${discountPercent}% off
+
+View Product: ${productUrl}
+
+Hurry! Prices can change at any time.
+
+Thank you for shopping with Minalesh!
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .product-card { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .product-image { width: 100%; max-width: 200px; height: auto; border-radius: 8px; display: block; margin: 0 auto 15px; }
+    .price-box { background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #4CAF50; }
+    .current-price { font-size: 28px; color: #4CAF50; font-weight: bold; }
+    .original-price { text-decoration: line-through; color: #999; font-size: 16px; }
+    .discount-badge { display: inline-block; background-color: #FF5722; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .button:hover { background-color: #45a049; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+    .urgency { background-color: #fff3cd; padding: 10px; border-radius: 5px; margin: 15px 0; color: #856404; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎉 Price Drop Alert!</h1>
+    </div>
+    <div class="content">
+      <p>Great news! A product you've been watching has dropped to your target price!</p>
+      
+      <div class="product-card">
+        ${imageUrl ? `<img src="${imageUrl}" alt="${productName}" class="product-image" />` : ''}
+        <h2 style="margin: 0 0 10px 0;">${productName}</h2>
+        <div class="price-box">
+          <p style="margin: 0;">
+            <span class="original-price">${formattedOriginalPrice} ETB</span>
+            <span class="discount-badge">${discountPercent}% OFF</span>
+          </p>
+          <p class="current-price" style="margin: 10px 0 0 0;">${formattedCurrentPrice} ETB</p>
+          <p style="margin: 5px 0 0 0; color: #666;">Your target: ${formattedTargetPrice} ETB ✓</p>
+        </div>
+        <a href="${productUrl}" class="button">View Product →</a>
+      </div>
+      
+      <div class="urgency">
+        <strong>⏰ Act Fast!</strong> Prices can change at any time.
+      </div>
+    </div>
+    <div class="footer">
+      <p>You're receiving this email because you set a price alert for this product.</p>
+      <p>Thank you for shopping with Minalesh!</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for saved search digest with new matching products
+ */
+export function createSavedSearchDigestEmail(
+  to: string,
+  searchName: string,
+  searchQuery: string,
+  products: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    salePrice?: number;
+    imageUrl?: string;
+  }>,
+  searchUrl: string,
+  appUrl: string
+): EmailTemplate {
+  const productCount = products.length;
+  const productListText = products
+    .map(
+      (p) =>
+        `- ${p.name}: ${p.salePrice ? p.salePrice.toLocaleString() : p.price.toLocaleString()} ETB`
+    )
+    .join('\n');
+
+  const productListHtml = products
+    .map(
+      (p) => `
+        <div style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
+          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 15px;" />` : '<div style="width: 60px; height: 60px; background-color: #f0f0f0; border-radius: 4px; margin-right: 15px;"></div>'}
+          <div style="flex: 1;">
+            <a href="${appUrl}/product/${p.slug}" style="color: #333; text-decoration: none; font-weight: 500;">${p.name}</a>
+            <p style="margin: 5px 0 0 0; color: #4CAF50; font-weight: bold;">
+              ${p.salePrice ? `<span style="text-decoration: line-through; color: #999; font-weight: normal;">${p.price.toLocaleString()} ETB</span> ` : ''}
+              ${p.salePrice ? p.salePrice.toLocaleString() : p.price.toLocaleString()} ETB
+            </p>
+          </div>
+          <a href="${appUrl}/product/${p.slug}" style="padding: 8px 16px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">View</a>
+        </div>
+      `
+    )
+    .join('');
+
+  return {
+    to,
+    subject: `🔔 ${productCount} new product${productCount > 1 ? 's' : ''} matching "${searchName}"`,
+    template: 'saved_search_digest',
+    text: `
+New products matching your saved search!
+
+Search: "${searchName}"
+Query: ${searchQuery}
+New Products Found: ${productCount}
+
+Products:
+${productListText}
+
+View all matching products: ${searchUrl}
+
+Thank you for shopping with Minalesh!
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2196F3; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .search-info { background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #2196F3; }
+    .products-list { background-color: white; border-radius: 8px; overflow: hidden; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .button { display: inline-block; padding: 14px 28px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 New Products Found!</h1>
+    </div>
+    <div class="content">
+      <p>Great news! We found ${productCount} new product${productCount > 1 ? 's' : ''} matching your saved search.</p>
+      
+      <div class="search-info">
+        <p style="margin: 0;"><strong>Saved Search:</strong> ${searchName}</p>
+        <p style="margin: 5px 0 0 0;"><strong>Search Query:</strong> "${searchQuery}"</p>
+      </div>
+      
+      <div class="products-list">
+        ${productListHtml}
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${searchUrl}" class="button">View All Matching Products →</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>You're receiving this email because you enabled notifications for this saved search.</p>
+      <p>To manage your saved searches, visit your profile settings.</p>
+      <p>Thank you for shopping with Minalesh!</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
