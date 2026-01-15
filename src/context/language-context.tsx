@@ -31,6 +31,26 @@ function setLanguageCookie(locale: Locale) {
 }
 
 /**
+ * Gets language preference from storage (client-side only)
+ */
+function getStoredLanguage(): Locale | null {
+  if (typeof window === 'undefined') return null;
+  
+  // Check localStorage first
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Locale;
+  if (saved && locales.includes(saved)) return saved;
+  
+  // Check cookie
+  const cookieMatch = document.cookie.match(new RegExp(`${LANGUAGE_COOKIE}=([^;]+)`));
+  if (cookieMatch) {
+    const cookieLocale = cookieMatch[1] as Locale;
+    if (locales.includes(cookieLocale)) return cookieLocale;
+  }
+  
+  return null;
+}
+
+/**
  * Saves language preference to the server for authenticated users
  */
 async function saveLanguagePreferenceToServer(locale: Locale): Promise<void> {
@@ -52,32 +72,18 @@ async function saveLanguagePreferenceToServer(locale: Locale): Promise<void> {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Initialize language from localStorage or cookie
-  const [language, setLanguageState] = useState<Locale>(() => {
-    if (typeof window !== 'undefined') {
-      // Check localStorage first
-      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Locale;
-      if (saved && locales.includes(saved)) return saved;
-      
-      // Check cookie
-      const cookieMatch = document.cookie.match(new RegExp(`${LANGUAGE_COOKIE}=([^;]+)`));
-      if (cookieMatch) {
-        const cookieLocale = cookieMatch[1] as Locale;
-        if (locales.includes(cookieLocale)) return cookieLocale;
-      }
-    }
-    return defaultLocale;
-  });
+  // Initialize with defaultLocale to ensure consistent server-client rendering
+  const [language, setLanguageState] = useState<Locale>(defaultLocale);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Sync with localStorage on mount (handle SSR)
+  // Sync with localStorage/cookie on mount (client-side only)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Locale;
-      if (saved && locales.includes(saved) && saved !== language) {
-        setLanguageState(saved);
-      }
+    const storedLanguage = getStoredLanguage();
+    if (storedLanguage && storedLanguage !== language) {
+      setLanguageState(storedLanguage);
     }
-  }, []);
+    setIsInitialized(true);
+  }, []); // Only run once on mount
 
   const setLanguage = useCallback((lang: Locale) => {
     if (!locales.includes(lang)) return;

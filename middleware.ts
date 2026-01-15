@@ -38,9 +38,10 @@ function detectBrowserLanguage(request: NextRequest): Locale | null {
     .split(',')
     .map(lang => {
       const [code, qValue] = lang.trim().split(';q=')
+      const parsedQ = qValue ? parseFloat(qValue) : 1
       return {
         code: code.split('-')[0].toLowerCase(), // Get primary language code
-        q: qValue ? parseFloat(qValue) : 1
+        q: !isNaN(parsedQ) ? parsedQ : 1 // Fallback to 1 if parsing fails
       }
     })
     .sort((a, b) => b.q - a.q)

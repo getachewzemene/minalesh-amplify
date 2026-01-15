@@ -6,6 +6,16 @@ import { type Locale } from './config';
 const CURRENCY_CODE = 'ETB';
 
 /**
+ * Map locale codes to BCP 47 locale codes for Ethiopian context
+ */
+const BCP47_LOCALE_MAP: Record<Locale, string> = {
+  en: 'en-ET',
+  am: 'am-ET',
+  om: 'om-ET',
+  ti: 'ti-ET',
+};
+
+/**
  * Format a number as Ethiopian Birr currency
  * 
  * @param amount - The amount to format
@@ -13,15 +23,7 @@ const CURRENCY_CODE = 'ETB';
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number, locale: Locale = 'en'): string {
-  // Map our locale codes to standard BCP 47 locale codes
-  const localeMap: Record<Locale, string> = {
-    en: 'en-ET',
-    am: 'am-ET',
-    om: 'om-ET',
-    ti: 'ti-ET',
-  };
-  
-  const bcp47Locale = localeMap[locale];
+  const bcp47Locale = BCP47_LOCALE_MAP[locale];
   
   try {
     return new Intl.NumberFormat(bcp47Locale, {
@@ -45,15 +47,8 @@ export function formatCurrency(amount: number, locale: Locale = 'en'): string {
  * Format a number with locale-appropriate separators
  */
 export function formatNumber(value: number, locale: Locale = 'en'): string {
-  const localeMap: Record<Locale, string> = {
-    en: 'en-ET',
-    am: 'am-ET',
-    om: 'om-ET',
-    ti: 'ti-ET',
-  };
-  
   try {
-    return new Intl.NumberFormat(localeMap[locale]).format(value);
+    return new Intl.NumberFormat(BCP47_LOCALE_MAP[locale]).format(value);
   } catch {
     return new Intl.NumberFormat('en-US').format(value);
   }
@@ -74,15 +69,8 @@ export function formatDate(
 ): string {
   const dateObj = date instanceof Date ? date : new Date(date);
   
-  const localeMap: Record<Locale, string> = {
-    en: 'en-ET',
-    am: 'am-ET',
-    om: 'om-ET',
-    ti: 'ti-ET',
-  };
-  
   try {
-    return new Intl.DateTimeFormat(localeMap[locale], {
+    return new Intl.DateTimeFormat(BCP47_LOCALE_MAP[locale], {
       timeZone: 'Africa/Addis_Ababa',
       ...options,
     }).format(dateObj);
@@ -122,15 +110,8 @@ export function formatRelativeTime(
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
   
-  const localeMap: Record<Locale, string> = {
-    en: 'en-ET',
-    am: 'am-ET',
-    om: 'om-ET',
-    ti: 'ti-ET',
-  };
-  
   try {
-    const rtf = new Intl.RelativeTimeFormat(localeMap[locale], { numeric: 'auto' });
+    const rtf = new Intl.RelativeTimeFormat(BCP47_LOCALE_MAP[locale], { numeric: 'auto' });
     
     if (diffSec < 60) {
       return rtf.format(-diffSec, 'second');
