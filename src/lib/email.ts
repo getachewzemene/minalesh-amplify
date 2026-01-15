@@ -1354,3 +1354,165 @@ Thank you for shopping with Minalesh!
     `.trim(),
   };
 }
+
+/**
+ * Email template for enhanced order tracking updates
+ * Supports all 7 order stages with courier info and estimated delivery
+ */
+export function createEnhancedTrackingEmail(
+  to: string,
+  orderNumber: string,
+  stage: string,
+  extras?: {
+    courierName?: string;
+    courierPhone?: string;
+    estimatedDeliveryStart?: Date;
+    estimatedDeliveryEnd?: Date;
+    deliveryProofUrl?: string;
+    trackingUrl?: string;
+  }
+): EmailTemplate {
+  const stageInfo: Record<string, { title: string; message: string; color: string; icon: string }> = {
+    pending: {
+      title: 'Order Placed',
+      message: 'Your order has been received and is being processed.',
+      color: '#FFC107',
+      icon: '📦',
+    },
+    confirmed: {
+      title: 'Vendor Confirmed',
+      message: 'Great news! The vendor has confirmed your order and is preparing it.',
+      color: '#00BCD4',
+      icon: '✅',
+    },
+    packed: {
+      title: 'Order Packed',
+      message: 'Your order has been packed and is ready for pickup by our delivery partner.',
+      color: '#9C27B0',
+      icon: '📦',
+    },
+    picked_up: {
+      title: 'Picked Up by Courier',
+      message: 'Your order has been picked up by our courier and is on its way!',
+      color: '#673AB7',
+      icon: '🚴',
+    },
+    in_transit: {
+      title: 'In Transit',
+      message: 'Your order is on the move and heading towards your location.',
+      color: '#E91E63',
+      icon: '🚚',
+    },
+    out_for_delivery: {
+      title: 'Out for Delivery',
+      message: 'Exciting! Your order is out for delivery and will arrive soon.',
+      color: '#FF5722',
+      icon: '🏃',
+    },
+    delivered: {
+      title: 'Delivered',
+      message: 'Your order has been delivered. Thank you for shopping with us!',
+      color: '#4CAF50',
+      icon: '🎉',
+    },
+  };
+
+  const info = stageInfo[stage] || {
+    title: 'Order Update',
+    message: `Your order status has been updated to: ${stage.replace(/_/g, ' ')}`,
+    color: '#2196F3',
+    icon: '📋',
+  };
+
+  const courierHtml = extras?.courierName ? `
+    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+      <p style="margin: 0; font-weight: bold;">🧑‍💼 Your Delivery Person</p>
+      <p style="margin: 5px 0 0 0;">${extras.courierName}${extras.courierPhone ? ` • ${extras.courierPhone}` : ''}</p>
+    </div>
+  ` : '';
+
+  const estimatedDeliveryHtml = extras?.estimatedDeliveryEnd ? `
+    <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+      <p style="margin: 0; font-weight: bold;">⏰ Estimated Delivery</p>
+      <p style="margin: 5px 0 0 0;">${new Date(extras.estimatedDeliveryEnd).toLocaleString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })}</p>
+    </div>
+  ` : '';
+
+  const deliveryProofHtml = extras?.deliveryProofUrl ? `
+    <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 15px 0;">
+      <p style="margin: 0; font-weight: bold;">📸 Proof of Delivery</p>
+      <p style="margin: 5px 0 0 0;"><a href="${extras.deliveryProofUrl}" style="color: #4CAF50;">View delivery photo</a></p>
+    </div>
+  ` : '';
+
+  const trackingButtonHtml = extras?.trackingUrl ? `
+    <div style="text-align: center; margin: 20px 0;">
+      <a href="${extras.trackingUrl}" style="display: inline-block; padding: 12px 24px; background-color: ${info.color}; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Track Your Order</a>
+    </div>
+  ` : '';
+
+  return {
+    to,
+    subject: `${info.icon} ${info.title} - Order ${orderNumber}`,
+    template: 'enhanced_tracking',
+    text: `
+${info.title}
+
+Order Number: ${orderNumber}
+
+${info.message}
+
+${extras?.courierName ? `Delivery Person: ${extras.courierName}${extras.courierPhone ? ` (${extras.courierPhone})` : ''}` : ''}
+${extras?.estimatedDeliveryEnd ? `Estimated Delivery: ${new Date(extras.estimatedDeliveryEnd).toLocaleString()}` : ''}
+
+Track your order at any time in your Minalesh account.
+
+Thank you for shopping with Minalesh!
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: ${info.color}; color: white; padding: 30px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .order-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0; font-size: 48px;">${info.icon}</h1>
+      <h2 style="margin: 10px 0 0 0;">${info.title}</h2>
+    </div>
+    <div class="content">
+      <div class="order-box">
+        <p style="margin: 0; font-size: 14px; color: #666;">Order Number</p>
+        <p style="margin: 5px 0 15px 0; font-size: 20px; font-weight: bold;">#${orderNumber}</p>
+        <p style="margin: 0;">${info.message}</p>
+      </div>
+      ${courierHtml}
+      ${estimatedDeliveryHtml}
+      ${deliveryProofHtml}
+      ${trackingButtonHtml}
+    </div>
+    <div class="footer">
+      <p>Thank you for shopping with Minalesh!</p>
+      <p style="color: #999;">You're receiving this email because you placed an order on Minalesh.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}

@@ -1,16 +1,43 @@
 import { useState, useEffect } from "react";
-import { Package, Truck, CheckCircle, Clock, MapPin } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, MapPin, Phone, User, Camera, Navigation } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
+import { getCompletedStatuses } from "@/lib/order-status";
+import type { OrderStatus } from "@prisma/client";
+
+interface DeliveryTracking {
+  courier: {
+    name: string | null;
+    phone: string | null;
+    photoUrl: string | null;
+    vehicleInfo: string | null;
+  } | null;
+  location: {
+    latitude: number;
+    longitude: number;
+    lastUpdate: string;
+  } | null;
+  estimatedDelivery: {
+    start: string | null;
+    end: string | null;
+  };
+  deliveryProof: {
+    photoUrl: string;
+    signatureUrl: string | null;
+    recipientName: string | null;
+    notes: string | null;
+    deliveredAt: string;
+  } | null;
+}
 
 interface Order {
   id: string;
   order_number: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded" | "confirmed";
+  status: "pending" | "paid" | "confirmed" | "processing" | "packed" | "picked_up" | "in_transit" | "out_for_delivery" | "fulfilled" | "shipped" | "delivered" | "cancelled" | "refunded";
   payment_status: "pending" | "processing" | "refunded" | "failed" | "completed";
   total_amount: number;
   created_at: string;
@@ -25,10 +52,24 @@ interface Order {
   }[];
 }
 
+/**
+ * Enhanced Order Tracking Component
+ * 
+ * Supports the enhanced order stages:
+ * 1. Order placed
+ * 2. Vendor confirmed
+ * 3. Packed
+ * 4. Picked up by courier
+ * 5. In transit
+ * 6. Out for delivery
+ * 7. Delivered
+ */
 export function OrderTracking() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [tracking, setTracking] = useState<DeliveryTracking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [trackingLoading, setTrackingLoading] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -36,6 +77,12 @@ export function OrderTracking() {
       fetchOrders();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      fetchTracking(selectedOrder.id);
+    }
+  }, [selectedOrder]);
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -50,7 +97,6 @@ export function OrderTracking() {
 
       if (response.ok) {
         const data = await response.json();
-        // Transform the data to match the expected format
         const transformedData = data.map((order: any) => ({
           ...order,
           order_number: order.orderNumber,
@@ -76,16 +122,46 @@ export function OrderTracking() {
     }
   };
 
+  const fetchTracking = async (orderId: string) => {
+    setTrackingLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/orders/${orderId}/tracking`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTracking(data);
+      }
+    } catch (error) {
+      console.error('Error fetching tracking:', error);
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "pending":
         return <Clock className="h-5 w-5 text-yellow-500" />;
+      case "paid":
+      case "confirmed":
+        return <CheckCircle className="h-5 w-5 text-blue-500" />;
       case "processing":
-        return <Package className="h-5 w-5 text-blue-500" />;
-      case "shipped":
+      case "packed":
+        return <Package className="h-5 w-5 text-indigo-500" />;
+      case "picked_up":
+      case "in_transit":
         return <Truck className="h-5 w-5 text-purple-500" />;
+      case "out_for_delivery":
+        return <Navigation className="h-5 w-5 text-orange-500" />;
       case "delivered":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case "cancelled":
+        return <Clock className="h-5 w-5 text-red-500" />;
       default:
         return <Clock className="h-5 w-5 text-gray-500" />;
     }
@@ -95,10 +171,20 @@ export function OrderTracking() {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "processing":
+      case "paid":
         return "bg-blue-100 text-blue-800";
-      case "shipped":
+      case "confirmed":
+        return "bg-cyan-100 text-cyan-800";
+      case "processing":
+        return "bg-indigo-100 text-indigo-800";
+      case "packed":
+        return "bg-violet-100 text-violet-800";
+      case "picked_up":
         return "bg-purple-100 text-purple-800";
+      case "in_transit":
+        return "bg-fuchsia-100 text-fuchsia-800";
+      case "out_for_delivery":
+        return "bg-orange-100 text-orange-800";
       case "delivered":
         return "bg-green-100 text-green-800";
       case "cancelled":
@@ -108,12 +194,38 @@ export function OrderTracking() {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: "Order Placed",
+      paid: "Payment Confirmed",
+      confirmed: "Vendor Confirmed",
+      processing: "Processing",
+      packed: "Packed",
+      picked_up: "Picked Up",
+      in_transit: "In Transit",
+      out_for_delivery: "Out for Delivery",
+      fulfilled: "Fulfilled",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+      refunded: "Refunded",
+    };
+    return labels[status] || status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  // Enhanced progress tracker with 7 stages
+  // Uses shared getCompletedStatuses utility from order-status.ts
   const getOrderProgress = (order: Order) => {
+    const completedStatuses = getCompletedStatuses(order.status as OrderStatus);
+
     const steps = [
-      { key: "pending", label: "Order Placed", completed: true },
-      { key: "processing", label: "Processing", completed: ["processing", "shipped", "delivered"].includes(order.status) },
-      { key: "shipped", label: "Shipped", completed: ["shipped", "delivered"].includes(order.status) },
-      { key: "delivered", label: "Delivered", completed: order.status === "delivered" },
+      { key: "pending", label: "Order Placed", completed: completedStatuses.includes("pending" as OrderStatus) },
+      { key: "confirmed", label: "Confirmed", completed: completedStatuses.includes("confirmed" as OrderStatus) || completedStatuses.includes("paid" as OrderStatus) },
+      { key: "packed", label: "Packed", completed: completedStatuses.includes("packed" as OrderStatus) },
+      { key: "picked_up", label: "Picked Up", completed: completedStatuses.includes("picked_up" as OrderStatus) },
+      { key: "in_transit", label: "In Transit", completed: completedStatuses.includes("in_transit" as OrderStatus) },
+      { key: "out_for_delivery", label: "Out for Delivery", completed: completedStatuses.includes("out_for_delivery" as OrderStatus) },
+      { key: "delivered", label: "Delivered", completed: completedStatuses.includes("delivered" as OrderStatus) },
     ];
     return steps;
   };
@@ -132,7 +244,7 @@ export function OrderTracking() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Order Details</h2>
-          <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+          <Button variant="outline" onClick={() => { setSelectedOrder(null); setTracking(null); }}>
             Back to Orders
           </Button>
         </div>
@@ -142,7 +254,7 @@ export function OrderTracking() {
             <CardTitle className="flex items-center justify-between">
               <span>Order #{selectedOrder.order_number}</span>
               <Badge className={getStatusColor(selectedOrder.status)}>
-                {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                {getStatusLabel(selectedOrder.status)}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -165,6 +277,14 @@ export function OrderTracking() {
                       {selectedOrder.payment_status}
                     </Badge>
                   </div>
+                  {tracking?.estimatedDelivery?.end && (
+                    <div className="flex justify-between">
+                      <span>Est. Delivery:</span>
+                      <span className="font-medium text-primary">
+                        {format(new Date(tracking.estimatedDelivery.end), "MMM dd, h:mm a")}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -175,9 +295,9 @@ export function OrderTracking() {
                     Shipping Address
                   </h3>
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p>{selectedOrder.shipping_address.street}</p>
+                    <p>{selectedOrder.shipping_address.street || selectedOrder.shipping_address.line1}</p>
                     <p>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.country}</p>
-                    <p>{selectedOrder.shipping_address.postal_code}</p>
+                    <p>{selectedOrder.shipping_address.postal_code || selectedOrder.shipping_address.postalCode}</p>
                   </div>
                 </div>
               )}
@@ -185,45 +305,182 @@ export function OrderTracking() {
           </CardContent>
         </Card>
 
-        {/* Progress Tracker */}
+        {/* Courier Information */}
+        {tracking?.courier && (tracking.courier.name || tracking.courier.phone) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Delivery Person
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                {tracking.courier.photoUrl ? (
+                  <img 
+                    src={tracking.courier.photoUrl} 
+                    alt={tracking.courier.name || 'Courier'} 
+                    className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="font-semibold text-lg">{tracking.courier.name || 'Your Courier'}</p>
+                  {tracking.courier.vehicleInfo && (
+                    <p className="text-sm text-muted-foreground">{tracking.courier.vehicleInfo}</p>
+                  )}
+                </div>
+                {tracking.courier.phone && (
+                  <a 
+                    href={`tel:${tracking.courier.phone}`}
+                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition"
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span>Call</span>
+                  </a>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Live Location */}
+        {tracking?.location && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Navigation className="h-5 w-5" />
+                Live Location
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Current Position</span>
+                  <span className="text-xs text-muted-foreground">
+                    Updated: {tracking.location.lastUpdate ? format(new Date(tracking.location.lastUpdate), "h:mm a") : 'N/A'}
+                  </span>
+                </div>
+                <p className="text-sm">
+                  <span className="font-mono">
+                    {tracking.location.latitude.toFixed(6)}, {tracking.location.longitude.toFixed(6)}
+                  </span>
+                </p>
+                <Button variant="outline" size="sm" className="mt-3" asChild>
+                  <a 
+                    href={`https://maps.google.com/?q=${tracking.location.latitude},${tracking.location.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Open in Maps
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Progress Tracker - 7 Stages */}
         <Card>
           <CardHeader>
             <CardTitle>Order Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              {progress.map((step, index) => (
-                <div key={step.key} className="flex items-center">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                    step.completed 
-                      ? "bg-primary border-primary text-primary-foreground" 
-                      : "border-muted bg-background"
-                  }`}>
-                    {step.completed ? (
-                      <CheckCircle className="h-5 w-5" />
-                    ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
-                    )}
+            <div className="relative">
+              {/* Progress Line */}
+              <div className="absolute top-5 left-5 right-5 h-0.5 bg-muted" />
+              <div 
+                className="absolute top-5 left-5 h-0.5 bg-primary transition-all duration-500"
+                style={{ 
+                  width: `${(progress.filter(s => s.completed).length - 1) / (progress.length - 1) * 100}%` 
+                }}
+              />
+              
+              {/* Steps */}
+              <div className="flex justify-between relative">
+                {progress.map((step, index) => (
+                  <div key={step.key} className="flex flex-col items-center" style={{ width: `${100 / progress.length}%` }}>
+                    <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 z-10 transition-all duration-300 ${
+                      step.completed 
+                        ? "bg-primary border-primary text-primary-foreground" 
+                        : "border-muted bg-background"
+                    }`}>
+                      {step.completed ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : (
+                        <span className="text-sm font-medium">{index + 1}</span>
+                      )}
+                    </div>
+                    <p className={`text-xs text-center mt-2 max-w-[60px] ${
+                      step.completed ? "text-primary font-medium" : "text-muted-foreground"
+                    }`}>
+                      {step.label}
+                    </p>
                   </div>
-                  {index < progress.length - 1 && (
-                    <div className={`h-1 w-24 mx-2 ${
-                      progress[index + 1].completed ? "bg-primary" : "bg-muted"
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-2">
-              {progress.map((step) => (
-                <div key={step.key} className="text-xs text-center w-10">
-                  <p className={step.completed ? "text-primary font-medium" : "text-muted-foreground"}>
-                    {step.label}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Delivery Proof */}
+        {tracking?.deliveryProof && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Proof of Delivery
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <img 
+                    src={tracking.deliveryProof.photoUrl} 
+                    alt="Delivery proof" 
+                    className="w-full h-48 object-cover rounded-lg border"
+                  />
+                </div>
+                <div className="space-y-3">
+                  {tracking.deliveryProof.recipientName && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Received by</p>
+                      <p className="font-medium">{tracking.deliveryProof.recipientName}</p>
+                    </div>
+                  )}
+                  {tracking.deliveryProof.deliveredAt && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Delivered at</p>
+                      <p className="font-medium">
+                        {format(new Date(tracking.deliveryProof.deliveredAt), "MMM dd, yyyy 'at' h:mm a")}
+                      </p>
+                    </div>
+                  )}
+                  {tracking.deliveryProof.notes && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Notes</p>
+                      <p className="text-sm">{tracking.deliveryProof.notes}</p>
+                    </div>
+                  )}
+                  {tracking.deliveryProof.signatureUrl && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Signature</p>
+                      <img 
+                        src={tracking.deliveryProof.signatureUrl} 
+                        alt="Signature" 
+                        className="h-16 border rounded bg-white"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Order Items */}
         <Card>
@@ -277,7 +534,7 @@ export function OrderTracking() {
                   </div>
                   <div className="text-right">
                     <Badge className={getStatusColor(order.status)}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {getStatusLabel(order.status)}
                     </Badge>
                     <p className="text-sm text-muted-foreground mt-1">
                       {formatCurrency(order.total_amount)}
