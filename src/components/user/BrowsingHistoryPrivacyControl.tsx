@@ -39,18 +39,17 @@ export function BrowsingHistoryPrivacyControl() {
       updateHistoryCount()
     }
 
-    window.addEventListener('recently-viewed-updated', handleUpdate)
-    window.addEventListener('browsing-history-preference-changed', () => {
+    const handlePreferenceChange = () => {
       setIsEnabled(isBrowsingHistoryEnabled())
       updateHistoryCount()
-    })
+    }
+
+    window.addEventListener('recently-viewed-updated', handleUpdate)
+    window.addEventListener('browsing-history-preference-changed', handlePreferenceChange)
 
     return () => {
       window.removeEventListener('recently-viewed-updated', handleUpdate)
-      window.removeEventListener('browsing-history-preference-changed', () => {
-        setIsEnabled(isBrowsingHistoryEnabled())
-        updateHistoryCount()
-      })
+      window.removeEventListener('browsing-history-preference-changed', handlePreferenceChange)
     }
   }, [])
 
