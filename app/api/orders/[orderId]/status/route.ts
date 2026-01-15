@@ -27,7 +27,12 @@ export async function PUT(
     const body = await request.json();
     const { status, notes } = body;
 
-    const allowedStatuses = ['pending','paid','confirmed','processing','fulfilled','shipped','delivered','cancelled','refunded'] as const;
+    // Enhanced order statuses including new tracking stages
+    const allowedStatuses = [
+      'pending', 'paid', 'confirmed', 'processing',
+      'packed', 'picked_up', 'in_transit', 'out_for_delivery',
+      'fulfilled', 'shipped', 'delivered', 'cancelled', 'refunded'
+    ] as const;
     if (!status || !allowedStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Invalid order status' },
@@ -84,6 +89,18 @@ export async function PUT(
         break;
       case 'processing':
         timestampFields.processingAt = now;
+        break;
+      case 'packed':
+        timestampFields.packedAt = now;
+        break;
+      case 'picked_up':
+        timestampFields.pickedUpAt = now;
+        break;
+      case 'in_transit':
+        timestampFields.inTransitAt = now;
+        break;
+      case 'out_for_delivery':
+        timestampFields.outForDeliveryAt = now;
         break;
       case 'fulfilled':
         timestampFields.fulfilledAt = now;

@@ -16,6 +16,10 @@ enum OrderStatus {
   paid
   confirmed
   processing
+  packed
+  picked_up
+  in_transit
+  out_for_delivery
   fulfilled
   shipped
   delivered
@@ -300,11 +304,20 @@ model Order {
   paidAt                 DateTime?     @map("paid_at")
   confirmedAt            DateTime?     @map("confirmed_at")
   processingAt           DateTime?     @map("processing_at")
+  packedAt               DateTime?     @map("packed_at")
+  pickedUpAt             DateTime?     @map("picked_up_at")
+  inTransitAt            DateTime?     @map("in_transit_at")
+  outForDeliveryAt       DateTime?     @map("out_for_delivery_at")
   fulfilledAt            DateTime?     @map("fulfilled_at")
   shippedAt              DateTime?     @map("shipped_at")
   deliveredAt            DateTime?     @map("delivered_at")
   cancelledAt            DateTime?     @map("cancelled_at")
   refundedAt             DateTime?     @map("refunded_at")
+  // Enhanced delivery tracking fields
+  estimatedDeliveryStart DateTime?     @map("estimated_delivery_start")
+  estimatedDeliveryEnd   DateTime?     @map("estimated_delivery_end")
+  deliveryProofUrl       String?       @map("delivery_proof_url")
+  deliveryNotes          String?       @map("delivery_notes")
   createdAt              DateTime      @default(now()) @map("created_at")
   updatedAt              DateTime      @updatedAt @map("updated_at")
 
@@ -327,6 +340,7 @@ model Order {
   disputes             Dispute[]
   subscriptionOrders   SubscriptionOrder[]
   protectionClaims     ProtectionClaim[]
+  deliveryTracking     DeliveryTracking?
 
   @@map("orders")
 }
@@ -343,6 +357,46 @@ model OrderEvent {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("order_events")
+}
+
+// Enhanced Delivery Tracking for real-time delivery visibility
+model DeliveryTracking {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId                String    @unique @map("order_id") @db.Uuid
+  // Logistics Provider Integration
+  logisticsProvider      String?   @map("logistics_provider")
+  providerTrackingId     String?   @map("provider_tracking_id")
+  providerWebhookEnabled Boolean   @default(false) @map("provider_webhook_enabled")
+  // Courier Information
+  courierName            String?   @map("courier_name")
+  courierPhone           String?   @map("courier_phone")
+  courierPhotoUrl        String?   @map("courier_photo_url")
+  courierVehicleInfo     String?   @map("courier_vehicle_info")
+  // GPS Tracking (where available)
+  currentLatitude        Decimal?  @map("current_latitude") @db.Decimal(10, 8)
+  currentLongitude       Decimal?  @map("current_longitude") @db.Decimal(11, 8)
+  lastLocationUpdate     DateTime? @map("last_location_update")
+  locationHistory        Json      @default("[]") @map("location_history")
+  // Delivery Window
+  estimatedDeliveryStart DateTime? @map("estimated_delivery_start")
+  estimatedDeliveryEnd   DateTime? @map("estimated_delivery_end")
+  actualDeliveryTime     DateTime? @map("actual_delivery_time")
+  // Delivery Proof
+  deliveryProofPhotoUrl  String?   @map("delivery_proof_photo_url")
+  deliverySignatureUrl   String?   @map("delivery_signature_url")
+  deliveryNotes          String?   @map("delivery_notes")
+  recipientName          String?   @map("recipient_name")
+  // SMS Notification Tracking
+  smsNotificationsSent   Json      @default("[]") @map("sms_notifications_sent")
+  // Metadata
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([logisticsProvider])
+  @@index([providerTrackingId])
+  @@map("delivery_tracking")
 }
 
 model WebhookEvent {
