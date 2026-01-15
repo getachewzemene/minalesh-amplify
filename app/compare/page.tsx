@@ -122,10 +122,11 @@ export default function ComparePage() {
   }
 
   const handleRemoveProduct = (productId: string) => {
-    if (products.length <= 2) {
+    // Prevent removing the last product - need at least 1 to stay on comparison page
+    if (products.length <= 1) {
       toast({
         title: 'Cannot Remove',
-        description: 'You need at least 2 products to compare',
+        description: 'This is the last product. Clear all to exit comparison.',
         variant: 'destructive',
       })
       return

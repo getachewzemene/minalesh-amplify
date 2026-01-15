@@ -322,11 +322,12 @@ function ProductsContent() {
     if (isInCompare(product.id)) {
       removeFromCompare(product.id)
     } else {
+      // When originalPrice exists, price is the sale price and originalPrice is the original
       addToCompare({
         id: product.id,
         name: product.name,
-        price: product.price,
-        salePrice: product.originalPrice ? product.price : null,
+        price: product.originalPrice || product.price, // Original price
+        salePrice: product.originalPrice ? product.price : null, // Sale price (only if there's a discount)
         image: typeof product.image === 'string' ? product.image : product.image.src,
         category: product.category,
         vendor: product.vendor,
