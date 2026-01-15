@@ -1,18 +1,12 @@
-import { getRequestConfig } from 'next-intl/server';
-import { notFound } from 'next/navigation';
+/**
+ * Root i18n configuration file
+ * 
+ * This file re-exports the i18n request configuration for next-intl.
+ * The actual configuration is in src/i18n/request.ts
+ */
 
-// List of supported locales
-export const locales = ['en', 'am', 'om', 'ti'] as const;
-export type Locale = (typeof locales)[number];
+// Re-export configuration for convenience
+export { locales, defaultLocale, type Locale } from './src/i18n/config';
 
-// Default locale
-export const defaultLocale: Locale = 'en';
-
-export default getRequestConfig(async ({ locale }) => {
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as Locale)) notFound();
-
-  return {
-    messages: (await import(`./messages/${locale}.json`)).default
-  };
-});
+// Export the request config as default
+export { default } from './src/i18n/request';

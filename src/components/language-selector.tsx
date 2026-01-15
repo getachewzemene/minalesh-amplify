@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -6,29 +8,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Globe } from "lucide-react"
-import { useLanguage, type Language } from "@/context/language-context"
-
-interface LanguageOption {
-  code: Language
-  name: string
-  nativeName: string
-}
-
-const languages: LanguageOption[] = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'am', name: 'Amharic', nativeName: 'አማርኛ' },
-  { code: 'om', name: 'Oromo', nativeName: 'Afaan Oromoo' },
-  { code: 'ti', name: 'Tigrinya', nativeName: 'ትግርኛ' }
-]
+import { useLanguage } from "@/context/language-context"
+import { languageNames, locales, type Locale } from "@/i18n/config"
 
 export function LanguageSelector() {
   const { language, setLanguage } = useLanguage()
 
-  const handleLanguageChange = (langCode: Language) => {
+  const handleLanguageChange = (langCode: Locale) => {
     setLanguage(langCode)
   }
 
-  const currentLanguage = languages.find(lang => lang.code === language)
+  const currentLanguage = languageNames[language]
 
   return (
     <DropdownMenu>
@@ -36,22 +26,28 @@ export function LanguageSelector() {
         <Button 
           variant="outline" 
           className="bg-primary hover:bg-primary/90 border-primary text-primary-foreground"
+          aria-label="Select language"
         >
           <Globe className="h-4 w-4 mr-2" />
-          {currentLanguage?.nativeName}
+          <span className="hidden sm:inline">{currentLanguage.nativeName}</span>
+          <span className="sm:hidden">{currentLanguage.flag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-popover">
-        {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => handleLanguageChange(language.code)}
-            className="cursor-pointer hover:bg-accent"
-          >
-            <span className="font-medium">{language.nativeName}</span>
-            <span className="ml-2 text-muted-foreground">({language.name})</span>
-          </DropdownMenuItem>
-        ))}
+        {locales.map((locale) => {
+          const langInfo = languageNames[locale]
+          return (
+            <DropdownMenuItem
+              key={locale}
+              onClick={() => handleLanguageChange(locale)}
+              className={`cursor-pointer hover:bg-accent ${language === locale ? 'bg-accent' : ''}`}
+            >
+              <span className="mr-2">{langInfo.flag}</span>
+              <span className="font-medium">{langInfo.nativeName}</span>
+              <span className="ml-2 text-muted-foreground">({langInfo.name})</span>
+            </DropdownMenuItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   )

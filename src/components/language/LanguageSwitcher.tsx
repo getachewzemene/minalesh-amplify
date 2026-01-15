@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import { Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,92 +9,47 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useLanguage } from '@/context/language-context'
+import { languageNames, locales, type Locale } from '@/i18n/config'
 
-const languages = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'am', name: 'አማርኛ', flag: '🇪🇹' },
-  { code: 'om', name: 'Afaan Oromoo', flag: '🇪🇹' },
-  { code: 'ti', name: 'ትግርኛ', flag: '🇪🇹' },
-]
-
+/**
+ * Language Switcher Component
+ * 
+ * Provides a dropdown menu for switching between supported languages.
+ * Uses the centralized language context for state management.
+ */
 export function LanguageSwitcher() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [currentLocale, setCurrentLocale] = React.useState('en')
+  const { language, setLanguage } = useLanguage()
 
-  React.useEffect(() => {
-    // Get current locale from pathname or cookie
-    const pathSegments = pathname.split('/')
-    const localeInPath = languages.find(lang => lang.code === pathSegments[1])
-    
-    if (localeInPath) {
-      setCurrentLocale(localeInPath.code)
-    } else {
-      // Check cookie or default to 'en'
-      const savedLocale = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('NEXT_LOCALE='))
-        ?.split('=')[1] || 'en'
-      setCurrentLocale(savedLocale)
-    }
-  }, [pathname])
-
-  const switchLanguage = (newLocale: string) => {
-    // Save preference to cookie
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`
-    
-    // Save to user profile if logged in
-    fetch('/api/user/preferences', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ language: newLocale }),
-    }).catch((error) => {
-      // Log error but don't block language change
-      console.error('Failed to save language preference:', error)
-    })
-
-    // Navigate to new locale
-    const pathSegments = pathname.split('/')
-    const currentLocaleInPath = languages.find(lang => lang.code === pathSegments[1])
-    
-    let newPath
-    if (currentLocaleInPath) {
-      // Replace existing locale in path
-      pathSegments[1] = newLocale
-      newPath = pathSegments.join('/')
-    } else if (newLocale !== 'en') {
-      // Add locale to path (only if not English - default)
-      newPath = `/${newLocale}${pathname}`
-    } else {
-      newPath = pathname
-    }
-
-    router.push(newPath)
-    router.refresh()
+  const switchLanguage = (newLocale: Locale) => {
+    setLanguage(newLocale)
   }
 
-  const currentLanguage = languages.find(lang => lang.code === currentLocale) || languages[0]
+  const currentLanguage = languageNames[language]
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="gap-2" aria-label="Switch language">
           <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.name}</span>
+          <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.nativeName}</span>
           <span className="sm:hidden">{currentLanguage.flag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => switchLanguage(language.code)}
-            className={currentLocale === language.code ? 'bg-accent' : ''}
-          >
-            <span className="mr-2">{language.flag}</span>
-            {language.name}
-          </DropdownMenuItem>
-        ))}
+        {locales.map((locale) => {
+          const langInfo = languageNames[locale]
+          return (
+            <DropdownMenuItem
+              key={locale}
+              onClick={() => switchLanguage(locale)}
+              className={language === locale ? 'bg-accent' : ''}
+            >
+              <span className="mr-2">{langInfo.flag}</span>
+              {langInfo.nativeName}
+            </DropdownMenuItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   )

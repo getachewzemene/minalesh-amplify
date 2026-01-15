@@ -13,7 +13,27 @@
     "sort": "Sort",
     "viewAll": "View All",
     "learnMore": "Learn More",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "apply": "Apply",
+    "update": "Update",
+    "add": "Add",
+    "remove": "Remove",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "done": "Done",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "noResults": "No results found",
+    "required": "Required"
   },
   "nav": {
     "home": "Home",
@@ -46,7 +66,18 @@
     "reviews": "Reviews",
     "description": "Description",
     "specifications": "Specifications",
-    "compareProducts": "Compare Products"
+    "compareProducts": "Compare Products",
+    "quantity": "Quantity",
+    "color": "Color",
+    "size": "Size",
+    "brand": "Brand",
+    "sku": "SKU",
+    "available": "Available",
+    "soldOut": "Sold Out",
+    "sale": "Sale",
+    "discount": "Discount",
+    "originalPrice": "Original Price",
+    "salePrice": "Sale Price"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -59,7 +90,12 @@
     "continueShopping": "Continue Shopping",
     "removeItem": "Remove Item",
     "updateQuantity": "Update Quantity",
-    "applyCoupon": "Apply Coupon"
+    "applyCoupon": "Apply Coupon",
+    "couponCode": "Coupon Code",
+    "couponApplied": "Coupon applied",
+    "invalidCoupon": "Invalid coupon code",
+    "freeShipping": "Free Shipping",
+    "estimatedDelivery": "Estimated Delivery"
   },
   "orders": {
     "title": "My Orders",
@@ -71,7 +107,14 @@
     "trackOrder": "Track Order",
     "cancelOrder": "Cancel Order",
     "returnOrder": "Return Order",
-    "noOrders": "No orders yet"
+    "noOrders": "No orders yet",
+    "pending": "Pending",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "returned": "Returned",
+    "refunded": "Refunded"
   },
   "vendor": {
     "dashboard": "Vendor Dashboard",
@@ -82,7 +125,13 @@
     "analytics": "Analytics",
     "earnings": "Earnings",
     "reviews": "Reviews",
-    "inventory": "Inventory"
+    "inventory": "Inventory",
+    "storeName": "Store Name",
+    "storeDescription": "Store Description",
+    "storeSettings": "Store Settings",
+    "salesReport": "Sales Report",
+    "commission": "Commission",
+    "payout": "Payout"
   },
   "auth": {
     "login": "Login",
@@ -97,7 +146,12 @@
     "registerVendor": "Register as Vendor",
     "firstName": "First Name",
     "lastName": "Last Name",
-    "phoneNumber": "Phone Number"
+    "phoneNumber": "Phone Number",
+    "resetPassword": "Reset Password",
+    "verifyEmail": "Verify Email",
+    "verification": "Verification",
+    "enterCode": "Enter Code",
+    "resendCode": "Resend Code"
   },
   "profile": {
     "title": "My Profile",
@@ -108,7 +162,10 @@
     "language": "Language",
     "currency": "Currency",
     "notifications": "Notifications",
-    "privacy": "Privacy Settings"
+    "privacy": "Privacy Settings",
+    "changePassword": "Change Password",
+    "deleteAccount": "Delete Account",
+    "accountSettings": "Account Settings"
   },
   "loyalty": {
     "title": "Loyalty Program",
@@ -165,11 +222,15 @@
     "networkError": "Network error. Please check your connection.",
     "notFound": "Page not found",
     "unauthorized": "Unauthorized access",
-    "serverError": "Server error. Please try again later."
+    "serverError": "Server error. Please try again later.",
+    "validationError": "Please check your input",
+    "loginRequired": "Please login to continue",
+    "sessionExpired": "Your session has expired"
   },
   "currency": {
     "etb": "ETB",
-    "birr": "Birr"
+    "birr": "Birr",
+    "symbol": "Br"
   },
   "languages": {
     "title": "Select Language",
@@ -177,6 +238,26 @@
     "amharic": "Amharic",
     "oromo": "Oromo",
     "tigrinya": "Tigrinya",
-    "switchLanguage": "Switch Language"
+    "switchLanguage": "Switch Language",
+    "currentLanguage": "Current Language"
+  },
+  "dateTime": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "now": "Now",
+    "ago": "ago",
+    "in": "in",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years"
+  },
+  "metadata": {
+    "title": "Minalesh - Ethiopia's Intelligent Marketplace",
+    "description": "Discover and shop from verified Ethiopian vendors. Quality products with secure payments and fast delivery.",
+    "keywords": "Ethiopian marketplace, online shopping, Ethiopian products, e-commerce Ethiopia"
   }
 }

@@ -13,7 +13,27 @@
     "sort": "ስርዓት",
     "viewAll": "ኩሉ ርአ",
     "learnMore": "ተወሳኺ ተማሃር",
-    "close": "ዓጽው"
+    "close": "ዓጽው",
+    "back": "ተመለስ",
+    "next": "ቀጻሊ",
+    "previous": "ቅድሚኡ",
+    "submit": "ኣቕርብ",
+    "reset": "ጀምር",
+    "clear": "ጸርግ",
+    "apply": "ተግብር",
+    "update": "ኣዘምን",
+    "add": "ወስኽ",
+    "remove": "ኣልግስ",
+    "yes": "እወ",
+    "no": "ኣይፋል",
+    "ok": "ሕራይ",
+    "done": "ተወዲኡ",
+    "selectAll": "ኩሉ ምረጽ",
+    "deselectAll": "ኩሉ ኣይትምረጽ",
+    "showMore": "ተወሳኺ ኣርኢ",
+    "showLess": "ዝውሓደ ኣርኢ",
+    "noResults": "ውጽኢት ኣይተረኽበን",
+    "required": "ኣድላዪ"
   },
   "nav": {
     "home": "መበገሲ",
@@ -46,7 +66,18 @@
     "reviews": "ግምገማታት",
     "description": "መግለጺ",
     "specifications": "ዝርዝራት",
-    "compareProducts": "ፍርያታት ኣነፃጽር"
+    "compareProducts": "ፍርያታት ኣነፃጽር",
+    "quantity": "ብዝሒ",
+    "color": "ሕብሪ",
+    "size": "ዓቐን",
+    "brand": "ብራንድ",
+    "sku": "SKU",
+    "available": "ይርከብ",
+    "soldOut": "ተሸይጡ",
+    "sale": "ሽያጥ",
+    "discount": "ቅናሽ",
+    "originalPrice": "መበቆላዊ ዋጋ",
+    "salePrice": "ዋጋ ሽያጥ"
   },
   "cart": {
     "title": "ዓረብያ ዕዳጋ",
@@ -59,7 +90,12 @@
     "continueShopping": "ዕዳጋ ቀጽል",
     "removeItem": "ንብረት ኣልግስ",
     "updateQuantity": "መጠን ኣዘምን",
-    "applyCoupon": "ኩፖን ተጠቐም"
+    "applyCoupon": "ኩፖን ተጠቐም",
+    "couponCode": "ኮድ ኩፖን",
+    "couponApplied": "ኩፖን ተቐቢሉ",
+    "invalidCoupon": "ዘይቅኑዕ ኮድ ኩፖን",
+    "freeShipping": "ነፃ መልኣኺ",
+    "estimatedDelivery": "ኣብ ልዕሊ ዝኾነ ምብጻሕ"
   },
   "orders": {
     "title": "ትእዛዛተይ",
@@ -71,7 +107,14 @@
     "trackOrder": "ትእዛዝ ክትትል",
     "cancelOrder": "ትእዛዝ ሰርዝ",
     "returnOrder": "ትእዛዝ መልስ",
-    "noOrders": "ክሳዕ ሕጂ ትእዛዝ የለን"
+    "noOrders": "ክሳዕ ሕጂ ትእዛዝ የለን",
+    "pending": "ይጽበ ኣሎ",
+    "processing": "ይስራሕ ኣሎ",
+    "shipped": "ተላኢኹ",
+    "delivered": "በጺሑ",
+    "cancelled": "ተሰሪዙ",
+    "returned": "ተመሊሱ",
+    "refunded": "ገንዘብ ተመሊሱ"
   },
   "vendor": {
     "dashboard": "ዳሽቦርድ ነጋዲ",
@@ -82,7 +125,13 @@
     "analytics": "ትንተና",
     "earnings": "ኣታዊታት",
     "reviews": "ግምገማታት",
-    "inventory": "መኽዘን"
+    "inventory": "መኽዘን",
+    "storeName": "ስም ድኳን",
+    "storeDescription": "መግለጺ ድኳን",
+    "storeSettings": "ቅንብራት ድኳን",
+    "salesReport": "ጸብጻብ ሽያጥ",
+    "commission": "ኮሚሽን",
+    "payout": "ክፍሊት"
   },
   "auth": {
     "login": "ኣትው",
@@ -97,7 +146,12 @@
     "registerVendor": "ከም ነጋዲ ምዝገባ",
     "firstName": "ስም",
     "lastName": "ስም ኣቦ",
-    "phoneNumber": "ቁጽሪ ተሌፎን"
+    "phoneNumber": "ቁጽሪ ተሌፎን",
+    "resetPassword": "ቃል ምሕላፍ ጀምር",
+    "verifyEmail": "ኢመይል ኣረጋግጽ",
+    "verification": "ምርግጋጽ",
+    "enterCode": "ኮድ ኣእትው",
+    "resendCode": "ኮድ ደጊምካ ስደድ"
   },
   "profile": {
     "title": "መገለጺይ",
@@ -108,7 +162,10 @@
     "language": "ቋንቋ",
     "currency": "ገንዘብ",
     "notifications": "መበገሲታት",
-    "privacy": "ምቁጽጻር ብሕትውነት"
+    "privacy": "ምቁጽጻር ብሕትውነት",
+    "changePassword": "ቃል ምሕላፍ ቀይር",
+    "deleteAccount": "መለያ ደምስስ",
+    "accountSettings": "ቅንብራት መለያ"
   },
   "loyalty": {
     "title": "መደብ ተኣማንነት",
@@ -165,11 +222,15 @@
     "networkError": "ጌጋ መርበብ። ብኽብረትካ ርክብካ ኣረጋግጽ።",
     "notFound": "ገጽ ኣይተረኽበን",
     "unauthorized": "ዘይፍቑድ መእተዊ",
-    "serverError": "ጌጋ ሰርቨር። ብኽብረትካ ድሕሪ ገለ ግዜ ፈትን።"
+    "serverError": "ጌጋ ሰርቨር። ብኽብረትካ ድሕሪ ገለ ግዜ ፈትን።",
+    "validationError": "ብኽብረትካ ሓበሬታኻ ኣረጋግጽ",
+    "loginRequired": "ብኽብረትካ ንምቕጻል ኣትው",
+    "sessionExpired": "ግዜኻ ተወዲኡ"
   },
   "currency": {
     "etb": "ብር",
-    "birr": "ብር"
+    "birr": "ብር",
+    "symbol": "ብ"
   },
   "languages": {
     "title": "ቋንቋ ምረጽ",
@@ -177,6 +238,26 @@
     "amharic": "ኣምሓርኛ",
     "oromo": "ኦሮምኛ",
     "tigrinya": "ትግርኛ",
-    "switchLanguage": "ቋንቋ ቀይር"
+    "switchLanguage": "ቋንቋ ቀይር",
+    "currentLanguage": "ህሉው ቋንቋ"
+  },
+  "dateTime": {
+    "today": "ሎሚ",
+    "yesterday": "ትማሊ",
+    "tomorrow": "ጽባሕ",
+    "now": "ሕጂ",
+    "ago": "ቅድሚ",
+    "in": "ኣብ",
+    "minutes": "ደቓይቕ",
+    "hours": "ሰዓታት",
+    "days": "መዓልታት",
+    "weeks": "ሰሙናት",
+    "months": "ኣዋርሕ",
+    "years": "ዓመታት"
+  },
+  "metadata": {
+    "title": "ሚናሌሽ - ብልሂ ዕዳጋ ኢትዮጵያ",
+    "description": "ካብ ዝተረጋገጹ ነጋዶ ኢትዮጵያ ግዛእ። ጽቡቕ ዓቐን ፍርያታት ምስ ውሕስነት ክፍሊትን ቅልጡፍ መብጽሓን።",
+    "keywords": "ዕዳጋ ኢትዮጵያ, ኦንላይን ዕዳጋ, ፍርያታት ኢትዮጵያ, ኢ-ኮመርስ ኢትዮጵያ"
   }
 }
