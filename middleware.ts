@@ -4,13 +4,13 @@ import { jwtVerify } from 'jose'
 const ADMIN_PREFIX = '/admin'
 const VENDOR_PREFIX = '/vendor'
 const VENDOR_STORE_PREFIX = '/vendor/store' // Public vendor store pages
+const VENDOR_LOGIN_PATH = '/vendor/login' // Public vendor login page
 const AUTH_COOKIE = 'auth_token'
 const LANGUAGE_COOKIE = 'preferred_language'
 
 // Supported locales
 const locales = ['en', 'am', 'om', 'ti'] as const;
 type Locale = (typeof locales)[number];
-const defaultLocale: Locale = 'en';
 
 function isValidLocale(locale: string): locale is Locale {
   return locales.includes(locale as Locale);
@@ -61,7 +61,8 @@ export async function middleware(req: NextRequest) {
   
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX)
   const isVendorStoreRoute = pathname.startsWith(VENDOR_STORE_PREFIX)
-  const isVendorRoute = pathname.startsWith(VENDOR_PREFIX) && !isVendorStoreRoute
+  const isVendorLoginRoute = pathname === VENDOR_LOGIN_PATH
+  const isVendorRoute = pathname.startsWith(VENDOR_PREFIX) && !isVendorStoreRoute && !isVendorLoginRoute
   const isAdminLogin = pathname === '/admin/login'
   
   // Set language cookie based on browser preference if not set
@@ -83,6 +84,11 @@ export async function middleware(req: NextRequest) {
     return response
   }
 
+  // Allow vendor login page to be accessed publicly
+  if (isVendorLoginRoute) {
+    return response
+  }
+
   // Allow non-authentication-required routes to pass through
   if (!isAdminRoute && !isVendorRoute) {
     return response
@@ -95,7 +101,7 @@ export async function middleware(req: NextRequest) {
   if (!token) {
     const loginUrl = isAdminRoute 
       ? new URL('/admin/login', req.url)
-      : new URL('/auth/login', req.url)
+      : new URL('/vendor/login', req.url)
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }
@@ -104,7 +110,7 @@ export async function middleware(req: NextRequest) {
   if (!payload?.role) {
     const loginUrl = isAdminRoute 
       ? new URL('/admin/login', req.url)
-      : new URL('/auth/login', req.url)
+      : new URL('/vendor/login', req.url)
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }

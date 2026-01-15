@@ -328,7 +328,7 @@ export default function AuthRegisterVendor() {
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 
-                  href="/auth/login" 
+                  href="/vendor/login" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
                   Sign in

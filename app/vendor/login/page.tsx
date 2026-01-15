@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Container } from "@/components/ui/container"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Eye, EyeOff, Loader2, User } from "lucide-react"
+import { Eye, EyeOff, Loader2, Store } from "lucide-react"
 import { toast } from "sonner"
 
-export default function CustomerLogin() {
+export default function VendorLogin() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -47,21 +47,9 @@ export default function CustomerLogin() {
         return
       }
 
-      // Block admin accounts from using customer login
-      if (data.user.role === 'admin') {
-        toast.error("Admin accounts must use the Admin Login page")
-        router.push('/admin/login')
-        setIsLoading(false)
-        return
-      }
-
-      // Redirect vendors to vendor login
-      if (data.user.role === 'vendor') {
-        // Store token since login was successful
-        localStorage.setItem('auth_token', data.token)
-        toast.success("Login successful! Redirecting to vendor dashboard...")
-        router.refresh()
-        router.push('/vendor/dashboard')
+      // Check if user is a vendor or admin (admins can access vendor area)
+      if (data.user.role !== 'vendor' && data.user.role !== 'admin') {
+        toast.error('Access denied. This login is for vendors only. Please use customer login.')
         setIsLoading(false)
         return
       }
@@ -69,17 +57,17 @@ export default function CustomerLogin() {
       // Store token in localStorage (matches existing auth pattern)
       localStorage.setItem('auth_token', data.token)
       
-      toast.success("Login successful!")
+      toast.success("Vendor login successful!")
       
       // Refresh router to ensure cookies are synced
       router.refresh()
       
-      // Redirect to the originally requested page or default to home
+      // Redirect to the originally requested page or default to vendor dashboard
       const next = searchParams.get('next')
-      const redirectUrl = 
-        isValidRedirectUrl(next) && !next.startsWith('/admin') && !next.startsWith('/vendor')
-          ? next
-          : '/'
+      // Allow redirect to vendor routes, or for admins to any valid route
+      const isValidNext = isValidRedirectUrl(next) && 
+        (next.startsWith('/vendor') || (data.user.role === 'admin' && !next.startsWith('/auth')))
+      const redirectUrl = isValidNext ? next : '/vendor/dashboard'
       router.push(redirectUrl)
     } catch (error) {
       console.error('Login error:', error)
@@ -97,14 +85,14 @@ export default function CustomerLogin() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="bg-primary/10 p-3 rounded-full">
-                <User className="h-12 w-12 text-primary" />
+                <Store className="h-12 w-12 text-primary" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to your account</p>
+            <h1 className="text-3xl font-bold mb-2">Vendor Portal</h1>
+            <p className="text-muted-foreground">Sign in to access your vendor dashboard</p>
           </div>
           
-          <form onSubmit={onSubmit} className="space-y-6" aria-label="Customer login form">
+          <form onSubmit={onSubmit} className="space-y-6" aria-label="Vendor login form">
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="email">
                 Email Address
@@ -115,7 +103,7 @@ export default function CustomerLogin() {
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
-                placeholder="Enter your email"
+                placeholder="vendor@example.com"
                 className="w-full"
                 disabled={isLoading}
               />
@@ -159,27 +147,30 @@ export default function CustomerLogin() {
                   Signing In...
                 </>
               ) : (
-                "Sign In"
+                <>
+                  <Store className="mr-2 h-4 w-4" />
+                  Sign In as Vendor
+                </>
               )}
             </Button>
 
             <div className="text-center space-y-4 pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                Don&apos;t have an account?{" "}
+                Don&apos;t have a vendor account?{" "}
                 <Link 
-                  href="/auth/register" 
+                  href="/auth/register-vendor" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
-                  Sign up
+                  Register as vendor
                 </Link>
               </p>
               <p className="text-sm text-muted-foreground">
-                Are you a vendor?{" "}
+                Customer?{" "}
                 <Link 
-                  href="/vendor/login" 
+                  href="/auth/login" 
                   className="text-primary hover:text-primary/80 font-medium underline"
                 >
-                  Vendor login
+                  Customer login
                 </Link>
               </p>
             </div>
