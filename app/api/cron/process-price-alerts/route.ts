@@ -13,6 +13,8 @@ import { createPriceDropAlertEmail } from '@/lib/email';
  * Authentication: Requires CRON_SECRET header matching environment variable
  */
 export async function GET(request: NextRequest) {
+  const startedAt = new Date();
+
   try {
     // Verify cron secret
     const cronSecret =
@@ -124,12 +126,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const completedAt = new Date();
+    const duration = completedAt.getTime() - startedAt.getTime();
+
     // Record cron job execution
     await prisma.cronJobExecution.create({
       data: {
         jobName: 'process-price-alerts',
         status: 'success',
-        completedAt: new Date(),
+        startedAt,
+        completedAt,
+        duration,
         recordsProcessed: activeAlerts.length,
         metadata: {
           alertsTriggered,
@@ -154,6 +161,8 @@ export async function GET(request: NextRequest) {
         data: {
           jobName: 'process-price-alerts',
           status: 'failed',
+          startedAt,
+          completedAt: new Date(),
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });

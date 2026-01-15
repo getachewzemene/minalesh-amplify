@@ -14,6 +14,8 @@ import { searchProducts, SearchFilters } from '@/lib/search';
  * Authentication: Requires CRON_SECRET header matching environment variable
  */
 export async function GET(request: NextRequest) {
+  const startedAt = new Date();
+
   try {
     // Verify cron secret
     const cronSecret =
@@ -68,18 +70,22 @@ export async function GET(request: NextRequest) {
     // Process each saved search
     for (const savedSearch of savedSearches) {
       try {
-        // Build search filters from saved search
-        const filters = savedSearch.filters as Record<string, unknown> || {};
+        // Build search filters from saved search with safe type checking
+        const rawFilters = savedSearch.filters;
+        const filters: Record<string, unknown> = 
+          rawFilters !== null && typeof rawFilters === 'object' && !Array.isArray(rawFilters)
+            ? (rawFilters as Record<string, unknown>)
+            : {};
         const searchFilters: SearchFilters = {
           query: savedSearch.query,
-          categorySlug: filters.category as string | undefined,
-          brand: filters.brand as string | undefined,
-          minPrice: filters.minPrice as number | undefined,
-          maxPrice: filters.maxPrice as number | undefined,
-          minRating: filters.rating as number | undefined,
-          vendorName: filters.vendor as string | undefined,
-          city: filters.location as string | undefined,
-          inStock: filters.inStock as boolean | undefined,
+          categorySlug: typeof filters.category === 'string' ? filters.category : undefined,
+          brand: typeof filters.brand === 'string' ? filters.brand : undefined,
+          minPrice: typeof filters.minPrice === 'number' ? filters.minPrice : undefined,
+          maxPrice: typeof filters.maxPrice === 'number' ? filters.maxPrice : undefined,
+          minRating: typeof filters.rating === 'number' ? filters.rating : undefined,
+          vendorName: typeof filters.vendor === 'string' ? filters.vendor : undefined,
+          city: typeof filters.location === 'string' ? filters.location : undefined,
+          inStock: typeof filters.inStock === 'boolean' ? filters.inStock : undefined,
         };
 
         // Search for matching products created in the last 24 hours
@@ -136,12 +142,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const completedAt = new Date();
+    const duration = completedAt.getTime() - startedAt.getTime();
+
     // Record cron job execution
     await prisma.cronJobExecution.create({
       data: {
         jobName: 'process-saved-search-digest',
         status: 'success',
-        completedAt: new Date(),
+        startedAt,
+        completedAt,
+        duration,
         recordsProcessed: savedSearches.length,
         metadata: {
           searchesProcessed,
@@ -165,6 +176,8 @@ export async function GET(request: NextRequest) {
         data: {
           jobName: 'process-saved-search-digest',
           status: 'failed',
+          startedAt,
+          completedAt: new Date(),
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
