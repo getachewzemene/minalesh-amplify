@@ -17,7 +17,8 @@ interface LanguageOption {
 const languages: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'am', name: 'Amharic', nativeName: 'አማርኛ' },
-  { code: 'om', name: 'Oromo', nativeName: 'Afaan Oromoo' }
+  { code: 'om', name: 'Oromo', nativeName: 'Afaan Oromoo' },
+  { code: 'ti', name: 'Tigrinya', nativeName: 'ትግርኛ' }
 ]
 
 export function LanguageSelector() {

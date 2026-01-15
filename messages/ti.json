@@ -170,5 +170,13 @@
   "currency": {
     "etb": "ብር",
     "birr": "ብር"
+  },
+  "languages": {
+    "title": "ቋንቋ ምረጽ",
+    "english": "እንግሊዝኛ",
+    "amharic": "ኣምሓርኛ",
+    "oromo": "ኦሮምኛ",
+    "tigrinya": "ትግርኛ",
+    "switchLanguage": "ቋንቋ ቀይር"
   }
 }

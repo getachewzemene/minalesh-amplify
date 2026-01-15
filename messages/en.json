@@ -170,5 +170,13 @@
   "currency": {
     "etb": "ETB",
     "birr": "Birr"
+  },
+  "languages": {
+    "title": "Select Language",
+    "english": "English",
+    "amharic": "Amharic",
+    "oromo": "Oromo",
+    "tigrinya": "Tigrinya",
+    "switchLanguage": "Switch Language"
   }
 }

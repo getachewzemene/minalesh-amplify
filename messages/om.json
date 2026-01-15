@@ -170,5 +170,13 @@
   "currency": {
     "etb": "Qarshii",
     "birr": "Qarshii"
+  },
+  "languages": {
+    "title": "Afaan Filadhu",
+    "english": "Afaan Ingilizii",
+    "amharic": "Amaariffaa",
+    "oromo": "Afaan Oromoo",
+    "tigrinya": "Tigriinyaa",
+    "switchLanguage": "Afaan Jijjiiri"
   }
 }

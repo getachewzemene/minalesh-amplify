@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-export type Language = "en" | "am" | "om";
+export type Language = "en" | "am" | "om" | "ti";
 
 interface Translations {
   en: string;
   am: string;
   om: string;
+  ti: string;
 }
 
 interface LanguageContextValue {
