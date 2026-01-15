@@ -47,9 +47,9 @@ export default function VendorLogin() {
         return
       }
 
-      // Check if user is a vendor
+      // Check if user is a vendor or admin (admins can access vendor area)
       if (data.user.role !== 'vendor' && data.user.role !== 'admin') {
-        toast.error('Access denied. Vendor credentials required. Please use customer login.')
+        toast.error('Access denied. This login is for vendors only. Please use customer login.')
         setIsLoading(false)
         return
       }
@@ -64,10 +64,10 @@ export default function VendorLogin() {
       
       // Redirect to the originally requested page or default to vendor dashboard
       const next = searchParams.get('next')
-      const redirectUrl = 
-        isValidRedirectUrl(next) && (next.startsWith('/vendor') || data.user.role === 'admin')
-          ? next 
-          : '/vendor/dashboard'
+      // Allow redirect to vendor routes, or for admins to any valid route
+      const isValidNext = isValidRedirectUrl(next) && 
+        (next.startsWith('/vendor') || (data.user.role === 'admin' && !next.startsWith('/auth')))
+      const redirectUrl = isValidNext ? next : '/vendor/dashboard'
       router.push(redirectUrl)
     } catch (error) {
       console.error('Login error:', error)
