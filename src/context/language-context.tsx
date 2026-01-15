@@ -1,8 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-export type Language = "en" | "am" | "om" | "ti";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { locales, defaultLocale, type Locale } from "@/i18n/config";
 
 interface Translations {
   en: string;
@@ -12,33 +11,102 @@ interface Translations {
 }
 
 interface LanguageContextValue {
-  language: Language;
-  setLanguage: (lang: Language) => void;
+  language: Locale;
+  setLanguage: (lang: Locale) => void;
   t: (translations: Translations) => string;
 }
 
+const LANGUAGE_COOKIE = 'preferred_language';
+const LANGUAGE_STORAGE_KEY = 'language';
+
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en");
+/**
+ * Sets a cookie with the language preference
+ */
+function setLanguageCookie(locale: Locale) {
+  if (typeof document !== 'undefined') {
+    document.cookie = `${LANGUAGE_COOKIE}=${locale};path=/;max-age=${60 * 60 * 24 * 365}`;
+  }
+}
 
+/**
+ * Gets language preference from storage (client-side only)
+ */
+function getStoredLanguage(): Locale | null {
+  if (typeof window === 'undefined') return null;
+  
+  // Check localStorage first
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Locale;
+  if (saved && locales.includes(saved)) return saved;
+  
+  // Check cookie
+  const cookieMatch = document.cookie.match(new RegExp(`${LANGUAGE_COOKIE}=([^;]+)`));
+  if (cookieMatch) {
+    const cookieLocale = cookieMatch[1] as Locale;
+    if (locales.includes(cookieLocale)) return cookieLocale;
+  }
+  
+  return null;
+}
+
+/**
+ * Saves language preference to the server for authenticated users
+ */
+async function saveLanguagePreferenceToServer(locale: Locale): Promise<void> {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (token) {
+      await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ language: locale }),
+      });
+    }
+  } catch (error) {
+    console.error('Failed to save language preference:', error);
+  }
+}
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  // Initialize with defaultLocale to ensure consistent server-client rendering
+  const [language, setLanguageState] = useState<Locale>(defaultLocale);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Sync with localStorage/cookie on mount (client-side only)
   useEffect(() => {
+    const storedLanguage = getStoredLanguage();
+    if (storedLanguage && storedLanguage !== language) {
+      setLanguageState(storedLanguage);
+    }
+    setIsInitialized(true);
+  }, []); // Only run once on mount
+
+  const setLanguage = useCallback((lang: Locale) => {
+    if (!locales.includes(lang)) return;
+    
+    setLanguageState(lang);
+    
     if (typeof window !== 'undefined') {
-      const saved = (localStorage.getItem("language") as Language) || "en";
-      setLanguageState(saved);
+      // Save to localStorage
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+      
+      // Save to cookie for middleware detection
+      setLanguageCookie(lang);
+      
+      // Save to server for authenticated users
+      saveLanguagePreferenceToServer(lang);
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("language", lang);
-    }
-  };
+  const t = useCallback((translations: Translations) => {
+    return translations[language] || translations[defaultLocale];
+  }, [language]);
 
-  const t = (translations: Translations) => translations[language];
-
-  const value = useMemo(() => ({ language, setLanguage, t }), [language]);
+  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
@@ -48,3 +116,8 @@ export function useLanguage() {
   if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
   return ctx;
 }
+
+// Re-export Locale type for backwards compatibility
+export type { Locale } from "@/i18n/config";
+// Alias for backwards compatibility with existing code that uses Language type
+export type Language = Locale;

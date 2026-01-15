@@ -13,7 +13,27 @@
     "sort": "ደርድር",
     "viewAll": "ሁሉንም ይመልከቱ",
     "learnMore": "ተጨማሪ ይወቁ",
-    "close": "ዝጋ"
+    "close": "ዝጋ",
+    "back": "ተመለስ",
+    "next": "ቀጣይ",
+    "previous": "ቀዳሚ",
+    "submit": "አስገባ",
+    "reset": "ዳግም አስጀምር",
+    "clear": "አጽዳ",
+    "apply": "ተግብር",
+    "update": "አዘምን",
+    "add": "ጨምር",
+    "remove": "አስወግድ",
+    "yes": "አዎ",
+    "no": "አይ",
+    "ok": "እሺ",
+    "done": "ተጠናቋል",
+    "selectAll": "ሁሉንም ምረጥ",
+    "deselectAll": "ሁሉንም አትምረጥ",
+    "showMore": "ተጨማሪ አሳይ",
+    "showLess": "ያነሰ አሳይ",
+    "noResults": "ምንም ውጤት አልተገኘም",
+    "required": "አስፈላጊ"
   },
   "nav": {
     "home": "መነሻ",
@@ -46,7 +66,18 @@
     "reviews": "ግምገማዎች",
     "description": "መግለጫ",
     "specifications": "ዝርዝሮች",
-    "compareProducts": "ምርቶችን አወዳድር"
+    "compareProducts": "ምርቶችን አወዳድር",
+    "quantity": "ብዛት",
+    "color": "ቀለም",
+    "size": "መጠን",
+    "brand": "ብራንድ",
+    "sku": "ኤስኬዩ",
+    "available": "ይገኛል",
+    "soldOut": "ተሽጧል",
+    "sale": "ቅናሽ",
+    "discount": "ቅናሽ",
+    "originalPrice": "መጀመሪያ ዋጋ",
+    "salePrice": "የቅናሽ ዋጋ"
   },
   "cart": {
     "title": "የገበያ ጋሪ",
@@ -59,7 +90,12 @@
     "continueShopping": "ገበያን ቀጥል",
     "removeItem": "ንጥል አስወግድ",
     "updateQuantity": "ብዛት አዘምን",
-    "applyCoupon": "ኩፖን ይተግብሩ"
+    "applyCoupon": "ኩፖን ይተግብሩ",
+    "couponCode": "የኩፖን ኮድ",
+    "couponApplied": "ኩፖን ተተግብሯል",
+    "invalidCoupon": "ልክ ያልሆነ የኩፖን ኮድ",
+    "freeShipping": "ነፃ መላኪያ",
+    "estimatedDelivery": "የሚገመት ማድረሻ"
   },
   "orders": {
     "title": "የእኔ ትዕዛዞች",
@@ -71,7 +107,14 @@
     "trackOrder": "ትዕዛዝን ይከታተሉ",
     "cancelOrder": "ትዕዛዝን ሰርዝ",
     "returnOrder": "ትዕዛዝን መልስ",
-    "noOrders": "ገና ምንም ትዕዛዝ የለም"
+    "noOrders": "ገና ምንም ትዕዛዝ የለም",
+    "pending": "በመጠባበቅ ላይ",
+    "processing": "በሂደት ላይ",
+    "shipped": "ተልኳል",
+    "delivered": "ደርሷል",
+    "cancelled": "ተሰርዟል",
+    "returned": "ተመልሷል",
+    "refunded": "ተመላሽ ተደርጓል"
   },
   "vendor": {
     "dashboard": "ሻጭ ዳሽቦርድ",
@@ -82,7 +125,13 @@
     "analytics": "ትንታኔዎች",
     "earnings": "ገቢዎች",
     "reviews": "ግምገማዎች",
-    "inventory": "ክምችት"
+    "inventory": "ክምችት",
+    "storeName": "የመደብር ስም",
+    "storeDescription": "የመደብር መግለጫ",
+    "storeSettings": "የመደብር ቅንብሮች",
+    "salesReport": "የሽያጭ ሪፖርት",
+    "commission": "ኮሚሽን",
+    "payout": "ክፍያ"
   },
   "auth": {
     "login": "ግባ",
@@ -97,7 +146,12 @@
     "registerVendor": "እንደ ሻጭ ይመዝገቡ",
     "firstName": "የመጀመሪያ ስም",
     "lastName": "የአባት ስም",
-    "phoneNumber": "ስልክ ቁጥር"
+    "phoneNumber": "ስልክ ቁጥር",
+    "resetPassword": "የይለፍ ቃል ዳግም አስጀምር",
+    "verifyEmail": "ኢሜል አረጋግጥ",
+    "verification": "ማረጋገጫ",
+    "enterCode": "ኮድ አስገባ",
+    "resendCode": "ኮድ ድጋሚ ላክ"
   },
   "profile": {
     "title": "የኔ መገለጫ",
@@ -108,7 +162,10 @@
     "language": "ቋንቋ",
     "currency": "ምንዛሬ",
     "notifications": "ማሳወቂያዎች",
-    "privacy": "የግላዊነት ቅንብሮች"
+    "privacy": "የግላዊነት ቅንብሮች",
+    "changePassword": "የይለፍ ቃል ቀይር",
+    "deleteAccount": "መለያ ሰርዝ",
+    "accountSettings": "የመለያ ቅንብሮች"
   },
   "loyalty": {
     "title": "የታማኝነት ፕሮግራም",
@@ -165,11 +222,15 @@
     "networkError": "የአውታረ መረብ ስህተት። እባክዎ ግንኙነትዎን ያረጋግጡ።",
     "notFound": "ገጽ አልተገኘም",
     "unauthorized": "ያልተፈቀደ መዳረሻ",
-    "serverError": "የአገልጋይ ስህተት። እባክዎ ቆይተው ይሞክሩ።"
+    "serverError": "የአገልጋይ ስህተት። እባክዎ ቆይተው ይሞክሩ።",
+    "validationError": "እባክዎ ግብዎትዎን ያረጋግጡ",
+    "loginRequired": "እባክዎ ለመቀጠል ይግቡ",
+    "sessionExpired": "ክፍለ ጊዜዎ አልፏል"
   },
   "currency": {
     "etb": "ብር",
-    "birr": "ብር"
+    "birr": "ብር",
+    "symbol": "ብ"
   },
   "languages": {
     "title": "ቋንቋ ይምረጡ",
@@ -177,6 +238,26 @@
     "amharic": "አማርኛ",
     "oromo": "ኦሮምኛ",
     "tigrinya": "ትግርኛ",
-    "switchLanguage": "ቋንቋ ቀይር"
+    "switchLanguage": "ቋንቋ ቀይር",
+    "currentLanguage": "የአሁኑ ቋንቋ"
+  },
+  "dateTime": {
+    "today": "ዛሬ",
+    "yesterday": "ትናንት",
+    "tomorrow": "ነገ",
+    "now": "አሁን",
+    "ago": "በፊት",
+    "in": "በ",
+    "minutes": "ደቂቃዎች",
+    "hours": "ሰዓታት",
+    "days": "ቀናት",
+    "weeks": "ሳምንታት",
+    "months": "ወራት",
+    "years": "ዓመታት"
+  },
+  "metadata": {
+    "title": "ሚናሌሽ - የኢትዮጵያ ብልህ ገበያ",
+    "description": "ከተረጋገጡ የኢትዮጵያ ሻጮች ይግዙ። ጥራት ያላቸው ምርቶች ከደህንነታዊ ክፍያ እና ፈጣን ማድረስ ጋር።",
+    "keywords": "የኢትዮጵያ ገበያ፣ ኦንላይን ገበያ፣ የኢትዮጵያ ምርቶች፣ ኢ-ኮሜርስ ኢትዮጵያ"
   }
 }

@@ -13,7 +13,27 @@
     "sort": "Tartiiba",
     "viewAll": "Hunda Ilaali",
     "learnMore": "Dabalataan Baraa",
-    "close": "Cufi"
+    "close": "Cufi",
+    "back": "Deebi'i",
+    "next": "Itti aanaa",
+    "previous": "Duraa",
+    "submit": "Galchi",
+    "reset": "Jalqaba",
+    "clear": "Qulqulleessi",
+    "apply": "Raawwadhu",
+    "update": "Haaroomsi",
+    "add": "Ida'i",
+    "remove": "Balleessi",
+    "yes": "Eeyee",
+    "no": "Lakki",
+    "ok": "Tole",
+    "done": "Xumuramee",
+    "selectAll": "Hunda Filadhu",
+    "deselectAll": "Hunda Hin Filatin",
+    "showMore": "Dabalata Agarsiisi",
+    "showLess": "Xiqqoo Agarsiisi",
+    "noResults": "Bu'aan hin argamne",
+    "required": "Dirqama"
   },
   "nav": {
     "home": "Mana",
@@ -46,7 +66,18 @@
     "reviews": "Gamaaggama",
     "description": "Ibsa",
     "specifications": "Ibsa Bal'aa",
-    "compareProducts": "Oomishaalee Wal Bira Qabi"
+    "compareProducts": "Oomishaalee Wal Bira Qabi",
+    "quantity": "Baay'ina",
+    "color": "Halluu",
+    "size": "Hanga",
+    "brand": "Maqaa Daldalaa",
+    "sku": "SKU",
+    "available": "Ni Jira",
+    "soldOut": "Gurgurameera",
+    "sale": "Gurgurtaa",
+    "discount": "Hir'isa",
+    "originalPrice": "Gatii Jalqabaa",
+    "salePrice": "Gatii Gurgurtaa"
   },
   "cart": {
     "title": "Gaarii Bittaa",
@@ -59,7 +90,12 @@
     "continueShopping": "Bittaa Itti Fufi",
     "removeItem": "Wanta Balleessi",
     "updateQuantity": "Baay'ina Haaroomsi",
-    "applyCoupon": "Kuuppoonii Fayyadami"
+    "applyCoupon": "Kuuppoonii Fayyadami",
+    "couponCode": "Koodii Kuuppoonii",
+    "couponApplied": "Kuuppooniin fudhatameera",
+    "invalidCoupon": "Koodiin Kuuppoonii hin sirrii miti",
+    "freeShipping": "Geejjiba Bilisaa",
+    "estimatedDelivery": "Tilmaama Geejjibaa"
   },
   "orders": {
     "title": "Ajajawwan Koo",
@@ -71,7 +107,14 @@
     "trackOrder": "Ajaja Hordofi",
     "cancelOrder": "Ajaja Haquu",
     "returnOrder": "Ajaja Deebisi",
-    "noOrders": "Ajajni hin jiru"
+    "noOrders": "Ajajni hin jiru",
+    "pending": "Eegamaa",
+    "processing": "Hojjetamaa",
+    "shipped": "Ergameera",
+    "delivered": "Gaheera",
+    "cancelled": "Haqameera",
+    "returned": "Deebi'eera",
+    "refunded": "Deebi'ameera"
   },
   "vendor": {
     "dashboard": "Dashiboordi Gurgurtaa",
@@ -82,7 +125,13 @@
     "analytics": "Xiinxala",
     "earnings": "Galii",
     "reviews": "Gamaaggama",
-    "inventory": "Kuusaa"
+    "inventory": "Kuusaa",
+    "storeName": "Maqaa Dukkaanaa",
+    "storeDescription": "Ibsa Dukkaanaa",
+    "storeSettings": "Qindaa'ina Dukkaanaa",
+    "salesReport": "Gabaasa Gurgurtaa",
+    "commission": "Koomishinii",
+    "payout": "Kaffaltii"
   },
   "auth": {
     "login": "Seeni",
@@ -97,7 +146,12 @@
     "registerVendor": "Akka Gurgurtuutti Galmaa'i",
     "firstName": "Maqaa Jalqabaa",
     "lastName": "Maqaa Maatii",
-    "phoneNumber": "Lakkoofsa Bilbilaa"
+    "phoneNumber": "Lakkoofsa Bilbilaa",
+    "resetPassword": "Jecha Iccitii Jalqabi",
+    "verifyEmail": "Imeelii Mirkaneessi",
+    "verification": "Mirkaneessa",
+    "enterCode": "Koodii Galchi",
+    "resendCode": "Koodii Deebisii Ergi"
   },
   "profile": {
     "title": "Piroofaayila Koo",
@@ -108,7 +162,10 @@
     "language": "Afaan",
     "currency": "Maallaqaa",
     "notifications": "Beeksisawwan",
-    "privacy": "Qindaa'ina Iccitii"
+    "privacy": "Qindaa'ina Iccitii",
+    "changePassword": "Jecha Iccitii Jijjiiri",
+    "deleteAccount": "Akkaawuntii Haqi",
+    "accountSettings": "Qindaa'ina Akkaawuntii"
   },
   "loyalty": {
     "title": "Sagantaa Amanamummaa",
@@ -165,11 +222,15 @@
     "networkError": "Dogoggora networki. Walitti dhufeenya kee mirkaneessi.",
     "notFound": "Fuuli hin argamne",
     "unauthorized": "Eeyyama hin qabne",
-    "serverError": "Dogoggora sarvaarii. Maaloo booda yaali."
+    "serverError": "Dogoggora sarvaarii. Maaloo booda yaali.",
+    "validationError": "Maaloo odeeffannoo kee mirkaneessi",
+    "loginRequired": "Maaloo seenuuf itti fufi",
+    "sessionExpired": "Yeroo kee xumuramee jira"
   },
   "currency": {
     "etb": "Qarshii",
-    "birr": "Qarshii"
+    "birr": "Qarshii",
+    "symbol": "Q"
   },
   "languages": {
     "title": "Afaan Filadhu",
@@ -177,6 +238,26 @@
     "amharic": "Amaariffaa",
     "oromo": "Afaan Oromoo",
     "tigrinya": "Tigriinyaa",
-    "switchLanguage": "Afaan Jijjiiri"
+    "switchLanguage": "Afaan Jijjiiri",
+    "currentLanguage": "Afaan Ammaa"
+  },
+  "dateTime": {
+    "today": "Har'a",
+    "yesterday": "Kaleessa",
+    "tomorrow": "Boru",
+    "now": "Amma",
+    "ago": "dura",
+    "in": "keessatti",
+    "minutes": "daqiiqaa",
+    "hours": "sa'aatii",
+    "days": "guyyaa",
+    "weeks": "torban",
+    "months": "ji'a",
+    "years": "waggaa"
+  },
+  "metadata": {
+    "title": "Minalesh - Gabaa Beekumsa Qabuu Itoophiyaa",
+    "description": "Daldaltoota Itoophiyaa mirkaneeffaman irraa bitaa. Oomishaalee qulqullina qaban waliin kaffaltii nageenya qabu fi geejjiba saffisaa.",
+    "keywords": "gabaa Itoophiyaa, bittaa toora interneetii, oomishaalee Itoophiyaa, e-commerce Itoophiyaa"
   }
 }
