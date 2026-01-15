@@ -33,6 +33,44 @@ const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 };
 
 /**
+ * The canonical order progression for the 7-stage delivery tracking.
+ * Used to derive completed steps in the progress tracker UI.
+ */
+export const TRACKING_ORDER_PROGRESSION: OrderStatus[] = [
+  'pending',
+  'paid',
+  'confirmed',
+  'processing',
+  'packed',
+  'picked_up',
+  'in_transit',
+  'out_for_delivery',
+  'delivered',
+];
+
+/**
+ * Get all completed statuses for a given current status in the tracking progression.
+ * This is used by the UI to determine which steps to mark as completed.
+ */
+export function getCompletedStatuses(currentStatus: OrderStatus): OrderStatus[] {
+  const progressionIndex = TRACKING_ORDER_PROGRESSION.indexOf(currentStatus);
+  
+  if (progressionIndex === -1) {
+    // Handle legacy statuses
+    if (currentStatus === 'fulfilled') {
+      return ['pending', 'paid', 'confirmed', 'processing'];
+    }
+    if (currentStatus === 'shipped') {
+      return ['pending', 'paid', 'confirmed', 'processing', 'packed', 'picked_up'];
+    }
+    return ['pending'];
+  }
+  
+  // Return all statuses up to and including the current status
+  return TRACKING_ORDER_PROGRESSION.slice(0, progressionIndex + 1);
+}
+
+/**
  * Check if a status transition is valid
  */
 export function isValidStatusTransition(

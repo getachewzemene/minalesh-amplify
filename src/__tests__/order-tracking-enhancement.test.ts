@@ -39,7 +39,7 @@ vi.mock('@/lib/logger', () => ({
   logEvent: vi.fn(),
 }));
 
-import { isValidStatusTransition, getValidNextStatuses } from '@/lib/order-status';
+import { isValidStatusTransition, getValidNextStatuses, getCompletedStatuses, TRACKING_ORDER_PROGRESSION } from '@/lib/order-status';
 
 describe('Order Tracking Enhancement', () => {
   beforeEach(() => {
@@ -133,6 +133,43 @@ describe('Order Tracking Enhancement', () => {
       Object.entries(stageMessages).forEach(([stage, expectedText]) => {
         expect(expectedText.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  describe('getCompletedStatuses Utility', () => {
+    it('should return correct completed statuses for pending', () => {
+      const completed = getCompletedStatuses('pending' as OrderStatus);
+      expect(completed).toContain('pending');
+      expect(completed.length).toBe(1);
+    });
+
+    it('should return correct completed statuses for delivered', () => {
+      const completed = getCompletedStatuses('delivered' as OrderStatus);
+      expect(completed).toContain('pending');
+      expect(completed).toContain('delivered');
+      expect(completed.length).toBe(9); // All stages
+    });
+
+    it('should return correct completed statuses for in_transit', () => {
+      const completed = getCompletedStatuses('in_transit' as OrderStatus);
+      expect(completed).toContain('pending');
+      expect(completed).toContain('packed');
+      expect(completed).toContain('picked_up');
+      expect(completed).toContain('in_transit');
+      expect(completed).not.toContain('out_for_delivery');
+      expect(completed).not.toContain('delivered');
+    });
+
+    it('should handle legacy fulfilled status', () => {
+      const completed = getCompletedStatuses('fulfilled' as OrderStatus);
+      expect(completed).toContain('pending');
+      expect(completed).toContain('processing');
+    });
+
+    it('should have canonical progression array', () => {
+      expect(TRACKING_ORDER_PROGRESSION.length).toBeGreaterThan(0);
+      expect(TRACKING_ORDER_PROGRESSION[0]).toBe('pending');
+      expect(TRACKING_ORDER_PROGRESSION[TRACKING_ORDER_PROGRESSION.length - 1]).toBe('delivered');
     });
   });
 

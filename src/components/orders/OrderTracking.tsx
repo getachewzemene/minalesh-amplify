@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
+import { getCompletedStatuses } from "@/lib/order-status";
+import type { OrderStatus } from "@prisma/client";
 
 interface DeliveryTracking {
   courier: {
@@ -212,32 +214,18 @@ export function OrderTracking() {
   };
 
   // Enhanced progress tracker with 7 stages
+  // Uses shared getCompletedStatuses utility from order-status.ts
   const getOrderProgress = (order: Order) => {
-    const completedStatuses: Record<string, string[]> = {
-      pending: [],
-      paid: ["pending"],
-      confirmed: ["pending", "paid"],
-      processing: ["pending", "paid", "confirmed"],
-      packed: ["pending", "paid", "confirmed", "processing"],
-      picked_up: ["pending", "paid", "confirmed", "processing", "packed"],
-      in_transit: ["pending", "paid", "confirmed", "processing", "packed", "picked_up"],
-      out_for_delivery: ["pending", "paid", "confirmed", "processing", "packed", "picked_up", "in_transit"],
-      delivered: ["pending", "paid", "confirmed", "processing", "packed", "picked_up", "in_transit", "out_for_delivery"],
-      // Handle legacy statuses
-      fulfilled: ["pending", "paid", "confirmed", "processing"],
-      shipped: ["pending", "paid", "confirmed", "processing", "packed", "picked_up"],
-    };
-
-    const currentCompleted = completedStatuses[order.status] || [];
+    const completedStatuses = getCompletedStatuses(order.status as OrderStatus);
 
     const steps = [
-      { key: "pending", label: "Order Placed", completed: true },
-      { key: "confirmed", label: "Confirmed", completed: currentCompleted.includes("paid") || order.status === "confirmed" || currentCompleted.includes("confirmed") },
-      { key: "packed", label: "Packed", completed: currentCompleted.includes("packed") || order.status === "packed" },
-      { key: "picked_up", label: "Picked Up", completed: currentCompleted.includes("picked_up") || order.status === "picked_up" },
-      { key: "in_transit", label: "In Transit", completed: currentCompleted.includes("in_transit") || order.status === "in_transit" },
-      { key: "out_for_delivery", label: "Out for Delivery", completed: currentCompleted.includes("out_for_delivery") || order.status === "out_for_delivery" },
-      { key: "delivered", label: "Delivered", completed: order.status === "delivered" },
+      { key: "pending", label: "Order Placed", completed: completedStatuses.includes("pending" as OrderStatus) },
+      { key: "confirmed", label: "Confirmed", completed: completedStatuses.includes("confirmed" as OrderStatus) || completedStatuses.includes("paid" as OrderStatus) },
+      { key: "packed", label: "Packed", completed: completedStatuses.includes("packed" as OrderStatus) },
+      { key: "picked_up", label: "Picked Up", completed: completedStatuses.includes("picked_up" as OrderStatus) },
+      { key: "in_transit", label: "In Transit", completed: completedStatuses.includes("in_transit" as OrderStatus) },
+      { key: "out_for_delivery", label: "Out for Delivery", completed: completedStatuses.includes("out_for_delivery" as OrderStatus) },
+      { key: "delivered", label: "Delivered", completed: completedStatuses.includes("delivered" as OrderStatus) },
     ];
     return steps;
   };

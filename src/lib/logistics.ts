@@ -478,13 +478,17 @@ export async function processTrackingUpdate(update: TrackingUpdate): Promise<voi
 /**
  * Calculate estimated delivery time based on distance and traffic
  * Simple implementation - can be enhanced with real traffic data
+ * 
+ * Uses the Haversine formula for great-circle distance calculation.
+ * This computes the shortest distance between two points on a sphere's surface,
+ * which is accurate for geographic coordinates on Earth.
  */
 export function calculateEstimatedDelivery(
   pickupLocation: GPSLocation,
   deliveryLocation: GPSLocation,
   averageSpeedKmH: number = 25 // Default average speed in city
 ): DeliveryWindow {
-  // Calculate distance using Haversine formula
+  // Calculate distance using Haversine formula (great-circle distance)
   const R = 6371; // Earth's radius in km
   const dLat = toRad(deliveryLocation.latitude - pickupLocation.latitude);
   const dLon = toRad(deliveryLocation.longitude - pickupLocation.longitude);
