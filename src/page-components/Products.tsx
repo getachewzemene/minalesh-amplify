@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from "react"
-import { Star, ShoppingCart, Eye, Heart } from "lucide-react"
+import { Star, ShoppingCart, Eye, Heart, GitCompare, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
 import { useRouter } from "next/navigation"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
+import { useComparison } from "@/context/comparison-context"
 import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -189,6 +190,7 @@ export default function Products() {
   const router = useRouter()
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
+  const { addToCompare, isInCompare, removeFromCompare, canAddMore } = useComparison()
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   
   // Get search query from URL (client-side only)
@@ -219,8 +221,29 @@ export default function Products() {
     toast.success("Item added to cart")
   }
 
+  const handleCompareToggle = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (isInCompare(product.id)) {
+      removeFromCompare(product.id)
+    } else {
+      // When originalPrice exists, price is the sale price and originalPrice is the original
+      addToCompare({
+        id: product.id,
+        name: product.name,
+        price: product.originalPrice || product.price, // Original price
+        salePrice: product.originalPrice ? product.price : null, // Sale price (only if there's a discount)
+        image: product.image,
+        category: product.category,
+        vendor: product.vendor,
+        ratingAverage: product.rating
+      })
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <Navbar />
       <main className="py-16">
         <Container>
@@ -404,37 +427,56 @@ export default function Products() {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product);
+                        }}
+                      >
+                        Add to Cart
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addToWishlist({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                            category: product.category,
+                            vendor: product.vendor,
+                            hasAR: product.hasAR
+                          })
+                          toast.success("Item added to wishlist")
+                        }}
+                        aria-label="Add to wishlist"
+                      >
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Button 
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      variant={isInCompare(product.id) ? "default" : "outline"}
                       size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleAddToCart(product);
-                      }}
+                      className={`w-full ${isInCompare(product.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                      onClick={(e) => handleCompareToggle(e, product)}
+                      disabled={!isInCompare(product.id) && !canAddMore}
                     >
-                      Add to Cart
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      addToWishlist({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        image: product.image,
-                        category: product.category,
-                        vendor: product.vendor,
-                        hasAR: product.hasAR
-                      })
-                      toast.success("Item added to wishlist")
-                    }}
-                      aria-label="Add to wishlist"
-                    >
-                      <Heart className="h-4 w-4 mr-1" /> Wishlist
+                      {isInCompare(product.id) ? (
+                        <>
+                          <Check className="h-4 w-4 mr-1" /> In Compare
+                        </>
+                      ) : (
+                        <>
+                          <GitCompare className="h-4 w-4 mr-1" /> Add to Compare
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

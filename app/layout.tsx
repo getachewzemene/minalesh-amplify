@@ -6,8 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AuthProvider } from "@/context/auth-context"
 import { LanguageProvider } from "@/context/language-context"
 import { ShopProvider } from "@/context/shop-context"
+import { ComparisonProvider } from "@/context/comparison-context"
 import { AIHelper } from "@/components/ai-helper"
 import { GoogleAnalytics } from "@/components/analytics"
+import { ComparisonBar } from "@/components/comparison/ComparisonBar"
 import '@/index.css'
 import Providers from './providers'
 
@@ -38,11 +40,14 @@ export default function RootLayout({
             <LanguageProvider>
               <AuthProvider>
                 <ShopProvider>
-                  {children}
-                  <AIHelper />
-                  <GoogleAnalytics />
-                  <Toaster />
-                  <Sonner />
+                  <ComparisonProvider>
+                    {children}
+                    <ComparisonBar />
+                    <AIHelper />
+                    <GoogleAnalytics />
+                    <Toaster />
+                    <Sonner />
+                  </ComparisonProvider>
                 </ShopProvider>
               </AuthProvider>
             </LanguageProvider>

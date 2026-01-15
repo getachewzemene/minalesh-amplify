@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Star, ShoppingCart, Eye, Heart, RefreshCw } from "lucide-react"
+import { Star, ShoppingCart, Eye, Heart, RefreshCw, GitCompare, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/ui/container"
@@ -19,6 +19,7 @@ import Image from "next/image"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { useShop } from "@/context/shop-context"
 import { useAuth } from "@/context/auth-context"
+import { useComparison } from "@/context/comparison-context"
 import { toast } from "sonner"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -101,6 +102,7 @@ function ProductsContent() {
   const searchParams = useSearchParams()
   const { addToCart, addToWishlist } = useShop()
   const { user } = useAuth()
+  const { addToCompare, removeFromCompare, isInCompare, canAddMore } = useComparison()
   
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
@@ -314,9 +316,29 @@ function ProductsContent() {
     toast.success("Added to wishlist!")
   }
 
+  const handleCompareToggle = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation()
+    
+    if (isInCompare(product.id)) {
+      removeFromCompare(product.id)
+    } else {
+      // When originalPrice exists, price is the sale price and originalPrice is the original
+      addToCompare({
+        id: product.id,
+        name: product.name,
+        price: product.originalPrice || product.price, // Original price
+        salePrice: product.originalPrice ? product.price : null, // Sale price (only if there's a discount)
+        image: typeof product.image === 'string' ? product.image : product.image.src,
+        category: product.category,
+        vendor: product.vendor,
+        ratingAverage: product.rating
+      })
+    }
+  }
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-24">
         <Navbar />
         <Container className="py-8">
           <div className="mb-8">
@@ -457,30 +479,51 @@ function ProductsContent() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
+                      className="flex-1 bg-primary hover:bg-primary/90 font-semibold shadow-md hover:shadow-lg transition-all"
+                      size="sm"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); handleAddToWishlist(product); }}
+                      variant="outline"
+                      size="icon"
+                      className="border-2 hover:bg-red-50 hover:border-red-400 hover:text-red-500 transition-all"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`); }}
+                      variant="outline"
+                      size="icon"
+                      className="border-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </div>
                   <Button
-                    onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
-                    className="flex-1 bg-primary hover:bg-primary/90 font-semibold shadow-md hover:shadow-lg transition-all"
+                    onClick={(e) => handleCompareToggle(e, product)}
+                    variant={isInCompare(product.id) ? "default" : "outline"}
                     size="sm"
+                    className={`w-full ${isInCompare(product.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    disabled={!isInCompare(product.id) && !canAddMore}
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); handleAddToWishlist(product); }}
-                    variant="outline"
-                    size="icon"
-                    className="border-2 hover:bg-red-50 hover:border-red-400 hover:text-red-500 transition-all"
-                  >
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`); }}
-                    variant="outline"
-                    size="icon"
-                    className="border-2"
-                  >
-                    <Eye className="w-4 h-4" />
+                    {isInCompare(product.id) ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        In Compare
+                      </>
+                    ) : (
+                      <>
+                        <GitCompare className="w-4 h-4 mr-2" />
+                        Add to Compare
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

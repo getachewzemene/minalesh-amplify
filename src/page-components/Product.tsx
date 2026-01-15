@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Star, Heart, Share2, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react"
+import { Star, Heart, Share2, ShoppingCart, Truck, Shield, RotateCcw, GitCompare, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
@@ -11,6 +11,7 @@ import { Container } from "@/components/ui/container"
 import { ARViewer } from "@/components/ar-viewer"
 import { ReviewsSection } from "@/components/reviews/ReviewsSection"
 import { useShop } from "@/context/shop-context"
+import { useComparison } from "@/context/comparison-context"
 import { formatCurrency } from "@/lib/utils"
 import { OfflineIndicator } from "@/components/ui/offline-indicator"
 import { 
@@ -73,6 +74,7 @@ export default function Product() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { addToCart, addToWishlist } = useShop()
+  const { addToCompare, isInCompare, removeFromCompare, canAddMore } = useComparison()
   const { user } = useAuth()
 
   // Fetch product data from API
@@ -216,7 +218,7 @@ export default function Product() {
   const specifications = parseJsonField<Record<string, string>>(displayProduct.specifications, {})
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <Navbar />
       
       <main className="py-8">
@@ -408,6 +410,39 @@ export default function Product() {
                     })}
                   >
                     <Heart className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    variant={isInCompare(displayProduct.id) ? "default" : "outline"}
+                    size="lg"
+                    className={isInCompare(displayProduct.id) ? 'bg-green-600 hover:bg-green-700' : ''}
+                    aria-label={isInCompare(displayProduct.id) ? "Remove from comparison" : "Add to comparison"}
+                    onClick={() => {
+                      if (isInCompare(displayProduct.id)) {
+                        removeFromCompare(displayProduct.id)
+                      } else {
+                        addToCompare({
+                          id: displayProduct.id,
+                          name: displayProduct.name,
+                          price: displayProduct.price,
+                          salePrice: displayProduct.salePrice,
+                          image: firstImage,
+                          category: displayProduct.category?.name,
+                          vendor: vendorName,
+                          ratingAverage: displayProduct.ratingAverage,
+                          stockQuantity: displayProduct.stockQuantity,
+                          brand: displayProduct.brand,
+                          specifications: parseJsonField<Record<string, string>>(displayProduct.specifications, {}),
+                          features: parseJsonField<string[]>(displayProduct.features, [])
+                        })
+                      }
+                    }}
+                    disabled={!isInCompare(displayProduct.id) && !canAddMore}
+                  >
+                    {isInCompare(displayProduct.id) ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      <GitCompare className="h-5 w-5" />
+                    )}
                   </Button>
                   <PriceAlertButton
                     productId={displayProduct.id}
