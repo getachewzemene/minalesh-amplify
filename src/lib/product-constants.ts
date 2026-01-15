@@ -7,13 +7,14 @@ export const STORAGE_KEYS = {
   RECENTLY_VIEWED: 'recently_viewed_products',
   COMPARE_PRODUCTS: 'compare_products',
   CART: 'shopping_cart',
-  WISHLIST: 'wishlist'
+  WISHLIST: 'wishlist',
+  BROWSING_HISTORY_ENABLED: 'browsing_history_enabled'
 } as const
 
 // Product limits
 export const PRODUCT_LIMITS = {
   MAX_COMPARISON: 4,
-  MAX_RECENTLY_VIEWED: 12,
+  MAX_RECENTLY_VIEWED: 20,
   MAX_FREQUENTLY_BOUGHT: 4
 } as const
 

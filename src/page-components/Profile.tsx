@@ -28,6 +28,9 @@ import { ProductComparison } from "@/components/user/ProductComparison"
 import { ReferralModal } from "@/components/user/ReferralModal"
 import { PriceAlertsList } from "@/components/user/PriceAlertsList"
 import { SavedSearchesList } from "@/components/user/SavedSearches"
+import { BrowsingHistoryPrivacyControl } from "@/components/user/BrowsingHistoryPrivacyControl"
+import { STORAGE_KEYS } from "@/lib/product-constants"
+import { isBrowsingHistoryEnabled } from "@/components/product/RecentlyViewedProducts"
 
 interface ProductRecommendation {
   id: string
@@ -112,7 +115,13 @@ export default function Profile() {
   // Fetch recently viewed products from localStorage
   useEffect(() => {
     try {
-      const viewed = localStorage.getItem('recentlyViewed')
+      // Check if browsing history is enabled
+      if (!isBrowsingHistoryEnabled()) {
+        setLoadingRecentlyViewed(false)
+        return
+      }
+      
+      const viewed = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
       if (viewed) {
         const viewedProducts = JSON.parse(viewed).slice(0, 6)
         setRecentlyViewed(viewedProducts)
@@ -120,7 +129,7 @@ export default function Profile() {
     } catch (error) {
       console.error('Error loading recently viewed:', error)
       // Clear corrupted data
-      localStorage.removeItem('recentlyViewed')
+      localStorage.removeItem(STORAGE_KEYS.RECENTLY_VIEWED)
       toast.error('Failed to load recently viewed products. Data has been reset.')
     } finally {
       setLoadingRecentlyViewed(false)
@@ -897,6 +906,9 @@ export default function Profile() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Browsing History Privacy Control */}
+                <BrowsingHistoryPrivacyControl />
 
                 {/* Privacy Information */}
                 <Card>
