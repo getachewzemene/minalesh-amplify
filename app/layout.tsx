@@ -9,8 +9,6 @@ import { ComparisonProvider } from "@/context/comparison-context"
 import { AIHelper } from "@/components/ai-helper"
 import { GoogleAnalytics } from "@/components/analytics"
 import { ComparisonBar } from "@/components/comparison/ComparisonBar"
-import { NextIntlClientProvider } from 'next-intl'
-import { getLocale, getMessages } from 'next-intl/server'
 import '@/index.css'
 import Providers from './providers'
 
@@ -28,36 +26,31 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const locale = await getLocale()
-  const messages = await getMessages()
-  
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <NextIntlClientProvider messages={messages}>
-            <TooltipProvider>
-              <LanguageProvider>
-                <AuthProvider>
-                  <ShopProvider>
-                    <ComparisonProvider>
-                      {children}
-                      <ComparisonBar />
-                      <AIHelper />
-                      <GoogleAnalytics />
-                      <Toaster />
-                      <Sonner />
-                    </ComparisonProvider>
-                  </ShopProvider>
-                </AuthProvider>
-              </LanguageProvider>
-            </TooltipProvider>
-          </NextIntlClientProvider>
+          <TooltipProvider>
+            <LanguageProvider>
+              <AuthProvider>
+                <ShopProvider>
+                  <ComparisonProvider>
+                    {children}
+                    <ComparisonBar />
+                    <AIHelper />
+                    <GoogleAnalytics />
+                    <Toaster />
+                    <Sonner />
+                  </ComparisonProvider>
+                </ShopProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

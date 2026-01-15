@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
-import { useRouter as useNextRouter, usePathname as useNextPathname } from "next/navigation";
 import { locales, defaultLocale, type Locale } from "@/i18n/config";
 
 interface Translations {
@@ -21,18 +20,6 @@ const LANGUAGE_COOKIE = 'preferred_language';
 const LANGUAGE_STORAGE_KEY = 'language';
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
-
-/**
- * Detects the current locale from the URL path
- */
-function getLocaleFromPath(pathname: string): Locale {
-  for (const locale of locales) {
-    if (pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`) {
-      return locale;
-    }
-  }
-  return defaultLocale;
-}
 
 /**
  * Sets a cookie with the language preference
@@ -65,30 +52,32 @@ async function saveLanguagePreferenceToServer(locale: Locale): Promise<void> {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const nextRouter = useNextRouter();
-  const pathname = useNextPathname();
-  
-  // Initialize language from URL or localStorage
+  // Initialize language from localStorage or cookie
   const [language, setLanguageState] = useState<Locale>(() => {
     if (typeof window !== 'undefined') {
-      // First check URL
-      const urlLocale = getLocaleFromPath(window.location.pathname);
-      if (urlLocale !== defaultLocale) return urlLocale;
-      
-      // Then check localStorage
+      // Check localStorage first
       const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Locale;
       if (saved && locales.includes(saved)) return saved;
+      
+      // Check cookie
+      const cookieMatch = document.cookie.match(new RegExp(`${LANGUAGE_COOKIE}=([^;]+)`));
+      if (cookieMatch) {
+        const cookieLocale = cookieMatch[1] as Locale;
+        if (locales.includes(cookieLocale)) return cookieLocale;
+      }
     }
     return defaultLocale;
   });
 
-  // Sync language state with URL on client-side navigation
+  // Sync with localStorage on mount (handle SSR)
   useEffect(() => {
-    const urlLocale = getLocaleFromPath(pathname);
-    if (urlLocale !== language) {
-      setLanguageState(urlLocale);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Locale;
+      if (saved && locales.includes(saved) && saved !== language) {
+        setLanguageState(saved);
+      }
     }
-  }, [pathname, language]);
+  }, []);
 
   const setLanguage = useCallback((lang: Locale) => {
     if (!locales.includes(lang)) return;
@@ -104,33 +93,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       
       // Save to server for authenticated users
       saveLanguagePreferenceToServer(lang);
-      
-      // Navigate to the new locale URL
-      const currentPath = pathname;
-      let newPath: string;
-      
-      // Remove existing locale prefix if present
-      let pathWithoutLocale = currentPath;
-      for (const locale of locales) {
-        if (currentPath.startsWith(`/${locale}/`)) {
-          pathWithoutLocale = currentPath.substring(locale.length + 1);
-          break;
-        } else if (currentPath === `/${locale}`) {
-          pathWithoutLocale = '/';
-          break;
-        }
-      }
-      
-      // Add new locale prefix (don't add for default locale with 'as-needed' strategy)
-      if (lang === defaultLocale) {
-        newPath = pathWithoutLocale;
-      } else {
-        newPath = `/${lang}${pathWithoutLocale}`;
-      }
-      
-      nextRouter.push(newPath);
     }
-  }, [pathname, nextRouter]);
+  }, []);
 
   const t = useCallback((translations: Translations) => {
     return translations[language] || translations[defaultLocale];

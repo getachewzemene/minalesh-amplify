@@ -1,12 +1,30 @@
+import { getRequestConfig } from 'next-intl/server';
+
 /**
- * Root i18n configuration file
+ * Root i18n configuration file for next-intl
  * 
- * This file re-exports the i18n request configuration for next-intl.
- * The actual configuration is in src/i18n/request.ts
+ * This file configures message loading and locale handling.
+ * Supported locales: English (en), Amharic (am), Oromo (om), Tigrinya (ti)
  */
 
-// Re-export configuration for convenience
-export { locales, defaultLocale, type Locale } from './src/i18n/config';
+export const locales = ['en', 'am', 'om', 'ti'] as const;
+export type Locale = (typeof locales)[number];
+export const defaultLocale: Locale = 'en';
 
-// Export the request config as default
-export { default } from './src/i18n/request';
+export default getRequestConfig(async ({ requestLocale }) => {
+  // Get the locale from the request, or use default
+  let locale = await requestLocale;
+  
+  // Validate that the incoming locale is supported
+  if (!locale || !locales.includes(locale as Locale)) {
+    locale = defaultLocale;
+  }
+
+  return {
+    locale,
+    messages: (await import(`./messages/${locale}.json`)).default,
+    // Configure date/time formatting for Ethiopian context
+    timeZone: 'Africa/Addis_Ababa',
+    now: new Date(),
+  };
+});
