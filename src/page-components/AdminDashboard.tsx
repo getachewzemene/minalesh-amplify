@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MobileNav } from "@/components/ui/mobile-nav";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import AdminProductManagement from "@/page-components/AdminProductManagement";
@@ -168,12 +170,26 @@ const mock = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
+const adminNavItems = [
+  { value: "overview", label: "Overview" },
+  { value: "advanced", label: "Advanced" },
+  { value: "orders", label: "Orders" },
+  { value: "products", label: "Products" },
+  { value: "vendors", label: "Vendors" },
+  { value: "disputes", label: "Disputes" },
+  { value: "analytics", label: "Analytics" },
+  { value: "coupons", label: "Coupons" },
+  { value: "shipping", label: "Shipping" },
+  { value: "taxes", label: "Taxes" },
+];
+
 export default function AdminDashboard() {
   const [period, setPeriod] = useState<"weekly" | "monthly" | "yearly">("weekly");
   const [activeTab, setActiveTab] = useState("overview");
   const data = mock[period];
   const { approveVendorVerification } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     document.title = "Admin Dashboard — Minalesh";
@@ -386,18 +402,32 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-10 text-xs md:text-sm overflow-x-auto">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="products">Products</TabsTrigger>
-              <TabsTrigger value="vendors">Vendors</TabsTrigger>
-              <TabsTrigger value="disputes">Disputes</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="coupons">Coupons</TabsTrigger>
-              <TabsTrigger value="shipping">Shipping</TabsTrigger>
-              <TabsTrigger value="taxes">Taxes</TabsTrigger>
-            </TabsList>
+            {/* Mobile Navigation */}
+            {isMobile && (
+              <MobileNav
+                items={adminNavItems}
+                activeItem={activeTab}
+                onItemChange={setActiveTab}
+                title="Admin Dashboard"
+                className="mb-4"
+              />
+            )}
+            
+            {/* Desktop Navigation */}
+            {!isMobile && (
+              <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 text-xs md:text-sm">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="advanced">Advanced</TabsTrigger>
+                <TabsTrigger value="orders">Orders</TabsTrigger>
+                <TabsTrigger value="products">Products</TabsTrigger>
+                <TabsTrigger value="vendors">Vendors</TabsTrigger>
+                <TabsTrigger value="disputes">Disputes</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                <TabsTrigger value="coupons">Coupons</TabsTrigger>
+                <TabsTrigger value="shipping">Shipping</TabsTrigger>
+                <TabsTrigger value="taxes">Taxes</TabsTrigger>
+              </TabsList>
+            )}
 
             <TabsContent value="overview" className="space-y-6">
               <div className="grid lg:grid-cols-2 gap-6">
