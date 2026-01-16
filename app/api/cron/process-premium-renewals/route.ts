@@ -19,6 +19,9 @@ import {
 import { PREMIUM_PRICING } from '@/lib/subscription';
 import { addDays } from 'date-fns';
 
+// Days to wait before retrying a failed payment
+const PAYMENT_RETRY_INTERVAL_DAYS = 3;
+
 // Verify cron secret for security
 function verifyCronSecret(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization');
@@ -118,13 +121,13 @@ export async function POST(req: NextRequest) {
          * });
          */
 
-        // Create payment record (simulated - mark as completed for testing)
-        const payment = await prisma.subscriptionPayment.create({
+        // Create payment record (simulated for testing - see documentation above)
+        await prisma.subscriptionPayment.create({
           data: {
             premiumSubscriptionId: subscription.id,
             amount: pricing.price,
             currency: 'ETB',
-            status: 'completed', // In production: 'pending' until payment confirmed via webhook
+            status: 'completed',
             paymentMethod: subscription.paymentMethod,
             periodStart: newPeriodStart,
             periodEnd: newPeriodEnd,
@@ -166,7 +169,7 @@ export async function POST(req: NextRequest) {
 
         // Send renewal failure email
         const planType = subscription.planType as 'premium_monthly' | 'premium_yearly';
-        const retryDate = addDays(now, 3); // Retry in 3 days
+        const retryDate = addDays(now, PAYMENT_RETRY_INTERVAL_DAYS);
         
         try {
           const failureEmail = createSubscriptionRenewalFailedEmail(

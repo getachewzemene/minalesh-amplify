@@ -25,7 +25,7 @@ function verifyCronSecret(req: NextRequest): boolean {
 }
 
 // Days before renewal to send reminders
-const REMINDER_DAYS = [7, 3, 1];
+const REMINDER_DAYS: readonly number[] = [7, 3, 1] as const;
 
 /**
  * GET /api/cron/subscription-renewal-reminders
