@@ -10,7 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 
 interface NavItem {
@@ -35,7 +34,6 @@ export function MobileNav({
   className,
 }: MobileNavProps) {
   const [open, setOpen] = React.useState(false)
-  const isMobile = useIsMobile()
 
   const handleItemClick = (value: string) => {
     onItemChange(value)
@@ -44,30 +42,6 @@ export function MobileNav({
 
   const activeLabel = items.find((item) => item.value === activeItem)?.label || title
 
-  // Desktop: Show horizontal tabs/buttons
-  if (!isMobile) {
-    return (
-      <div className={cn("flex gap-2 flex-wrap", className)}>
-        {items.map((item) => (
-          <Button
-            key={item.value}
-            variant={activeItem === item.value ? "default" : "outline"}
-            onClick={() => onItemChange(item.value)}
-            className={cn(
-              "text-xs sm:text-sm",
-              activeItem === item.value && "bg-primary hover:bg-primary/90"
-            )}
-            size="sm"
-          >
-            {item.icon && <span className="mr-2">{item.icon}</span>}
-            {item.label}
-          </Button>
-        ))}
-      </div>
-    )
-  }
-
-  // Mobile: Show collapsible sidebar
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
