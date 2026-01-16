@@ -119,11 +119,16 @@ export async function POST(req: NextRequest) {
     const completedAt = new Date();
     const duration = completedAt.getTime() - startedAt.getTime();
 
+    // Determine job status based on results
+    // - 'success' if no errors occurred
+    // - 'failed' if any errors occurred (even partial failures should be flagged)
+    const jobStatus = failed > 0 ? 'failed' : 'success';
+
     // Update job execution record
     await prisma.cronJobExecution.update({
       where: { id: execution.id },
       data: {
-        status: failed === subscriptions.length && subscriptions.length > 0 ? 'failed' : 'success',
+        status: jobStatus,
         completedAt,
         duration,
         recordsProcessed: processed,

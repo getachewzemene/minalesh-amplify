@@ -96,20 +96,35 @@ export async function POST(req: NextRequest) {
         const newPeriodStart = now;
         const newPeriodEnd = addDays(now, pricing.daysInPeriod);
 
-        // In a production environment, this is where you would:
-        // 1. Charge the customer's saved payment method via Stripe
-        // 2. Handle payment failures with retry logic
-        
-        // For now, we'll simulate successful payment and create a payment record
-        // In production, integrate with Stripe subscription billing or manual charge
+        /**
+         * PRODUCTION PAYMENT INTEGRATION NOTE:
+         * 
+         * This is a SIMULATION for development/testing purposes.
+         * 
+         * In production, you must integrate with Stripe or another payment provider:
+         * 1. Call Stripe API to charge the customer's saved payment method
+         * 2. Handle payment failures with exponential backoff retry logic
+         * 3. Only create payment record and extend subscription after payment confirmation
+         * 4. Use webhooks to handle async payment confirmations
+         * 
+         * Example with Stripe:
+         * const paymentIntent = await stripe.paymentIntents.create({
+         *   amount: pricing.price * 100, // ETB in cents
+         *   currency: 'etb',
+         *   customer: subscription.stripeCustomerId,
+         *   payment_method: subscription.stripePaymentMethodId,
+         *   off_session: true,
+         *   confirm: true,
+         * });
+         */
 
-        // Create payment record
+        // Create payment record (simulated - mark as completed for testing)
         const payment = await prisma.subscriptionPayment.create({
           data: {
             premiumSubscriptionId: subscription.id,
             amount: pricing.price,
             currency: 'ETB',
-            status: 'completed', // In production, this would be 'pending' until payment confirmed
+            status: 'completed', // In production: 'pending' until payment confirmed via webhook
             paymentMethod: subscription.paymentMethod,
             periodStart: newPeriodStart,
             periodEnd: newPeriodEnd,
@@ -201,11 +216,16 @@ export async function POST(req: NextRequest) {
     const completedAt = new Date();
     const duration = completedAt.getTime() - startedAt.getTime();
 
+    // Determine job status based on results
+    // - 'success' if no errors occurred
+    // - 'failed' if any errors occurred (even partial failures should be flagged)
+    const jobStatus = failed > 0 ? 'failed' : 'success';
+
     // Update job execution record
     await prisma.cronJobExecution.update({
       where: { id: execution.id },
       data: {
-        status: failed === subscriptionsToRenew.length && subscriptionsToRenew.length > 0 ? 'failed' : 'success',
+        status: jobStatus,
         completedAt,
         duration,
         recordsProcessed: subscriptionsToRenew.length + subscriptionsToExpire.length,
