@@ -8,16 +8,19 @@ import prisma from '@/lib/prisma';
 import {
   getSubscriptionsDueForDelivery,
   processSubscriptionDelivery,
+  calculateNextDeliveryDate,
 } from '@/lib/subscription';
+import { sendEmail, createProductSubscriptionDeliveryEmail } from '@/lib/email';
 
 // Verify cron secret for security
 function verifyCronSecret(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization');
+  const cronSecretHeader = req.headers.get('x-cron-secret');
   const cronSecret = process.env.CRON_SECRET;
   
   if (!cronSecret) return true; // Allow in development
   
-  return authHeader === `Bearer ${cronSecret}`;
+  return authHeader === `Bearer ${cronSecret}` || cronSecretHeader === cronSecret;
 }
 
 /**
@@ -44,6 +47,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://minalesh.et';
+    const manageUrl = `${appUrl}/subscriptions`;
+
     // Get all subscriptions due for delivery
     const subscriptions = await getSubscriptionsDueForDelivery();
 
@@ -55,7 +61,7 @@ export async function POST(req: NextRequest) {
         // Check product stock
         const product = await prisma.product.findUnique({
           where: { id: subscription.productId },
-          select: { stockQuantity: true, isActive: true },
+          select: { stockQuantity: true, isActive: true, name: true },
         });
 
         if (!product || !product.isActive) {
@@ -66,12 +72,30 @@ export async function POST(req: NextRequest) {
           throw new Error('Insufficient stock');
         }
 
-        // Process the delivery
-        await processSubscriptionDelivery(subscription.id);
+        // Process the delivery (creates order)
+        const order = await processSubscriptionDelivery(subscription.id);
         processed++;
 
-        // TODO: Send notification email to user
-        // await sendSubscriptionDeliveryEmail(subscription.user.email, order);
+        // Send delivery notification email
+        const discountedPrice = Number(subscription.priceAtSubscription) * 
+          (1 - Number(subscription.discountPercent) / 100) * subscription.quantity;
+        const nextDeliveryDate = calculateNextDeliveryDate(
+          subscription.nextDeliveryDate,
+          subscription.frequency
+        );
+
+        const emailTemplate = createProductSubscriptionDeliveryEmail(
+          subscription.user.email,
+          product.name,
+          order.orderNumber,
+          subscription.quantity,
+          discountedPrice,
+          nextDeliveryDate,
+          manageUrl
+        );
+
+        await sendEmail(emailTemplate);
+        console.log(`Sent subscription delivery email to ${subscription.user.email}`);
 
       } catch (error) {
         failed++;

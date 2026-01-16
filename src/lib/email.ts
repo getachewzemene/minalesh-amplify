@@ -1516,3 +1516,366 @@ Thank you for shopping with Minalesh!
     `.trim(),
   };
 }
+
+/**
+ * Email template for premium subscription renewal reminder
+ */
+export function createSubscriptionRenewalReminderEmail(
+  to: string,
+  planType: 'premium_monthly' | 'premium_yearly',
+  renewalDate: Date,
+  priceAmount: number,
+  daysUntilRenewal: number,
+  manageUrl: string
+): EmailTemplate {
+  const planName = planType === 'premium_yearly' ? 'Annual' : 'Monthly';
+  const formattedDate = renewalDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return {
+    to,
+    subject: `⏰ Your Minalesh Premium ${planName} Plan Renews in ${daysUntilRenewal} Day${daysUntilRenewal > 1 ? 's' : ''}`,
+    template: 'subscription_renewal_reminder',
+    text: `
+Your Minalesh Premium subscription is renewing soon!
+
+Plan: ${planName} Premium
+Renewal Date: ${formattedDate}
+Amount: ${priceAmount} ETB
+
+Your subscription will automatically renew on ${formattedDate}. 
+
+Current Benefits You'll Continue Enjoying:
+- Free shipping on all orders
+- Extended returns (14 days)
+- 2x loyalty points on purchases
+- Priority customer support
+- Exclusive deals and early access to sales
+
+To manage your subscription or update payment method, visit:
+${manageUrl}
+
+If you don't want to renew, you can cancel anytime before the renewal date.
+
+Thank you for being a Minalesh Premium member!
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .renewal-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #667eea; }
+    .benefits-list { background-color: #e8f5e9; padding: 15px 25px; border-radius: 8px; margin: 15px 0; }
+    .benefits-list li { padding: 5px 0; }
+    .button { display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+    .crown { font-size: 48px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="crown">👑</div>
+      <h1>Renewal Reminder</h1>
+      <p>Your Premium subscription renews soon</p>
+    </div>
+    <div class="content">
+      <div class="renewal-box">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Subscription Details</p>
+        <p style="margin: 0; font-size: 18px; font-weight: bold;">Minalesh Premium - ${planName} Plan</p>
+        <p style="margin: 10px 0 0 0;"><strong>Renewal Date:</strong> ${formattedDate}</p>
+        <p style="margin: 5px 0 0 0;"><strong>Amount:</strong> ${priceAmount} ETB</p>
+      </div>
+      
+      <p style="text-align: center; font-size: 16px;">
+        <strong>Your subscription will automatically renew in ${daysUntilRenewal} day${daysUntilRenewal > 1 ? 's' : ''}</strong>
+      </p>
+      
+      <div class="benefits-list">
+        <p style="margin: 0 0 10px 0; font-weight: bold;">✨ Benefits you'll continue enjoying:</p>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>🚚 Free shipping on all orders</li>
+          <li>🔄 Extended returns (14 days)</li>
+          <li>⭐ 2x loyalty points on purchases</li>
+          <li>🎧 Priority customer support</li>
+          <li>🎁 Exclusive deals and early access to sales</li>
+        </ul>
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${manageUrl}" class="button">Manage Subscription</a>
+      </div>
+      
+      <p style="text-align: center; font-size: 13px; color: #666;">
+        If you don't want to renew, you can cancel anytime before the renewal date.
+      </p>
+    </div>
+    <div class="footer">
+      <p>Thank you for being a Minalesh Premium member! 👑</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for premium subscription renewal success
+ */
+export function createSubscriptionRenewalSuccessEmail(
+  to: string,
+  planType: 'premium_monthly' | 'premium_yearly',
+  newPeriodEnd: Date,
+  priceAmount: number,
+  manageUrl: string
+): EmailTemplate {
+  const planName = planType === 'premium_yearly' ? 'Annual' : 'Monthly';
+  const formattedDate = newPeriodEnd.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return {
+    to,
+    subject: `✅ Your Minalesh Premium Subscription Has Been Renewed`,
+    template: 'subscription_renewal_success',
+    text: `
+Your Minalesh Premium subscription has been renewed!
+
+Plan: ${planName} Premium
+Amount Charged: ${priceAmount} ETB
+Next Renewal: ${formattedDate}
+
+Thank you for continuing your Premium membership! You can continue enjoying all your exclusive benefits.
+
+To manage your subscription, visit:
+${manageUrl}
+
+Thank you for being a Minalesh Premium member!
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4CAF50; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .success-box { background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4CAF50; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">✅ Renewal Successful</h1>
+      <p style="margin: 10px 0 0 0;">Your Premium subscription has been renewed</p>
+    </div>
+    <div class="content">
+      <div class="success-box">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Payment Confirmed</p>
+        <p style="margin: 0; font-size: 18px; font-weight: bold;">Minalesh Premium - ${planName} Plan</p>
+        <p style="margin: 10px 0 0 0;"><strong>Amount Charged:</strong> ${priceAmount} ETB</p>
+        <p style="margin: 5px 0 0 0;"><strong>Next Renewal:</strong> ${formattedDate}</p>
+      </div>
+      
+      <p>Thank you for continuing your Premium membership! You can continue enjoying all your exclusive benefits including free shipping, extended returns, and 2x loyalty points.</p>
+      
+      <div style="text-align: center;">
+        <a href="${manageUrl}" class="button">Manage Subscription</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Thank you for being a Minalesh Premium member! 👑</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for premium subscription renewal failure
+ */
+export function createSubscriptionRenewalFailedEmail(
+  to: string,
+  planType: 'premium_monthly' | 'premium_yearly',
+  failureReason: string,
+  retryDate: Date,
+  updatePaymentUrl: string
+): EmailTemplate {
+  const planName = planType === 'premium_yearly' ? 'Annual' : 'Monthly';
+  const formattedRetryDate = retryDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return {
+    to,
+    subject: `⚠️ Action Required: Your Minalesh Premium Renewal Failed`,
+    template: 'subscription_renewal_failed',
+    text: `
+We were unable to renew your Minalesh Premium subscription.
+
+Plan: ${planName} Premium
+Issue: ${failureReason}
+Next Retry: ${formattedRetryDate}
+
+Please update your payment method to avoid losing your Premium benefits:
+${updatePaymentUrl}
+
+If we can't process your payment, your Premium benefits will be suspended.
+
+Thank you,
+Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #FF9800; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .warning-box { background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FF9800; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #FF9800; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">⚠️ Payment Failed</h1>
+      <p style="margin: 10px 0 0 0;">We couldn't renew your Premium subscription</p>
+    </div>
+    <div class="content">
+      <div class="warning-box">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #856404;">Payment Issue</p>
+        <p style="margin: 0; font-size: 16px;"><strong>Reason:</strong> ${failureReason}</p>
+        <p style="margin: 10px 0 0 0;"><strong>Next Retry:</strong> ${formattedRetryDate}</p>
+      </div>
+      
+      <p><strong>Action Required:</strong> Please update your payment method to continue enjoying your Premium benefits including free shipping, extended returns, and 2x loyalty points.</p>
+      
+      <div style="text-align: center;">
+        <a href="${updatePaymentUrl}" class="button">Update Payment Method</a>
+      </div>
+      
+      <p style="font-size: 13px; color: #666;">If we can't process your payment, your Premium benefits will be suspended until payment is resolved.</p>
+    </div>
+    <div class="footer">
+      <p>Thank you,<br>Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Email template for product subscription delivery notification
+ */
+export function createProductSubscriptionDeliveryEmail(
+  to: string,
+  productName: string,
+  orderNumber: string,
+  quantity: number,
+  price: number,
+  nextDeliveryDate: Date,
+  manageUrl: string
+): EmailTemplate {
+  const formattedNextDate = nextDeliveryDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return {
+    to,
+    subject: `🔄 Subscribe & Save Delivery Placed - ${productName}`,
+    template: 'product_subscription_delivery',
+    text: `
+Your Subscribe & Save delivery has been placed!
+
+Product: ${productName}
+Quantity: ${quantity}
+Order Number: ${orderNumber}
+Price: ${price.toFixed(2)} ETB (10% Subscribe & Save discount applied)
+
+Next Delivery: ${formattedNextDate}
+
+To manage your subscription (pause, skip, or cancel), visit:
+${manageUrl}
+
+Thank you for using Subscribe & Save!
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2196F3; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .order-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .discount-badge { display: inline-block; background-color: #4CAF50; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .next-delivery { background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">🔄 Subscription Delivery</h1>
+      <p style="margin: 10px 0 0 0;">Your order has been placed</p>
+    </div>
+    <div class="content">
+      <div class="order-box">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Order #${orderNumber}</p>
+        <p style="margin: 0; font-size: 18px; font-weight: bold;">${productName}</p>
+        <p style="margin: 10px 0 0 0;">Quantity: ${quantity}</p>
+        <p style="margin: 5px 0 0 0;">
+          <strong>${price.toFixed(2)} ETB</strong> 
+          <span class="discount-badge">10% OFF</span>
+        </p>
+      </div>
+      
+      <div class="next-delivery">
+        <p style="margin: 0; font-weight: bold;">📅 Next Delivery</p>
+        <p style="margin: 5px 0 0 0;">${formattedNextDate}</p>
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${manageUrl}" class="button">Manage Subscription</a>
+      </div>
+      
+      <p style="text-align: center; font-size: 13px; color: #666;">
+        You can pause, skip, or cancel your subscription anytime.
+      </p>
+    </div>
+    <div class="footer">
+      <p>Thank you for using Subscribe & Save! 🎉</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
