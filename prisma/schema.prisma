@@ -3,11 +3,21 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Optimize for serverless environments
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
+  // Use DATABASE_URL for pooled connections (runtime)
   url      = env("DATABASE_URL")
+  // Use DIRECT_URL for direct connections (migrations)
+  // This is especially important for Supabase where:
+  // - DATABASE_URL uses port 6543 (PgBouncer pooler)
+  // - DIRECT_URL uses port 5432 (direct connection)
+  // For other providers where pooling is automatic (like Neon),
+  // DIRECT_URL is optional and can be the same as DATABASE_URL
+  directUrl = env("DIRECT_URL")
 }
 
 // Enums
