@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getConfigSummary } from '@/lib/env';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -15,6 +16,7 @@ interface HealthStatus {
     cache?: boolean;
     uptime: number;
   };
+  config?: ReturnType<typeof getConfigSummary>;
 }
 
 const startTime = Date.now();
@@ -54,8 +56,12 @@ export async function GET(req: NextRequest) {
       memoryUsage: process.memoryUsage(),
     };
 
+    // Add configuration summary
+    const configSummary = getConfigSummary();
+
     return NextResponse.json({
       ...health,
+      config: configSummary,
       details: additionalInfo,
     }, {
       status: health.status === 'healthy' ? 200 : 503,
