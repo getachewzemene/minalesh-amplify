@@ -8,6 +8,25 @@ interface ProductPageProps {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Parse product images from various formats (array, JSON string, or unknown)
+ * Handles both direct array and JSON-encoded string formats
+ */
+function parseProductImages(images: unknown): string[] {
+  if (!images) return []
+  if (Array.isArray(images)) {
+    return images as string[]
+  } else if (typeof images === 'string') {
+    try {
+      const parsed = JSON.parse(images)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      // If parsing fails, return empty array
+    }
+  }
+  return []
+}
+
 // Generate dynamic metadata for product pages
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params
@@ -40,20 +59,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       }
     }
 
-    // Parse images
-    let images: string[] = []
-    if (product.images) {
-      if (Array.isArray(product.images)) {
-        images = product.images as string[]
-      } else if (typeof product.images === 'string') {
-        try {
-          const parsed = JSON.parse(product.images)
-          if (Array.isArray(parsed)) images = parsed
-        } catch {
-          // If parsing fails, use empty array
-        }
-      }
-    }
+    const images = parseProductImages(product.images)
 
     return createProductMetadata({
       id: product.id,
@@ -71,21 +77,6 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       description: 'View product details on Minalesh'
     }
   }
-}
-
-// Helper to parse images for structured data
-function parseImages(images: unknown): string[] {
-  if (Array.isArray(images)) {
-    return images as string[]
-  } else if (typeof images === 'string') {
-    try {
-      const parsed = JSON.parse(images)
-      if (Array.isArray(parsed)) return parsed
-    } catch {
-      // If parsing fails, return empty array
-    }
-  }
-  return []
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -126,7 +117,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     })
 
     if (product) {
-      const images = parseImages(product.images)
+      const images = parseProductImages(product.images)
       const vendorName = product.vendor?.displayName || 
         `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
         'Minalesh Vendor'

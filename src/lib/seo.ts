@@ -26,8 +26,8 @@ export const ORGANIZATION_INFO = {
   logo: `${BASE_URL}/logo.png`,
   description: SITE_DESCRIPTION,
   contactPoint: {
-    telephone: '+251-XXX-XXX-XXX',
-    email: 'support@minalesh.et',
+    telephone: process.env.CONTACT_PHONE || '+251-11-123-4567',
+    email: process.env.CONTACT_EMAIL || 'support@minalesh.et',
     contactType: 'customer service'
   },
   address: {
