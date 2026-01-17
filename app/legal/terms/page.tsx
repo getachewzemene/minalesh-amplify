@@ -1,12 +1,23 @@
 import { Metadata } from 'next'
+import { BreadcrumbSchema } from '@/components/seo'
+import { createPageMetadata, BASE_URL } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service - Minalesh Marketplace',
-  description: 'Terms of Service and User Agreement for Minalesh Ethiopian Marketplace',
-}
+export const metadata: Metadata = createPageMetadata({
+  title: 'Terms of Service',
+  description: 'Terms of Service and User Agreement for Minalesh Ethiopian Marketplace. Read our terms for buyers and vendors.',
+  path: '/legal/terms'
+})
 
 export default function TermsOfServicePage() {
   return (
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: BASE_URL },
+          { name: 'Legal', url: `${BASE_URL}/legal` },
+          { name: 'Terms of Service', url: `${BASE_URL}/legal/terms` }
+        ]}
+      />
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
       
@@ -242,5 +253,6 @@ export default function TermsOfServicePage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

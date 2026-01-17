@@ -1,14 +1,35 @@
 import { Metadata } from 'next'
 import { Card, CardContent } from '@/components/ui/card'
 import { ShoppingBag, Users, Zap, Shield, Heart, TrendingUp } from 'lucide-react'
+import { LocalBusinessSchema, BreadcrumbSchema } from '@/components/seo'
+import { createPageMetadata, BASE_URL, ORGANIZATION_INFO } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'About Minalesh - Ethiopia\'s Intelligent Marketplace',
-  description: 'Learn about Minalesh, the leading e-commerce platform connecting Ethiopian buyers and sellers',
-}
+export const metadata: Metadata = createPageMetadata({
+  title: 'About Minalesh',
+  description: "Learn about Minalesh, Ethiopia's leading e-commerce platform connecting buyers and sellers across the nation. Discover our mission, values, and commitment to Ethiopian commerce.",
+  path: '/about'
+})
 
 export default function AboutPage() {
   return (
+    <>
+      {/* Structured Data for About Page */}
+      <LocalBusinessSchema
+        name={ORGANIZATION_INFO.name}
+        url={ORGANIZATION_INFO.url}
+        logo={ORGANIZATION_INFO.logo}
+        description="Ethiopia's intelligent e-commerce marketplace connecting buyers and sellers across the nation"
+        address={ORGANIZATION_INFO.address}
+        telephone={ORGANIZATION_INFO.contactPoint.telephone}
+        email={ORGANIZATION_INFO.contactPoint.email}
+        priceRange="$$"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: BASE_URL },
+          { name: 'About', url: `${BASE_URL}/about` }
+        ]}
+      />
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Hero Section */}
       <div className="text-center mb-16">
@@ -295,5 +316,6 @@ export default function AboutPage() {
         </Card>
       </section>
     </div>
+    </>
   )
 }
