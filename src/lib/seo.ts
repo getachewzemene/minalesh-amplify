@@ -138,7 +138,7 @@ export function createProductMetadata(product: {
   const productUrl = `${BASE_URL}/product/${product.id}`
   const productImage = product.images?.[0] || DEFAULT_OG_IMAGE
   const productDescription = product.description 
-    ? product.description.slice(0, 160) 
+    ? truncateDescription(product.description)
     : `Buy ${product.name} on ${SITE_NAME}. Best prices in Ethiopian Birr (ETB).`
 
   return {
@@ -153,7 +153,7 @@ export function createProductMetadata(product: {
       SITE_NAME
     ].filter(Boolean),
     openGraph: {
-      type: 'website',
+      type: 'website', // Note: 'product' type requires additional properties, using 'website' for broader compatibility
       url: productUrl,
       title: product.name,
       description: productDescription,

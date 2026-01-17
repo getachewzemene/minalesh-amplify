@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <body>
         {/* Organization and WebSite Structured Data */}
         <OrganizationSchema
           name={ORGANIZATION_INFO.name}
@@ -38,8 +38,6 @@ export default function RootLayout({
           description={ORGANIZATION_INFO.description}
           searchUrl={`${BASE_URL}/products?q={search_term_string}`}
         />
-      </head>
-      <body>
         <Providers>
           <TooltipProvider>
             <LanguageProvider>

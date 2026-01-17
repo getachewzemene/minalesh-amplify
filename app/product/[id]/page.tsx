@@ -2,29 +2,11 @@ import { Metadata } from 'next'
 import prisma from '@/lib/prisma'
 import { createProductMetadata, BASE_URL } from '@/lib/seo'
 import { ProductSchema, BreadcrumbSchema } from '@/components/seo'
+import { parseAllImages } from '@/lib/image-utils'
 import ProductClient from '@/page-components/Product'
 
 interface ProductPageProps {
   params: Promise<{ id: string }>
-}
-
-/**
- * Parse product images from various formats (array, JSON string, or unknown)
- * Handles both direct array and JSON-encoded string formats
- */
-function parseProductImages(images: unknown): string[] {
-  if (!images) return []
-  if (Array.isArray(images)) {
-    return images as string[]
-  } else if (typeof images === 'string') {
-    try {
-      const parsed = JSON.parse(images)
-      if (Array.isArray(parsed)) return parsed
-    } catch {
-      // If parsing fails, return empty array
-    }
-  }
-  return []
 }
 
 // Generate dynamic metadata for product pages
@@ -59,7 +41,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       }
     }
 
-    const images = parseProductImages(product.images)
+    const images = parseAllImages(product.images)
 
     return createProductMetadata({
       id: product.id,
@@ -117,7 +99,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     })
 
     if (product) {
-      const images = parseProductImages(product.images)
+      const images = parseAllImages(product.images)
       const vendorName = product.vendor?.displayName || 
         `${product.vendor?.firstName || ''} ${product.vendor?.lastName || ''}`.trim() || 
         'Minalesh Vendor'
