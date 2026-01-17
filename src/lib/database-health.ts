@@ -9,6 +9,23 @@ import prisma from './prisma'
 import logger from './logger'
 
 /**
+ * Configuration constants for connection pool monitoring
+ */
+const CONNECTION_POOL_THRESHOLDS = {
+  MAX_WAITING_CLIENTS: 10,
+  MIN_IDLE_CONNECTIONS: 0,
+  MAX_WAIT_TIME_MICROSECONDS: 1000000, // 1 second
+} as const
+
+/**
+ * Maximum limits for query result sizes
+ */
+const QUERY_LIMITS = {
+  MAX_SLOW_QUERIES: 100,
+  MAX_TABLE_SIZES: 100,
+} as const
+
+/**
  * Check if database is accessible
  */
 export async function checkDatabaseConnection(): Promise<{
@@ -196,6 +213,9 @@ export async function getSlowQueries(
   error?: string
 }> {
   try {
+    // Validate and sanitize limit
+    const safeLimit = Math.min(Math.max(1, Math.floor(limit)), QUERY_LIMITS.MAX_SLOW_QUERIES)
+    
     const queries = await prisma.$queryRaw<Array<{
       query: string
       calls: bigint
@@ -210,7 +230,7 @@ export async function getSlowQueries(
       FROM pg_stat_statements
       WHERE query NOT LIKE '%pg_stat_statements%'
       ORDER BY mean_exec_time DESC
-      LIMIT ${limit}
+      LIMIT ${safeLimit}
     `
     
     return { queries }
@@ -236,6 +256,9 @@ export async function getTableSizes(limit: number = 20): Promise<{
   error?: string
 }> {
   try {
+    // Validate and sanitize limit
+    const safeLimit = Math.min(Math.max(1, Math.floor(limit)), QUERY_LIMITS.MAX_TABLE_SIZES)
+    
     const tables = await prisma.$queryRaw<Array<{
       table_name: string
       total_size: string
@@ -250,7 +273,7 @@ export async function getTableSizes(limit: number = 20): Promise<{
       FROM pg_tables
       WHERE schemaname = 'public'
       ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
-      LIMIT ${limit}
+      LIMIT ${safeLimit}
     `
     
     return { tables }
@@ -413,7 +436,7 @@ export function isConnectionPoolWarning(poolStats: {
   reason?: string
 } {
   // High client waiting queue
-  if (poolStats.cl_waiting > 10) {
+  if (poolStats.cl_waiting > CONNECTION_POOL_THRESHOLDS.MAX_WAITING_CLIENTS) {
     return {
       warning: true,
       reason: `${poolStats.cl_waiting} clients waiting for connections`,
@@ -421,7 +444,7 @@ export function isConnectionPoolWarning(poolStats: {
   }
   
   // Low idle connections
-  if (poolStats.sv_idle === 0 && poolStats.sv_used > 0) {
+  if (poolStats.sv_idle === CONNECTION_POOL_THRESHOLDS.MIN_IDLE_CONNECTIONS && poolStats.sv_used > 0) {
     return {
       warning: true,
       reason: 'No idle server connections available',
@@ -429,10 +452,10 @@ export function isConnectionPoolWarning(poolStats: {
   }
   
   // High maxwait time (in microseconds)
-  if (poolStats.maxwait && poolStats.maxwait > 1000000) { // 1 second
+  if (poolStats.maxwait && poolStats.maxwait > CONNECTION_POOL_THRESHOLDS.MAX_WAIT_TIME_MICROSECONDS) {
     return {
       warning: true,
-      reason: `Maximum wait time is ${poolStats.maxwait / 1000000}s`,
+      reason: `Maximum wait time is ${poolStats.maxwait / CONNECTION_POOL_THRESHOLDS.MAX_WAIT_TIME_MICROSECONDS}s`,
     }
   }
   
