@@ -154,6 +154,7 @@ model Profile {
   addresses        Address[]
   sellerRatings    SellerRating[]
   disputes         Dispute[]
+  productShares    ProductShare[]
 
   @@map("profiles")
 }
@@ -242,6 +243,7 @@ model Product {
   media                Media[]
   productSubscriptions ProductSubscription[]
   priceAlerts          PriceAlert[]
+  shares               ProductShare[]
 
   @@map("products")
 }
@@ -1710,4 +1712,39 @@ model BuyerProtectionSettings {
   updatedAt                DateTime @updatedAt @map("updated_at")
 
   @@map("buyer_protection_settings")
+}
+
+// ============================================
+// Social Sharing
+// ============================================
+
+// Social platform enum
+enum SharePlatform {
+  whatsapp
+  facebook
+  twitter
+  telegram
+  copy_link
+  qr_code
+  native
+}
+
+// Product Share tracking
+model ProductShare {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String        @map("product_id") @db.Uuid
+  userId    String?       @map("user_id") @db.Uuid // Optional: track if user is logged in
+  platform  SharePlatform
+  userAgent String?       @map("user_agent") // Track device/browser
+  ipAddress String?       @map("ip_address") // For analytics
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([userId])
+  @@index([platform])
+  @@index([createdAt])
+  @@map("product_shares")
 }

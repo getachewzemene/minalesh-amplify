@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Star, Heart, Share2, ShoppingCart, Truck, Shield, RotateCcw, GitCompare, Check } from "lucide-react"
+import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, GitCompare, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
@@ -29,6 +29,7 @@ import { DeliveryEstimator } from "@/components/product/DeliveryEstimator"
 import { PriceAlertButton } from "@/components/user/PriceAlertButton"
 import { useAuth } from "@/context/auth-context"
 import { VendorStatsCard } from "@/components/seller-ratings"
+import { ProductSocialShare } from "@/components/social"
 
 interface ProductData {
   id: string
@@ -451,9 +452,14 @@ export default function Product() {
                     isLoggedIn={!!user}
                     onLoginRequired={() => router.push('/auth/login?redirect=' + encodeURIComponent(window.location.pathname))}
                   />
-                  <Button variant="outline" size="lg">
-                    <Share2 className="h-5 w-5" />
-                  </Button>
+                  <ProductSocialShare
+                    productId={displayProduct.id}
+                    productName={displayProduct.name}
+                    productDescription={displayProduct.shortDescription || displayProduct.description}
+                    productPrice={currentPrice}
+                    productImage={firstImage}
+                    showShareCount={true}
+                  />
                 </div>
               </div>
 
