@@ -4,7 +4,7 @@
 **Last Updated:** January 17, 2025  
 **Status:** In Progress  
 
-This document tracks the progress of features and components required for deployment and beta release for production. Each feature includes its current status, implementation procedure, and priority level.
+This document tracks the progress of features and components required for deployment and beta release for production. Each feature includes its current status, implementation procedures, and priority level.
 
 ---
 
@@ -243,13 +243,13 @@ CRON_SECRET=<random-secret>
 
 2. **Configure database URL:**
    ```bash
-   DATABASE_URL="postgresql://user:password@host:5432/minalesh?sslmode=require"
+   DATABASE_URL="postgresql://<username>:<password>@<host>:5432/<database>?sslmode=require"
    ```
 
 3. **Enable connection pooling (for serverless):**
    ```bash
    # Add to next.config.js or prisma schema
-   DATABASE_URL="postgresql://user:password@host:5432/minalesh?pgbouncer=true&connection_limit=1"
+   DATABASE_URL="postgresql://<username>:<password>@<host>:5432/<database>?pgbouncer=true&connection_limit=1"
    ```
 
 4. **Run migrations:**
@@ -291,10 +291,10 @@ CRON_SECRET=<random-secret>
 
 2. **Configure S3 bucket for production:**
    ```bash
-   AWS_S3_BUCKET=minalesh-production
-   AWS_S3_REGION=eu-central-1
-   AWS_ACCESS_KEY_ID=...
-   AWS_SECRET_ACCESS_KEY=...
+   AWS_S3_BUCKET=<your-bucket-name>
+   AWS_S3_REGION=<your-region>
+   AWS_ACCESS_KEY_ID=<your-access-key-id>
+   AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
    ```
 
 3. **Add CloudFlare or Vercel Edge caching headers**
