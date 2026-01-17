@@ -34,6 +34,10 @@ build/
 # Environment
 .env*.local
 .env
+.env.test
+
+# Test files
+test-env*.ts
 
 # Editor directories and files
 .vscode/*

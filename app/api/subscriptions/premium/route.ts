@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const subscription = await getPremiumSubscription(user.id);
-    const isActive = await hasActivePremiumSubscription(user.id);
+    const subscription = await getPremiumSubscription(user.userId);
+    const isActive = await hasActivePremiumSubscription(user.userId);
 
     return NextResponse.json({
       success: true,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if already has subscription
-    const existing = await getPremiumSubscription(user.id);
+    const existing = await getPremiumSubscription(user.userId);
     if (existing && existing.status === 'active') {
       return NextResponse.json(
         { error: 'You already have an active subscription' },
@@ -149,7 +149,7 @@ export async function PUT(req: NextRequest) {
         );
         break;
       case 'resume':
-        subscription = await resumePremiumSubscription(user.id);
+        subscription = await resumePremiumSubscription(user.userId);
         break;
       default:
         return NextResponse.json(
@@ -195,7 +195,7 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const immediate = searchParams.get('immediate') === 'true';
 
-    const subscription = await cancelPremiumSubscription(user.id, immediate);
+    const subscription = await cancelPremiumSubscription(user.userId, immediate);
 
     return NextResponse.json({
       success: true,

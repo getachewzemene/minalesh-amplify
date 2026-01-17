@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     if (action === 'user-flags') {
       // Get flags enabled for current user
       const flags = await getUserFeatureFlags({
-        userId: user.id,
+        userId: user.userId,
         userRole: user.role,
         email: user.email,
       });

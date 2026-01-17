@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
             { status: 400 }
           );
         }
-        const acknowledged = await acknowledgeAlert(alertId, user.id);
+        const acknowledged = await acknowledgeAlert(alertId, user.userId);
         return NextResponse.json({
           success: true,
           message: 'Alert acknowledged',
