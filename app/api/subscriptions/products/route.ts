@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const subscriptions = await getProductSubscriptions(user.id);
+    const subscriptions = await getProductSubscriptions(user.userId);
 
     return NextResponse.json({
       success: true,
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const subscription = await createProductSubscription(user.id, productId, {
+    const subscription = await createProductSubscription(user.userId, productId, {
       variantId,
       quantity,
       frequency,

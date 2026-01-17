@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
           environment: data.environment,
           commitHash: data.commitHash,
           commitMessage: data.commitMessage,
-          deployedBy: user.id,
+          deployedBy: user.userId,
           metadata: data.metadata,
         });
 

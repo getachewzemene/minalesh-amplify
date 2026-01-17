@@ -136,11 +136,11 @@ export async function PUT(
         break;
 
       case 'resume':
-        subscription = await resumeProductSubscription(id, user.id);
+        subscription = await resumeProductSubscription(id, user.userId);
         break;
 
       case 'skip':
-        subscription = await skipNextDelivery(id, user.id);
+        subscription = await skipNextDelivery(id, user.userId);
         break;
 
       case 'update':
@@ -168,7 +168,7 @@ export async function PUT(
           }
         }
 
-        subscription = await updateProductSubscription(id, user.id, {
+        subscription = await updateProductSubscription(id, user.userId, {
           quantity,
           frequency,
           shippingAddressId,
@@ -224,7 +224,7 @@ export async function DELETE(
     const { searchParams } = new URL(req.url);
     const reason = searchParams.get('reason') || undefined;
 
-    const subscription = await cancelProductSubscription(id, user.id, reason);
+    const subscription = await cancelProductSubscription(id, user.userId, reason);
 
     return NextResponse.json({
       success: true,

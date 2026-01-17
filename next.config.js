@@ -91,6 +91,8 @@ const nextConfig = {
 
   // Experimental features for better performance
   experimental: {
+    // Enable instrumentation for startup validation
+    instrumentationHook: true,
     // Enable optimizations
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
     // Exclude logging packages from bundling to avoid worker thread issues
