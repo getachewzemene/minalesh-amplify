@@ -1,12 +1,23 @@
 import { Metadata } from 'next'
+import { BreadcrumbSchema } from '@/components/seo'
+import { createPageMetadata, BASE_URL } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy - Minalesh Marketplace',
-  description: 'Privacy Policy and Data Protection practices for Minalesh Ethiopian Marketplace',
-}
+export const metadata: Metadata = createPageMetadata({
+  title: 'Privacy Policy',
+  description: 'Privacy Policy and Data Protection practices for Minalesh Ethiopian Marketplace. Learn how we collect, use, and protect your data.',
+  path: '/legal/privacy'
+})
 
 export default function PrivacyPolicyPage() {
   return (
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: BASE_URL },
+          { name: 'Legal', url: `${BASE_URL}/legal` },
+          { name: 'Privacy Policy', url: `${BASE_URL}/legal/privacy` }
+        ]}
+      />
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
       
@@ -295,5 +306,6 @@ export default function PrivacyPolicyPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

@@ -9,22 +9,12 @@ import { ComparisonProvider } from "@/context/comparison-context"
 import { AIHelper } from "@/components/ai-helper"
 import { GoogleAnalytics } from "@/components/analytics"
 import { ComparisonBar } from "@/components/comparison/ComparisonBar"
+import { OrganizationSchema, WebSiteSchema } from "@/components/seo"
+import { createBaseMetadata, BASE_URL, ORGANIZATION_INFO } from "@/lib/seo"
 import '@/index.css'
 import Providers from './providers'
 
-export const metadata: Metadata = {
-  title: 'Minalesh - Ethiopia\'s Intelligent Marketplace',
-  description: 'Ethiopia\'s intelligent e-commerce marketplace',
-  authors: [{ name: 'Minalesh' }],
-  openGraph: {
-    title: 'Minalesh - Ethiopia\'s Intelligent Marketplace',
-    description: 'Ethiopia\'s intelligent e-commerce marketplace',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-  },
-}
+export const metadata: Metadata = createBaseMetadata()
 
 export default function RootLayout({
   children,
@@ -33,6 +23,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Organization and WebSite Structured Data */}
+        <OrganizationSchema
+          name={ORGANIZATION_INFO.name}
+          url={ORGANIZATION_INFO.url}
+          logo={ORGANIZATION_INFO.logo}
+          description={ORGANIZATION_INFO.description}
+          contactPoint={ORGANIZATION_INFO.contactPoint}
+        />
+        <WebSiteSchema
+          name={ORGANIZATION_INFO.name}
+          url={ORGANIZATION_INFO.url}
+          description={ORGANIZATION_INFO.description}
+          searchUrl={`${BASE_URL}/products?q={search_term_string}`}
+        />
+      </head>
       <body>
         <Providers>
           <TooltipProvider>
