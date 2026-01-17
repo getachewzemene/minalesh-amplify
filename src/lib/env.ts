@@ -82,13 +82,13 @@ const envSchema = z.object({
   // ========================================
   // Caching (Redis)
   // ========================================
-  REDIS_URL: z.string().url('REDIS_URL must be a valid URL').optional().or(z.literal('')),
+  REDIS_URL: z.string().url('REDIS_URL must be a valid URL').optional(),
   REDIS_TLS_ENABLED: z.enum(['true', 'false']).default('false'),
 
   // ========================================
   // Monitoring & Observability
   // ========================================
-  SENTRY_DSN: z.string().url('SENTRY_DSN must be a valid URL').optional().or(z.literal('')),
+  SENTRY_DSN: z.string().url('SENTRY_DSN must be a valid URL').optional(),
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
@@ -169,7 +169,7 @@ function validateEnv() {
     }
 
     // Warn if no storage is configured
-    if (!parsed.data.AWS_S3_BUCKET || !parsed.data.AWS_ACCESS_KEY_ID) {
+    if (!parsed.data.AWS_S3_BUCKET || !parsed.data.AWS_ACCESS_KEY_ID || !parsed.data.AWS_SECRET_ACCESS_KEY) {
       console.warn('⚠️  AWS S3 not fully configured - file uploads will not work');
     }
 

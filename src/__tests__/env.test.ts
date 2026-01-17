@@ -2,6 +2,20 @@
  * Tests for Environment Variables Validation
  * 
  * Tests the env.ts module to ensure environment variables are properly validated.
+ * 
+ * Testing Approach:
+ * - Each test runs in isolation with a fresh copy of process.env
+ * - We use vi.resetModules() to ensure fresh imports of the env module
+ * - Tests verify both successful validation and proper error handling
+ * - Feature detection and configuration summary functions are tested
+ * 
+ * Test Categories:
+ * 1. Required Variables - Tests validation of mandatory configuration
+ * 2. Optional Variables - Tests default values and custom configurations
+ * 3. Email Configuration - Tests email address validation
+ * 4. Feature Detection - Tests runtime feature availability checks
+ * 5. Configuration Summary - Tests the configuration reporting function
+ * 6. URL Validation - Tests URL format validation
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
