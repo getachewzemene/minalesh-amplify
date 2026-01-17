@@ -11,7 +11,7 @@ import {
   getTableSizes,
   isConnectionPoolWarning,
 } from '@/lib/database-health'
-import { logger } from '@/lib/logger'
+import logger from '@/lib/logger'
 
 /**
  * GET /api/health/db

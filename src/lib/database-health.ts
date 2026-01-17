@@ -6,7 +6,7 @@
  */
 
 import prisma from './prisma'
-import { logger } from './logger'
+import logger from './logger'
 
 /**
  * Check if database is accessible
@@ -407,6 +407,7 @@ export function isConnectionPoolWarning(poolStats: {
   sv_active: number
   sv_idle: number
   sv_used: number
+  maxwait?: number
 }): {
   warning: boolean
   reason?: string
@@ -428,7 +429,7 @@ export function isConnectionPoolWarning(poolStats: {
   }
   
   // High maxwait time (in microseconds)
-  if (poolStats.maxwait > 1000000) { // 1 second
+  if (poolStats.maxwait && poolStats.maxwait > 1000000) { // 1 second
     return {
       warning: true,
       reason: `Maximum wait time is ${poolStats.maxwait / 1000000}s`,
