@@ -50,6 +50,8 @@ import { useAuth } from "@/context/auth-context"
 import { LoadingState, CardLoadingSkeleton } from "@/components/ui/loading-state"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { MobileNav } from "@/components/ui/mobile-nav"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   ChartContainer,
   ChartTooltip,
@@ -123,6 +125,15 @@ const chartConfig = {
   },
 }
 
+const vendorNavItems = [
+  { value: "bulk-operations", label: "Bulk Operations", icon: <Upload className="h-4 w-4" /> },
+  { value: "inventory-forecast", label: "Inventory Forecast", icon: <Package className="h-4 w-4" /> },
+  { value: "performance", label: "Performance Insights", icon: <BarChart3 className="h-4 w-4" /> },
+  { value: "marketing", label: "Marketing", icon: <Megaphone className="h-4 w-4" /> },
+  { value: "communication", label: "Communication", icon: <MessageSquare className="h-4 w-4" /> },
+  { value: "financial", label: "Financial Tools", icon: <Calculator className="h-4 w-4" /> },
+];
+
 export default function VendorAdvancedDashboard() {
   const [activeTab, setActiveTab] = useState('bulk-operations')
   const [loading, setLoading] = useState(false)
@@ -133,6 +144,7 @@ export default function VendorAdvancedDashboard() {
   const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([])
   const { toast } = useToast()
   const { profile } = useAuth()
+  const isMobile = useIsMobile()
 
   // Mock data for inventory forecasting
   const mockInventoryForecasts: InventoryForecast[] = [
@@ -351,57 +363,67 @@ export default function VendorAdvancedDashboard() {
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        <Button 
-          variant={activeTab === 'bulk-operations' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('bulk-operations')}
-          className={activeTab === 'bulk-operations' ? 'bg-primary hover:bg-primary/90' : ''}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Bulk Operations
-        </Button>
-        <Button 
-          variant={activeTab === 'inventory-forecast' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('inventory-forecast')}
-          className={activeTab === 'inventory-forecast' ? 'bg-primary hover:bg-primary/90' : ''}
-        >
-          <Package className="h-4 w-4 mr-2" />
-          Inventory Forecast
-        </Button>
-        <Button 
-          variant={activeTab === 'performance' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('performance')}
-          className={activeTab === 'performance' ? 'bg-primary hover:bg-primary/90' : ''}
-        >
-          <BarChart3 className="h-4 w-4 mr-2" />
-          Performance Insights
-        </Button>
-        <Button 
-          variant={activeTab === 'marketing' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('marketing')}
-          className={activeTab === 'marketing' ? 'bg-primary hover:bg-primary/90' : ''}
-        >
-          <Megaphone className="h-4 w-4 mr-2" />
-          Marketing
-        </Button>
-        <Button 
-          variant={activeTab === 'communication' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('communication')}
-          className={activeTab === 'communication' ? 'bg-primary hover:bg-primary/90' : ''}
-        >
-          <MessageSquare className="h-4 w-4 mr-2" />
-          Communication
-        </Button>
-        <Button 
-          variant={activeTab === 'financial' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('financial')}
-          className={activeTab === 'financial' ? 'bg-primary hover:bg-primary/90' : ''}
-        >
-          <Calculator className="h-4 w-4 mr-2" />
-          Financial Tools
-        </Button>
-      </div>
+      {/* Navigation - Mobile: Collapsible sidebar, Desktop: Button row */}
+      {isMobile ? (
+        <MobileNav
+          items={vendorNavItems}
+          activeItem={activeTab}
+          onItemChange={setActiveTab}
+          title="Vendor Tools"
+          className="mb-6"
+        />
+      ) : (
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <Button 
+            variant={activeTab === 'bulk-operations' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('bulk-operations')}
+            className={activeTab === 'bulk-operations' ? 'bg-primary hover:bg-primary/90' : ''}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Bulk Operations
+          </Button>
+          <Button 
+            variant={activeTab === 'inventory-forecast' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('inventory-forecast')}
+            className={activeTab === 'inventory-forecast' ? 'bg-primary hover:bg-primary/90' : ''}
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Inventory Forecast
+          </Button>
+          <Button 
+            variant={activeTab === 'performance' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('performance')}
+            className={activeTab === 'performance' ? 'bg-primary hover:bg-primary/90' : ''}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Performance Insights
+          </Button>
+          <Button 
+            variant={activeTab === 'marketing' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('marketing')}
+            className={activeTab === 'marketing' ? 'bg-primary hover:bg-primary/90' : ''}
+          >
+            <Megaphone className="h-4 w-4 mr-2" />
+            Marketing
+          </Button>
+          <Button 
+            variant={activeTab === 'communication' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('communication')}
+            className={activeTab === 'communication' ? 'bg-primary hover:bg-primary/90' : ''}
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Communication
+          </Button>
+          <Button 
+            variant={activeTab === 'financial' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('financial')}
+            className={activeTab === 'financial' ? 'bg-primary hover:bg-primary/90' : ''}
+          >
+            <Calculator className="h-4 w-4 mr-2" />
+            Financial Tools
+          </Button>
+        </div>
+      )}
 
       {/* Bulk Operations Tab */}
       {activeTab === 'bulk-operations' && (
