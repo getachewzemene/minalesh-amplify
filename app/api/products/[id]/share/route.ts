@@ -87,7 +87,9 @@ export async function POST(
       const token = request.headers.get('authorization')?.replace('Bearer ', '')
       if (token) {
         const decoded = await verifyToken(token)
-        userId = decoded.userId
+        if (decoded && typeof decoded === 'object' && 'userId' in decoded) {
+          userId = decoded.userId
+        }
       }
     } catch (error) {
       // User is not logged in, which is fine

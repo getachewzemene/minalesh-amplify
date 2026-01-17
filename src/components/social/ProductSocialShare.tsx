@@ -52,9 +52,14 @@ export function ProductSocialShare({
   
   const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '')
   
-  // Create pre-filled share text with product details
-  const shareText = `Check out ${productName} for ${productPrice} ETB on Minalesh! ${productDescription || ''}`
-  const shareTextShort = `${productName} - ${productPrice} ETB`
+  // Sanitize text for sharing (remove potential XSS characters)
+  const sanitizeText = (text: string) => {
+    return text.replace(/[<>]/g, '').trim()
+  }
+  
+  // Create pre-filled share text with product details (sanitized)
+  const shareText = `Check out ${sanitizeText(productName)} for ${productPrice} ETB on Minalesh! ${productDescription ? sanitizeText(productDescription) : ''}`
+  const shareTextShort = `${sanitizeText(productName)} - ${productPrice} ETB`
 
   // Fetch share count on mount
   React.useEffect(() => {
@@ -155,7 +160,7 @@ export function ProductSocialShare({
       await trackShare('native')
     } catch (err) {
       // User cancelled or error occurred
-      if ((err as Error).name !== 'AbortError') {
+      if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Share failed:', err)
       }
     }
@@ -178,11 +183,16 @@ export function ProductSocialShare({
     }
   }
 
+  // Sanitize filename by removing invalid characters
+  const sanitizeFilename = (name: string) => {
+    return name.replace(/[<>:"/\\|?*]/g, '-').replace(/\s+/g, '-').toLowerCase()
+  }
+
   const downloadQRCode = () => {
     if (!qrCodeDataUrl) return
     
     const link = document.createElement('a')
-    link.download = `${productName}-qrcode.png`
+    link.download = `${sanitizeFilename(productName)}-qrcode.png`
     link.href = qrCodeDataUrl
     link.click()
     toast.success('QR code downloaded!')
