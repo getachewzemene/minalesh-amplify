@@ -75,7 +75,7 @@ const envSchema = z.object({
   // Storage (AWS S3)
   // ========================================
   AWS_S3_BUCKET: z.string().optional(),
-  AWS_REGION: z.string().default('us-east-1'),
+  AWS_REGION: z.string().optional(),
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
 
@@ -195,7 +195,15 @@ export const env = validateEnv();
  */
 export const features = {
   hasEmail: () => !!env.RESEND_API_KEY,
-  hasSMS: () => env.SMS_PROVIDER !== 'none' && !!env.AFRICAS_TALKING_API_KEY,
+  hasSMS: () => {
+    // Check if SMS is configured based on provider
+    if (env.SMS_PROVIDER === 'none') return false;
+    if (env.SMS_PROVIDER === 'africas_talking') {
+      return !!env.AFRICAS_TALKING_API_KEY && !!env.AFRICAS_TALKING_USERNAME;
+    }
+    // Add other providers as needed (twilio, etc.)
+    return false;
+  },
   hasStripe: () => !!env.STRIPE_SECRET_KEY,
   hasTeleBirr: () => !!env.TELEBIRR_API_KEY,
   hasCBE: () => !!env.CBE_API_KEY,

@@ -108,8 +108,9 @@ describe('Environment Validation', () => {
       expect(env.JWT_EXPIRES_IN).toBe('7d');
       expect(env.REFRESH_TOKEN_EXPIRES_IN).toBe('30d');
       expect(env.LOG_LEVEL).toBe('info');
-      expect(env.AWS_REGION).toBe('us-east-1');
       expect(env.SMS_PROVIDER).toBe('none');
+      // AWS_REGION is now optional with no default
+      expect(env.AWS_REGION).toBeUndefined();
     });
 
     it('should accept custom values for optional variables', async () => {
@@ -207,6 +208,7 @@ describe('Environment Validation', () => {
       process.env.CRON_SECRET = 'cron-secret-16-chars-min';
       process.env.SMS_PROVIDER = 'africas_talking';
       process.env.AFRICAS_TALKING_API_KEY = 'test_key';
+      process.env.AFRICAS_TALKING_USERNAME = 'test_username';
 
       const { features } = await import('@/lib/env');
 
