@@ -3,6 +3,10 @@ import prisma from '@/lib/prisma';
 import { queueEmail, createPostPurchaseFollowUpEmail } from '@/lib/email';
 import { logError, logEvent } from '@/lib/logger';
 
+// Configuration constants
+const DAYS_AFTER_DELIVERY = 7;
+const DAYS_AFTER_DELIVERY_WINDOW = 8; // Grace period for cron timing
+
 /**
  * @swagger
  * /api/cron/send-post-purchase-followup:
@@ -32,8 +36,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Find orders delivered exactly 7 days ago (give or take a day for cron timing)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - DAYS_AFTER_DELIVERY * 24 * 60 * 60 * 1000);
+    const eightDaysAgo = new Date(Date.now() - DAYS_AFTER_DELIVERY_WINDOW * 24 * 60 * 60 * 1000);
 
     const deliveredOrders = await prisma.order.findMany({
       where: {

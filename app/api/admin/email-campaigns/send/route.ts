@@ -8,6 +8,10 @@ import {
 } from '@/lib/email';
 import { logError, logEvent } from '@/lib/logger';
 
+// Configuration constants
+const MAX_WISHLIST_ITEMS = 5;
+const DEFAULT_RECOMMENDATION_LIMIT = 4;
+
 /**
  * @swagger
  * /api/admin/email-campaigns/send:
@@ -169,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     } else if (campaignType === 'product_recommendations') {
       // Send Product Recommendations emails based on user browsing history
-      const limit = recommendationsData?.limit || 4;
+      const limit = recommendationsData?.limit || DEFAULT_RECOMMENDATION_LIMIT;
       const categoryId = recommendationsData?.categoryId;
 
       // Get users with their recently viewed products or wishlist
@@ -200,7 +204,7 @@ export async function POST(req: NextRequest) {
                 },
               },
             },
-            take: 5,
+            take: MAX_WISHLIST_ITEMS,
             orderBy: {
               createdAt: 'desc',
             },

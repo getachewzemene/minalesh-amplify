@@ -3,6 +3,10 @@ import prisma from '@/lib/prisma';
 import { queueEmail, createAbandonedCartEmail } from '@/lib/email';
 import { logError, logEvent } from '@/lib/logger';
 
+// Configuration constants
+const CART_ABANDONMENT_HOURS = 24;
+const CART_ABANDONMENT_WINDOW_HOURS = 48; // Don't send multiple emails within this window
+
 /**
  * @swagger
  * /api/cron/send-abandoned-cart-emails:
@@ -32,8 +36,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Find abandoned carts (24 hours old, not updated)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - CART_ABANDONMENT_HOURS * 60 * 60 * 1000);
+    const fortyEightHoursAgo = new Date(Date.now() - CART_ABANDONMENT_WINDOW_HOURS * 60 * 60 * 1000);
 
     // Get cart items that haven't been updated in the last 24 hours
     // but were updated within the last 48 hours (to avoid sending multiple emails)

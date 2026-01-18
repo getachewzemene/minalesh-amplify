@@ -3,6 +3,11 @@ import prisma from '@/lib/prisma';
 import { queueEmail, createWeeklyDealsDigestEmail } from '@/lib/email';
 import { logError, logEvent } from '@/lib/logger';
 
+// Configuration constants
+const DEFAULT_DISCOUNT_PERCENTAGE = 10;
+const MIN_DEALS_COUNT = 5;
+const MAX_DEALS_TO_SEND = 8;
+
 /**
  * @swagger
  * /api/cron/send-weekly-deals-digest:
@@ -63,7 +68,7 @@ export async function POST(req: NextRequest) {
     }));
 
     // If we don't have enough deals from promotions, add featured products
-    if (deals.length < 5) {
+    if (deals.length < MIN_DEALS_COUNT) {
       const featuredProducts = await prisma.product.findMany({
         where: {
           isPublished: true,
@@ -82,8 +87,8 @@ export async function POST(req: NextRequest) {
         name: product.name,
         category: product.category?.name || 'General',
         originalPrice: product.price,
-        discountPrice: product.price * 0.9, // Mock 10% discount
-        discount: 10,
+        discountPrice: product.price * (1 - DEFAULT_DISCOUNT_PERCENTAGE / 100),
+        discount: DEFAULT_DISCOUNT_PERCENTAGE,
         imageUrl: product.images?.[0],
         productUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://minalesh.et'}/products/${product.id}`,
       }));
@@ -128,7 +133,7 @@ export async function POST(req: NextRequest) {
           createWeeklyDealsDigestEmail(
             user.email,
             userName,
-            deals.slice(0, 8), // Send top 8 deals
+            deals.slice(0, MAX_DEALS_TO_SEND),
             browseUrl
           )
         );

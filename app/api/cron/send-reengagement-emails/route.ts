@@ -3,6 +3,10 @@ import prisma from '@/lib/prisma';
 import { queueEmail, createReEngagementEmail } from '@/lib/email';
 import { logError, logEvent } from '@/lib/logger';
 
+// Configuration constants
+const MIN_INACTIVE_DAYS = 30;
+const MAX_INACTIVE_DAYS = 60;
+
 /**
  * @swagger
  * /api/cron/send-reengagement-emails:
@@ -32,8 +36,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Find users who haven't placed an order in the last 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(Date.now() - MIN_INACTIVE_DAYS * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgo = new Date(Date.now() - MAX_INACTIVE_DAYS * 24 * 60 * 60 * 1000);
 
     // Get users with their last order
     const users = await prisma.user.findMany({
@@ -119,7 +123,7 @@ export async function POST(req: NextRequest) {
         );
 
         // Only send to users inactive for 30-60 days to avoid spam
-        if (daysSinceLastVisit < 30 || daysSinceLastVisit > 60) {
+        if (daysSinceLastVisit < MIN_INACTIVE_DAYS || daysSinceLastVisit > MAX_INACTIVE_DAYS) {
           continue;
         }
 
