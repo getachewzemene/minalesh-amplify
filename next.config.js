@@ -1,26 +1,80 @@
 const { withSentryConfig } = require('@sentry/nextjs');
 
+// Production-safe image domains configuration
+// Set NODE_ENV=production and configure these domains for your deployment
+const getRemotePatterns = () => {
+  // In production, use specific allowed domains
+  if (process.env.NODE_ENV === 'production' && process.env.IMAGE_DOMAINS) {
+    const domains = process.env.IMAGE_DOMAINS
+      .split(',')
+      .map(d => d.trim())
+      .filter(d => d.length > 0); // Filter out empty strings
+    
+    if (domains.length === 0) {
+      throw new Error(
+        'IMAGE_DOMAINS is set but empty in production. ' +
+        'Please provide at least one allowed image domain. ' +
+        'Example: IMAGE_DOMAINS="your-bucket.s3.amazonaws.com,cdn.yoursite.com"'
+      );
+    }
+    
+    // Basic validation: check for suspicious patterns
+    const invalidDomains = domains.filter(d => 
+      d.includes('..') || d.startsWith('.') || d.includes(' ')
+    );
+    
+    if (invalidDomains.length > 0) {
+      throw new Error(
+        `Invalid domain format in IMAGE_DOMAINS: ${invalidDomains.join(', ')}. ` +
+        'Domains should be valid hostnames (e.g., "example.com" or "*.example.com")'
+      );
+    }
+    
+    return domains.map(hostname => ({
+      protocol: 'https',
+      hostname,
+    }));
+  }
+  
+  // For development and testing, allow all HTTPS sources
+  return [
+    {
+      protocol: 'https',
+      hostname: '**',
+    },
+    {
+      protocol: 'http',
+      hostname: 'localhost',
+    },
+  ];
+};
+
+// Cache duration constants
+const SIXTY_DAYS_IN_SECONDS = 60 * 24 * 60 * 60; // 60 days: 5,184,000 seconds
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image optimization with CDN support
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-    ],
-    // Enable image optimization
+    // Dynamic remote patterns based on environment
+    // In production: Set IMAGE_DOMAINS="your-bucket.s3.amazonaws.com,*.cloudfront.net"
+    // In development: Allows all HTTPS sources for flexibility
+    remotePatterns: getRemotePatterns(),
+    // Enable modern image formats with automatic format selection
     formats: ['image/avif', 'image/webp'],
-    // Configure for CDN
+    // Configure responsive image sizes for different devices
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Set a reasonable limit
-    minimumCacheTTL: 60,
+    // Cache optimized images for 60 days (browser and CDN)
+    minimumCacheTTL: SIXTY_DAYS_IN_SECONDS,
+    // Allow SVG images (useful for logos and icons)
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Custom loader for CDN (requires both NEXT_PUBLIC_CDN_URL and NEXT_PUBLIC_CDN_PROVIDER)
+    // Uncomment the lines below to enable custom CDN integration
+    // loader: process.env.NEXT_PUBLIC_CDN_URL && process.env.NEXT_PUBLIC_CDN_PROVIDER ? 'custom' : 'default',
+    // loaderFile: process.env.NEXT_PUBLIC_CDN_URL && process.env.NEXT_PUBLIC_CDN_PROVIDER ? './src/lib/image-loader.ts' : undefined,
   },
   
   // TypeScript configuration

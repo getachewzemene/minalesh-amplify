@@ -1,0 +1,103 @@
+/**
+ * Custom Image Loader for CDN Support
+ * 
+ * This loader enables integration with external CDN services like CloudFlare or AWS CloudFront.
+ * By default, Vercel's built-in image optimization is used (recommended).
+ * 
+ * To use a custom CDN:
+ * 1. Set NEXT_PUBLIC_CDN_URL in your environment variables
+ * 2. Set NEXT_PUBLIC_CDN_PROVIDER to 'cloudflare' or 'cloudfront'
+ * 3. Uncomment the loader configuration in next.config.js
+ * 
+ * @see https://nextjs.org/docs/api-reference/next/image#loader
+ */
+
+export interface ImageLoaderProps {
+  src: string;
+  width: number;
+  quality?: number;
+}
+
+/**
+ * Supported CDN providers
+ */
+export const CDN_PROVIDERS = {
+  CLOUDFLARE: 'cloudflare',
+  CLOUDFRONT: 'cloudfront',
+} as const;
+
+export type CDNProvider = typeof CDN_PROVIDERS[keyof typeof CDN_PROVIDERS];
+
+/**
+ * Determine CDN provider from environment
+ */
+function getCDNProvider(): CDNProvider | null {
+  const provider = process.env.NEXT_PUBLIC_CDN_PROVIDER?.toLowerCase();
+  if (provider === CDN_PROVIDERS.CLOUDFLARE || provider === CDN_PROVIDERS.CLOUDFRONT) {
+    return provider as CDNProvider;
+  }
+  return null;
+}
+
+/**
+ * Custom image loader function
+ * Constructs optimized image URLs for external CDN
+ */
+export default function customImageLoader({ src, width, quality }: ImageLoaderProps): string {
+  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+  const provider = getCDNProvider();
+
+  // If no CDN configuration, this should not be called
+  // Next.js will only use this loader if explicitly configured
+  if (!cdnUrl || !provider) {
+    console.warn('Custom image loader called without CDN configuration. Returning source as-is.');
+    return src;
+  }
+
+  const imageQuality = quality || 75;
+
+  // Handle absolute URLs from remote sources
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    try {
+      // For CloudFlare Image Resizing
+      if (provider === CDN_PROVIDERS.CLOUDFLARE) {
+        return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${src}`;
+      }
+      
+      // For AWS CloudFront with Lambda@Edge
+      if (provider === CDN_PROVIDERS.CLOUDFRONT) {
+        const url = new URL(src);
+        return `${cdnUrl}${url.pathname}?w=${width}&q=${imageQuality}`;
+      }
+    } catch (error) {
+      console.error('Error processing image URL:', error);
+      // Return safe fallback - don't return potentially unsafe src
+      // Use a placeholder or the CDN base path
+      return `${cdnUrl}/image-error.png`;
+    }
+  }
+
+  // Handle relative URLs (local images)
+  // Validate that relative paths start with /
+  if (!src.startsWith('/')) {
+    console.warn('Invalid relative image path:', src);
+    return `${cdnUrl}/image-error.png`;
+  }
+
+  // For CloudFlare Image Resizing
+  if (provider === CDN_PROVIDERS.CLOUDFLARE) {
+    return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto${src}`;
+  }
+
+  // For AWS CloudFront or other CDNs
+  if (provider === CDN_PROVIDERS.CLOUDFRONT) {
+    const params = new URLSearchParams();
+    params.set('w', width.toString());
+    params.set('q', imageQuality.toString());
+    return `${cdnUrl}${src}?${params.toString()}`;
+  }
+
+  // Should not reach here, but return safe fallback
+  console.warn('Unexpected CDN provider configuration. Using error placeholder.');
+  return `${cdnUrl}/image-error.png`;
+}
