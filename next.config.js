@@ -5,10 +5,24 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const getRemotePatterns = () => {
   // In production, use specific allowed domains
   if (process.env.NODE_ENV === 'production' && process.env.IMAGE_DOMAINS) {
-    const domains = process.env.IMAGE_DOMAINS.split(',');
+    const domains = process.env.IMAGE_DOMAINS
+      .split(',')
+      .map(d => d.trim())
+      .filter(d => d.length > 0); // Filter out empty strings
+    
+    if (domains.length === 0) {
+      console.warn('WARNING: IMAGE_DOMAINS is set but empty. Using fallback configuration.');
+      return [
+        {
+          protocol: 'https',
+          hostname: 'localhost', // Safe fallback
+        },
+      ];
+    }
+    
     return domains.map(hostname => ({
       protocol: 'https',
-      hostname: hostname.trim(),
+      hostname,
     }));
   }
   
@@ -25,6 +39,9 @@ const getRemotePatterns = () => {
   ];
 };
 
+// Cache duration constants
+const SIXTY_DAYS_IN_SECONDS = 60 * 24 * 60 * 60; // 5,184,000 seconds
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image optimization with CDN support
@@ -39,7 +56,7 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // Cache optimized images for 60 days (browser and CDN)
-    minimumCacheTTL: 5184000,
+    minimumCacheTTL: SIXTY_DAYS_IN_SECONDS,
     // Allow SVG images (useful for logos and icons)
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

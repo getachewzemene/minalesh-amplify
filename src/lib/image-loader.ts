@@ -47,8 +47,10 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
   const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
   const provider = getCDNProvider();
 
-  // If no CDN URL is configured, return the source as-is
+  // If no CDN configuration, this should not be called
+  // Next.js will only use this loader if explicitly configured
   if (!cdnUrl || !provider) {
+    console.warn('Custom image loader called without CDN configuration. Returning source as-is.');
     return src;
   }
 
@@ -56,15 +58,21 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
 
   // Handle absolute URLs from remote sources
   if (src.startsWith('http://') || src.startsWith('https://')) {
-    // For CloudFlare Image Resizing
-    if (provider === CDN_PROVIDERS.CLOUDFLARE) {
-      return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${src}`;
-    }
-    
-    // For AWS CloudFront with Lambda@Edge
-    if (provider === CDN_PROVIDERS.CLOUDFRONT) {
-      const url = new URL(src);
-      return `${cdnUrl}${url.pathname}?w=${width}&q=${imageQuality}`;
+    try {
+      // For CloudFlare Image Resizing
+      if (provider === CDN_PROVIDERS.CLOUDFLARE) {
+        return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${src}`;
+      }
+      
+      // For AWS CloudFront with Lambda@Edge
+      if (provider === CDN_PROVIDERS.CLOUDFRONT) {
+        const url = new URL(src);
+        return `${cdnUrl}${url.pathname}?w=${width}&q=${imageQuality}`;
+      }
+    } catch (error) {
+      console.error('Error processing image URL:', error);
+      // Fallback to original src if URL parsing fails
+      return src;
     }
   }
 
@@ -82,6 +90,7 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
     return `${cdnUrl}${src}?${params.toString()}`;
   }
 
-  // Default fallback
+  // Should not reach here, but return src as safe fallback
+  console.warn('Unexpected CDN provider configuration. Returning source as-is.');
   return src;
 }
