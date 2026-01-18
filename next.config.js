@@ -18,6 +18,18 @@ const getRemotePatterns = () => {
       );
     }
     
+    // Basic validation: check for suspicious patterns
+    const invalidDomains = domains.filter(d => 
+      d.includes('..') || d.startsWith('.') || d.includes(' ')
+    );
+    
+    if (invalidDomains.length > 0) {
+      throw new Error(
+        `Invalid domain format in IMAGE_DOMAINS: ${invalidDomains.join(', ')}. ` +
+        'Domains should be valid hostnames (e.g., "example.com" or "*.example.com")'
+      );
+    }
+    
     return domains.map(hostname => ({
       protocol: 'https',
       hostname,
@@ -38,7 +50,7 @@ const getRemotePatterns = () => {
 };
 
 // Cache duration constants
-const SIXTY_DAYS_IN_SECONDS = 60 * 24 * 60 * 60; // 5,184,000 seconds
+const SIXTY_DAYS_IN_SECONDS = 60 * 24 * 60 * 60; // 60 days: 5,184,000 seconds
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

@@ -71,12 +71,19 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
       }
     } catch (error) {
       console.error('Error processing image URL:', error);
-      // Fallback to original src if URL parsing fails
-      return src;
+      // Return safe fallback - don't return potentially unsafe src
+      // Use a placeholder or the CDN base path
+      return `${cdnUrl}/image-error.png`;
     }
   }
 
   // Handle relative URLs (local images)
+  // Validate that relative paths start with /
+  if (!src.startsWith('/')) {
+    console.warn('Invalid relative image path:', src);
+    return `${cdnUrl}/image-error.png`;
+  }
+
   // For CloudFlare Image Resizing
   if (provider === CDN_PROVIDERS.CLOUDFLARE) {
     return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto${src}`;
@@ -90,7 +97,7 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
     return `${cdnUrl}${src}?${params.toString()}`;
   }
 
-  // Should not reach here, but return src as safe fallback
-  console.warn('Unexpected CDN provider configuration. Returning source as-is.');
-  return src;
+  // Should not reach here, but return safe fallback
+  console.warn('Unexpected CDN provider configuration. Using error placeholder.');
+  return `${cdnUrl}/image-error.png`;
 }
