@@ -14,13 +14,20 @@ const nextConfig = {
         hostname: 'localhost',
       },
     ],
-    // Enable image optimization
+    // Enable modern image formats with automatic format selection
     formats: ['image/avif', 'image/webp'],
-    // Configure for CDN
+    // Configure responsive image sizes for different devices
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Set a reasonable limit
-    minimumCacheTTL: 60,
+    // Cache optimized images for 60 days (browser and CDN)
+    minimumCacheTTL: 5184000,
+    // Allow SVG images (useful for logos and icons)
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Custom loader for CDN (optional - Vercel handles this automatically)
+    // loader: process.env.NEXT_PUBLIC_CDN_URL ? 'custom' : 'default',
+    // loaderFile: process.env.NEXT_PUBLIC_CDN_URL ? './src/lib/image-loader.ts' : undefined,
   },
   
   // TypeScript configuration
