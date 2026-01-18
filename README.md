@@ -289,6 +289,11 @@ This project is built with:
 - `npm run db:seed:categories` - Seed Ethiopian categories
 - `npm run db:seed:shipping-tax` - Seed shipping zones and tax rates
 
+## Database migration scripts
+- `npx prisma migrate reset --force` - reset the migration for fresh start
+- `npx prisma migrate dev --name init` - initialize the migration files
+- `npx prisma generate` - generate new migration files
+
 ## Key Routes
 
 - `/` - Homepage with featured products
