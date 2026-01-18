@@ -1879,3 +1879,718 @@ Thank you for using Subscribe & Save!
     `.trim(),
   };
 }
+
+/**
+ * Email Marketing Campaign Templates
+ */
+
+/**
+ * Welcome Series Email - Sent to new users after registration
+ */
+export function createWelcomeSeriesEmail(
+  to: string,
+  userName: string,
+  exploreUrl: string,
+  accountUrl: string
+): EmailTemplate {
+  return {
+    to,
+    subject: '🎉 Welcome to Minalesh - Your Ethiopian Marketplace!',
+    template: 'welcome_series',
+    text: `
+Welcome to Minalesh, ${userName}!
+
+We're excited to have you join our community of Ethiopian shoppers and vendors.
+
+Here's what you can do now:
+- Explore thousands of products from local vendors
+- Set up your profile and preferences
+- Add items to your wishlist
+- Get personalized product recommendations
+
+Explore Products: ${exploreUrl}
+Manage Account: ${accountUrl}
+
+Happy shopping!
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 30px; background-color: #f9f9f9; }
+    .welcome-box { background-color: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .feature { padding: 15px 0; border-bottom: 1px solid #eee; }
+    .feature:last-child { border-bottom: none; }
+    .feature-icon { font-size: 24px; margin-right: 10px; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 15px 10px; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0; font-size: 32px;">🎉 Welcome to Minalesh!</h1>
+      <p style="margin: 15px 0 0 0; font-size: 18px;">Your Ethiopian Marketplace</p>
+    </div>
+    <div class="content">
+      <div class="welcome-box">
+        <h2 style="color: #667eea; margin-top: 0;">Hi ${userName}!</h2>
+        <p style="font-size: 16px;">We're thrilled to have you join our growing community of Ethiopian shoppers and vendors.</p>
+        
+        <h3 style="color: #333; margin-top: 25px;">Get Started:</h3>
+        <div class="feature">
+          <span class="feature-icon">🛍️</span>
+          <strong>Explore Products</strong> - Browse thousands of items from local vendors
+        </div>
+        <div class="feature">
+          <span class="feature-icon">❤️</span>
+          <strong>Create Wishlists</strong> - Save your favorite products
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🎯</span>
+          <strong>Get Recommendations</strong> - Personalized product suggestions
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🔔</span>
+          <strong>Price Alerts</strong> - Get notified when prices drop
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="${exploreUrl}" class="button">Explore Products</a>
+          <a href="${accountUrl}" class="button" style="background-color: #764ba2;">My Account</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Happy shopping! 🛒</p>
+      <p style="margin-top: 10px;">The Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Abandoned Cart Email - Sent 24h after cart abandonment
+ */
+export function createAbandonedCartEmail(
+  to: string,
+  userName: string,
+  cartItems: Array<{ name: string; price: number; imageUrl?: string }>,
+  cartUrl: string,
+  totalAmount: number
+): EmailTemplate {
+  const itemsList = cartItems.map(item => `- ${item.name} (${item.price.toFixed(2)} ETB)`).join('\n');
+  const htmlItems = cartItems.map(item => `
+    <div style="display: flex; padding: 15px; border-bottom: 1px solid #eee; align-items: center;">
+      ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 15px;" />` : ''}
+      <div style="flex: 1;">
+        <strong>${item.name}</strong>
+        <p style="margin: 5px 0; color: #667eea; font-weight: bold;">${item.price.toFixed(2)} ETB</p>
+      </div>
+    </div>
+  `).join('');
+
+  return {
+    to,
+    subject: '🛒 You left items in your cart!',
+    template: 'abandoned_cart',
+    text: `
+Hi ${userName},
+
+You left some great items in your cart! They're still waiting for you.
+
+Your Cart Items:
+${itemsList}
+
+Total: ${totalAmount.toFixed(2)} ETB
+
+Complete your purchase now: ${cartUrl}
+
+These items are popular and may sell out soon!
+
+Best regards,
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #FF6B6B; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .cart-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .total { background-color: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 18px; font-weight: bold; }
+    .button { display: inline-block; padding: 16px 32px; background-color: #FF6B6B; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; font-size: 16px; }
+    .urgency { background-color: #fff3cd; padding: 12px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">🛒 Don't Miss Out!</h1>
+      <p style="margin: 10px 0 0 0;">Your cart is waiting for you</p>
+    </div>
+    <div class="content">
+      <p style="font-size: 16px;">Hi ${userName},</p>
+      <p>You left some great items in your cart! Complete your purchase before they're gone.</p>
+      
+      <div class="cart-box">
+        <h3 style="margin-top: 0; color: #FF6B6B;">Your Cart Items:</h3>
+        ${htmlItems}
+        <div class="total">
+          Total: ${totalAmount.toFixed(2)} ETB
+        </div>
+      </div>
+      
+      <div class="urgency">
+        ⚠️ <strong>Hurry!</strong> These popular items may sell out soon.
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${cartUrl}" class="button">Complete Your Purchase →</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Need help? Contact our support team anytime.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Product Recommendations Email - Based on browsing history
+ */
+export function createProductRecommendationsEmail(
+  to: string,
+  userName: string,
+  recommendations: Array<{ name: string; price: number; imageUrl?: string; productUrl: string }>,
+  browseUrl: string
+): EmailTemplate {
+  const itemsList = recommendations.map(item => `- ${item.name} - ${item.price.toFixed(2)} ETB`).join('\n');
+  const htmlItems = recommendations.map(item => `
+    <div style="flex: 0 0 48%; margin-bottom: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 100%; height: 150px; object-fit: cover;" />` : ''}
+      <div style="padding: 15px;">
+        <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${item.name}</h4>
+        <p style="margin: 0 0 10px 0; color: #667eea; font-weight: bold; font-size: 16px;">${item.price.toFixed(2)} ETB</p>
+        <a href="${item.productUrl}" style="display: inline-block; padding: 8px 16px; background-color: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">View Product</a>
+      </div>
+    </div>
+  `).join('');
+
+  return {
+    to,
+    subject: '✨ Products We Think You\'ll Love',
+    template: 'product_recommendations',
+    text: `
+Hi ${userName},
+
+Based on your recent browsing, we thought you might like these products:
+
+${itemsList}
+
+Browse more personalized recommendations: ${browseUrl}
+
+Happy shopping!
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .products-grid { display: flex; flex-wrap: wrap; justify-content: space-between; margin: 20px 0; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">✨ Picked Just For You</h1>
+      <p style="margin: 10px 0 0 0;">Products we think you'll love</p>
+    </div>
+    <div class="content">
+      <p style="font-size: 16px;">Hi ${userName},</p>
+      <p>Based on your recent browsing, we've selected these products especially for you:</p>
+      
+      <div class="products-grid">
+        ${htmlItems}
+      </div>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="${browseUrl}" class="button">Browse More Recommendations</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Personalized just for you! 🎯</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Flash Sale Alert Email - For opted-in users
+ */
+export function createFlashSaleAlertEmail(
+  to: string,
+  userName: string,
+  saleName: string,
+  discount: number,
+  endsAt: Date,
+  saleUrl: string,
+  featuredProducts?: Array<{ name: string; originalPrice: number; salePrice: number }>
+): EmailTemplate {
+  const formattedEndDate = endsAt.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const productsList = featuredProducts 
+    ? featuredProducts.map(p => `- ${p.name}: ${p.originalPrice.toFixed(2)} ETB → ${p.salePrice.toFixed(2)} ETB`).join('\n')
+    : '';
+
+  const htmlProducts = featuredProducts 
+    ? featuredProducts.map(p => `
+      <div style="padding: 12px; border-bottom: 1px solid #eee;">
+        <strong>${p.name}</strong>
+        <div style="margin-top: 5px;">
+          <span style="text-decoration: line-through; color: #999;">${p.originalPrice.toFixed(2)} ETB</span>
+          <span style="color: #FF6B6B; font-weight: bold; font-size: 18px; margin-left: 10px;">${p.salePrice.toFixed(2)} ETB</span>
+        </div>
+      </div>
+    `).join('')
+    : '';
+
+  return {
+    to,
+    subject: `🔥 FLASH SALE: ${discount}% OFF - ${saleName}!`,
+    template: 'flash_sale_alert',
+    text: `
+🔥 FLASH SALE ALERT! 🔥
+
+Hi ${userName},
+
+${saleName} is NOW LIVE!
+
+Save up to ${discount}% on selected products!
+Sale ends: ${formattedEndDate}
+
+${productsList ? `Featured deals:\n${productsList}\n` : ''}
+Shop now before it's too late: ${saleUrl}
+
+Hurry - Limited time only!
+
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 40px; text-align: center; border-radius: 8px 8px 0 0; }
+    .flash-badge { display: inline-block; background-color: #FFD700; color: #333; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .sale-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 2px solid #FF6B6B; }
+    .timer { background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center; font-size: 18px; font-weight: bold; color: #856404; }
+    .button { display: inline-block; padding: 18px 36px; background-color: #FF6B6B; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; font-size: 18px; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0; font-size: 36px;">🔥 FLASH SALE 🔥</h1>
+      <div class="flash-badge">UP TO ${discount}% OFF</div>
+      <h2 style="margin: 10px 0 0 0;">${saleName}</h2>
+    </div>
+    <div class="content">
+      <p style="font-size: 16px;">Hi ${userName},</p>
+      <p style="font-size: 18px; font-weight: bold; color: #FF6B6B;">The sale you've been waiting for is NOW LIVE!</p>
+      
+      ${htmlProducts ? `
+      <div class="sale-box">
+        <h3 style="margin-top: 0; color: #FF6B6B;">⚡ Featured Deals:</h3>
+        ${htmlProducts}
+      </div>
+      ` : ''}
+      
+      <div class="timer">
+        ⏰ Ends: ${formattedEndDate}
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${saleUrl}" class="button">SHOP NOW →</a>
+      </div>
+      
+      <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
+        ⚠️ Limited quantities available. First come, first served!
+      </p>
+    </div>
+    <div class="footer">
+      <p>You're receiving this because you opted in to flash sale alerts.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Weekly Deals Digest Email
+ */
+export function createWeeklyDealsDigestEmail(
+  to: string,
+  userName: string,
+  deals: Array<{ 
+    name: string; 
+    category: string; 
+    originalPrice: number; 
+    discountPrice: number; 
+    discount: number; 
+    imageUrl?: string; 
+    productUrl: string 
+  }>,
+  browseUrl: string
+): EmailTemplate {
+  const dealsList = deals.map(d => 
+    `- ${d.name} (${d.category}): ${d.originalPrice.toFixed(2)} ETB → ${d.discountPrice.toFixed(2)} ETB (${d.discount}% off)`
+  ).join('\n');
+
+  const htmlDeals = deals.map(d => `
+    <div style="display: flex; padding: 15px; border-bottom: 1px solid #eee; align-items: center;">
+      ${d.imageUrl ? `<img src="${d.imageUrl}" alt="${d.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-right: 15px;" />` : ''}
+      <div style="flex: 1;">
+        <h4 style="margin: 0 0 5px 0; color: #333;">${d.name}</h4>
+        <p style="margin: 0 0 5px 0; color: #999; font-size: 12px;">${d.category}</p>
+        <div>
+          <span style="text-decoration: line-through; color: #999;">${d.originalPrice.toFixed(2)} ETB</span>
+          <span style="color: #4CAF50; font-weight: bold; font-size: 18px; margin-left: 10px;">${d.discountPrice.toFixed(2)} ETB</span>
+          <span style="background-color: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">${d.discount}% OFF</span>
+        </div>
+      </div>
+      <a href="${d.productUrl}" style="padding: 8px 16px; background-color: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; margin-left: 10px;">View</a>
+    </div>
+  `).join('');
+
+  return {
+    to,
+    subject: '🎁 This Week\'s Best Deals - Handpicked For You!',
+    template: 'weekly_deals_digest',
+    text: `
+Hi ${userName},
+
+Here are this week's hottest deals, handpicked just for you!
+
+Top Deals This Week:
+${dealsList}
+
+Browse all deals: ${browseUrl}
+
+Don't miss out - these deals won't last long!
+
+Happy shopping!
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #4CAF50 0%, #45B7D1 100%); color: white; padding: 35px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .deals-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .button { display: inline-block; padding: 14px 28px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">🎁 Weekly Deals Digest</h1>
+      <p style="margin: 10px 0 0 0; font-size: 18px;">Handpicked deals just for you</p>
+    </div>
+    <div class="content">
+      <p style="font-size: 16px;">Hi ${userName},</p>
+      <p>We've curated the best deals of the week based on your interests:</p>
+      
+      <div class="deals-box">
+        <h3 style="margin-top: 0; color: #4CAF50;">🔥 Top Deals This Week:</h3>
+        ${htmlDeals}
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${browseUrl}" class="button">Browse All Deals</a>
+      </div>
+      
+      <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
+        💡 New deals added daily - check back often!
+      </p>
+    </div>
+    <div class="footer">
+      <p>You're receiving this weekly digest because you're subscribed to our newsletter.</p>
+      <p style="margin-top: 5px;">Happy shopping! 🛍️</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Post-Purchase Follow-up Email - Review request
+ */
+export function createPostPurchaseFollowUpEmail(
+  to: string,
+  userName: string,
+  orderNumber: string,
+  deliveredDate: Date,
+  products: Array<{ name: string; productId: string; imageUrl?: string }>,
+  reviewUrl: string
+): EmailTemplate {
+  const formattedDate = deliveredDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const productsList = products.map(p => `- ${p.name}`).join('\n');
+  
+  const htmlProducts = products.map(p => `
+    <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+      ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 12px;" />` : ''}
+      <strong style="flex: 1;">${p.name}</strong>
+      <a href="${reviewUrl}?productId=${p.productId}" style="padding: 6px 12px; background-color: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">Review</a>
+    </div>
+  `).join('');
+
+  return {
+    to,
+    subject: '⭐ How was your recent order? Share your feedback!',
+    template: 'post_purchase_followup',
+    text: `
+Hi ${userName},
+
+We hope you're enjoying your recent purchase!
+
+Order #${orderNumber}
+Delivered: ${formattedDate}
+
+Products:
+${productsList}
+
+We'd love to hear your feedback! Your review helps other shoppers make informed decisions and helps our vendors improve.
+
+Leave a review: ${reviewUrl}
+
+Thank you for shopping with Minalesh!
+
+Best regards,
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #667eea; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .order-box { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .stars { font-size: 24px; color: #FFD700; margin: 10px 0; }
+    .button { display: inline-block; padding: 14px 28px; background-color: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+    .benefit-box { background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #667eea; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">⭐ How Was Your Order?</h1>
+      <p style="margin: 10px 0 0 0;">We'd love your feedback!</p>
+    </div>
+    <div class="content">
+      <p style="font-size: 16px;">Hi ${userName},</p>
+      <p>We hope you're enjoying your recent purchase! Your experience matters to us.</p>
+      
+      <div class="order-box">
+        <p style="margin: 0 0 10px 0; color: #666;">Order #${orderNumber}</p>
+        <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">Delivered on ${formattedDate}</p>
+        
+        <h3 style="margin: 15px 0 10px 0; color: #333;">Your Products:</h3>
+        ${htmlProducts}
+      </div>
+      
+      <div class="benefit-box">
+        <strong>Why leave a review?</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Help other shoppers make informed decisions</li>
+          <li>Support our local vendors</li>
+          <li>Improve our marketplace</li>
+        </ul>
+      </div>
+      
+      <div style="text-align: center;">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <a href="${reviewUrl}" class="button">Leave a Review</a>
+      </div>
+      
+      <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
+        Takes less than 2 minutes!
+      </p>
+    </div>
+    <div class="footer">
+      <p>Thank you for shopping with Minalesh! 🙏</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
+
+/**
+ * Re-engagement Email - For inactive users
+ */
+export function createReEngagementEmail(
+  to: string,
+  userName: string,
+  daysSinceLastVisit: number,
+  specialOffers: Array<{ title: string; description: string; discount: number; offerUrl: string }>,
+  exploreUrl: string,
+  accountUrl: string
+): EmailTemplate {
+  const offersList = specialOffers.map(o => 
+    `- ${o.title} (${o.discount}% off): ${o.description}`
+  ).join('\n');
+
+  const htmlOffers = specialOffers.map(o => `
+    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div style="display: inline-block; background-color: #FF6B6B; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 10px;">
+        ${o.discount}% OFF
+      </div>
+      <h3 style="margin: 10px 0; color: #333;">${o.title}</h3>
+      <p style="color: #666; margin: 10px 0;">${o.description}</p>
+      <a href="${o.offerUrl}" style="display: inline-block; padding: 10px 20px; background-color: #667eea; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px;">Claim Offer</a>
+    </div>
+  `).join('');
+
+  return {
+    to,
+    subject: `We Miss You, ${userName}! 🎁 Special Offer Inside`,
+    template: 're_engagement',
+    text: `
+Hi ${userName},
+
+We've missed you! It's been ${daysSinceLastVisit} days since your last visit to Minalesh.
+
+A lot has changed since you were last here:
+- New products from local vendors
+- Exclusive deals and promotions
+- Improved shopping experience
+
+Special Welcome Back Offers:
+${offersList}
+
+Come back and explore: ${exploreUrl}
+
+We'd love to have you back!
+
+The Minalesh Team
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 25px; background-color: #f9f9f9; }
+    .miss-you { font-size: 32px; margin: 20px 0; text-align: center; }
+    .whats-new { background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .feature { padding: 10px 0; }
+    .feature-icon { margin-right: 10px; }
+    .button { display: inline-block; padding: 16px 32px; background-color: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; font-size: 16px; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0;">We Miss You! 💜</h1>
+      <p style="margin: 10px 0 0 0; font-size: 18px;">Come back and see what's new</p>
+    </div>
+    <div class="content">
+      <div class="miss-you">👋</div>
+      <p style="font-size: 16px; text-align: center;">Hi ${userName},</p>
+      <p style="text-align: center; font-size: 18px;">It's been ${daysSinceLastVisit} days since we last saw you!</p>
+      
+      <div class="whats-new">
+        <h3 style="margin-top: 0; color: #667eea;">✨ What's New:</h3>
+        <div class="feature">
+          <span class="feature-icon">🆕</span>
+          <strong>Fresh Products</strong> - Hundreds of new items from local vendors
+        </div>
+        <div class="feature">
+          <span class="feature-icon">💰</span>
+          <strong>Better Deals</strong> - More discounts and promotions
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🚀</span>
+          <strong>Improved Experience</strong> - Faster, smoother shopping
+        </div>
+      </div>
+      
+      <h3 style="color: #FF6B6B; text-align: center;">🎁 Welcome Back Offers:</h3>
+      ${htmlOffers}
+      
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="${exploreUrl}" class="button">Start Shopping</a>
+      </div>
+      
+      <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
+        Not interested anymore? <a href="${accountUrl}" style="color: #667eea;">Update your preferences</a>
+      </p>
+    </div>
+    <div class="footer">
+      <p>We'd love to have you back! 🛍️</p>
+      <p style="margin-top: 5px;">The Minalesh Team</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  };
+}
