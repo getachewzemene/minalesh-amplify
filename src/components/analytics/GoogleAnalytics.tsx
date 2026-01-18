@@ -302,4 +302,34 @@ export function trackSavedSearchCreated(searchQuery: string) {
   }
 }
 
+// E-commerce: View item list
+export function trackViewItemList(
+  items: ProductItem[],
+  listName: string,
+  listId?: string
+) {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'view_item_list', {
+      item_list_id: listId,
+      item_list_name: listName,
+      items,
+    });
+  }
+}
+
+// E-commerce: Select item from list
+export function trackSelectItem(
+  item: ProductItem,
+  listName: string,
+  listId?: string
+) {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'select_item', {
+      item_list_id: listId,
+      item_list_name: listName,
+      items: [item],
+    });
+  }
+}
+
 export default GoogleAnalytics;

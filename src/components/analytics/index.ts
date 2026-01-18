@@ -18,4 +18,29 @@ export {
   trackShare,
   trackPriceAlertCreated,
   trackSavedSearchCreated,
+  trackViewItemList,
+  trackSelectItem,
 } from './GoogleAnalytics';
+
+export {
+  GoogleTagManager,
+  pushToDataLayer,
+  trackGTMPageView,
+  trackGTMEvent,
+  setGTMUserProperties,
+} from './GoogleTagManager';
+
+export {
+  FacebookPixel,
+  trackFBPageView,
+  trackFBViewContent,
+  trackFBSearch,
+  trackFBAddToCart,
+  trackFBAddToWishlist,
+  trackFBInitiateCheckout,
+  trackFBAddPaymentInfo,
+  trackFBPurchase,
+  trackFBLead,
+  trackFBCompleteRegistration,
+  trackFBCustomEvent,
+} from './FacebookPixel';
