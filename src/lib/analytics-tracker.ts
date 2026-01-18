@@ -19,7 +19,7 @@ import {
   trackSignUp as trackGASignUp,
   trackLogin as trackGALogin,
   trackAddToWishlist as trackGAAddToWishlist,
-} from './GoogleAnalytics';
+} from '../components/analytics/GoogleAnalytics';
 
 import {
   trackFBAddToCart,
@@ -31,12 +31,12 @@ import {
   trackFBPurchase,
   trackFBCompleteRegistration,
   trackFBCustomEvent,
-} from './FacebookPixel';
+} from '../components/analytics/FacebookPixel';
 
 import {
   trackGTMEvent,
   pushToDataLayer,
-} from './GoogleTagManager';
+} from '../components/analytics/GoogleTagManager';
 
 // Product interface for analytics
 export interface AnalyticsProduct {
@@ -531,10 +531,3 @@ export class FunnelTracker {
     this.funnel = [];
   }
 }
-
-// Export all trackers
-export {
-  ConversionTracker,
-  EngagementTracker,
-  FunnelTracker,
-};
