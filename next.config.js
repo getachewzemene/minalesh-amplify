@@ -5,6 +5,11 @@ const nextConfig = {
   // Image optimization with CDN support
   images: {
     remotePatterns: [
+      // Allow all HTTPS sources for flexibility with external CDNs and S3
+      // IMPORTANT: In production, restrict this to specific domains:
+      // Example: { protocol: 'https', hostname: 'your-bucket.s3.amazonaws.com' }
+      // Example: { protocol: 'https', hostname: '*.cloudfront.net' }
+      // Example: { protocol: 'https', hostname: 'your-cdn-domain.com' }
       {
         protocol: 'https',
         hostname: '**',

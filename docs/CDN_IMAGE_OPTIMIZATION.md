@@ -140,10 +140,11 @@ CloudFlare can be used as an alternative CDN with image optimization capabilitie
 
 #### 3. Application Configuration
 
-Set the CDN URL in your environment:
+Set the CDN URL and provider in your environment:
 
 ```bash
 NEXT_PUBLIC_CDN_URL=https://yoursite.com
+NEXT_PUBLIC_CDN_PROVIDER=cloudflare
 ```
 
 Uncomment the custom loader in `next.config.js`:
@@ -284,6 +285,7 @@ AWS_SECRET_ACCESS_KEY=your-secret-key
 
 # CloudFront Configuration
 NEXT_PUBLIC_CDN_URL=https://d1234567890abc.cloudfront.net
+NEXT_PUBLIC_CDN_PROVIDER=cloudfront
 AWS_CLOUDFRONT_DISTRIBUTION_ID=E1234567890ABC
 ```
 
