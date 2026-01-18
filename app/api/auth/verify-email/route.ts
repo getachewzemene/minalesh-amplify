@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { queueEmail, createWelcomeSeriesEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,14 @@ export async function POST(request: Request) {
     const user = await prisma.user.findFirst({
       where: { 
         emailVerificationToken: token,
+      },
+      include: {
+        profile: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
     });
 
@@ -41,6 +50,26 @@ export async function POST(request: Request) {
         emailVerificationToken: null,
       },
     });
+
+    // Send welcome series email
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const userName = user.profile?.firstName || user.email.split('@')[0];
+      const exploreUrl = `${appUrl}/products`;
+      const accountUrl = `${appUrl}/account`;
+
+      await queueEmail(
+        createWelcomeSeriesEmail(
+          user.email,
+          userName,
+          exploreUrl,
+          accountUrl
+        )
+      );
+    } catch (emailError) {
+      // Log but don't fail the verification if email fails
+      console.error('Failed to send welcome email:', emailError);
+    }
 
     return NextResponse.json({
       message: 'Email verified successfully',
