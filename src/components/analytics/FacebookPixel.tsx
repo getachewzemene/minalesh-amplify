@@ -45,7 +45,11 @@ export function FacebookPixel({ pixelId }: FacebookPixelProps) {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
   }, []);
 
   // Don't render if no Pixel ID or no consent

@@ -283,10 +283,16 @@ describe('Analytics Tracker', () => {
   });
 
   describe('FunnelTracker', () => {
+    let tracker: FunnelTracker;
+
+    beforeEach(() => {
+      tracker = new FunnelTracker();
+    });
+
     it('should track funnel start', () => {
       const funnelName = 'Checkout Funnel';
 
-      FunnelTracker.startFunnel(funnelName);
+      tracker.startFunnel(funnelName);
 
       const gtmEvent = mockDataLayer.find((item: any) => item.event === 'funnel_start');
       expect(gtmEvent).toBeDefined();
@@ -297,18 +303,18 @@ describe('Analytics Tracker', () => {
     });
 
     it('should track funnel steps', () => {
-      FunnelTracker.startFunnel('Purchase Funnel');
-      FunnelTracker.addStep('View Product');
-      FunnelTracker.addStep('Add to Cart');
+      tracker.startFunnel('Purchase Funnel');
+      tracker.addStep('View Product');
+      tracker.addStep('Add to Cart');
 
       const stepEvents = mockDataLayer.filter((item: any) => item.event === 'funnel_step');
       expect(stepEvents.length).toBe(2);
     });
 
     it('should track funnel completion', () => {
-      FunnelTracker.startFunnel('Purchase Funnel');
-      FunnelTracker.addStep('Checkout');
-      FunnelTracker.completeFunnel();
+      tracker.startFunnel('Purchase Funnel');
+      tracker.addStep('Checkout');
+      tracker.completeFunnel();
 
       const completeEvent = mockDataLayer.find((item: any) => item.event === 'funnel_complete');
       expect(completeEvent).toBeDefined();
@@ -320,9 +326,9 @@ describe('Analytics Tracker', () => {
     });
 
     it('should track funnel abandonment', () => {
-      FunnelTracker.startFunnel('Checkout Funnel');
-      FunnelTracker.addStep('Cart');
-      FunnelTracker.abandonFunnel('User navigated away');
+      tracker.startFunnel('Checkout Funnel');
+      tracker.addStep('Cart');
+      tracker.abandonFunnel('User navigated away');
 
       const abandonEvent = mockDataLayer.find((item: any) => item.event === 'funnel_abandon');
       expect(abandonEvent).toBeDefined();
@@ -333,11 +339,11 @@ describe('Analytics Tracker', () => {
     });
 
     it('should track funnel path correctly', () => {
-      FunnelTracker.startFunnel('Registration Funnel');
-      FunnelTracker.addStep('Email Entry');
-      FunnelTracker.addStep('Profile Setup');
-      FunnelTracker.addStep('Verification');
-      FunnelTracker.completeFunnel();
+      tracker.startFunnel('Registration Funnel');
+      tracker.addStep('Email Entry');
+      tracker.addStep('Profile Setup');
+      tracker.addStep('Verification');
+      tracker.completeFunnel();
 
       const completeEvent = mockDataLayer.find((item: any) => item.event === 'funnel_complete');
       expect(completeEvent?.funnel_path).toBe(

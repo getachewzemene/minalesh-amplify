@@ -479,11 +479,11 @@ export class EngagementTracker {
 
 // User flow and funnel visualization helpers
 export class FunnelTracker {
-  private static funnel: string[] = [];
-  private static startTime: number = Date.now();
+  private funnel: string[] = [];
+  private startTime: number = Date.now();
 
   // Start tracking a funnel
-  static startFunnel(funnelName: string) {
+  startFunnel(funnelName: string) {
     this.funnel = [funnelName];
     this.startTime = Date.now();
     
@@ -495,7 +495,7 @@ export class FunnelTracker {
   }
 
   // Add step to funnel
-  static addStep(stepName: string) {
+  addStep(stepName: string) {
     this.funnel.push(stepName);
     
     pushToDataLayer({
@@ -508,7 +508,7 @@ export class FunnelTracker {
   }
 
   // Complete funnel
-  static completeFunnel() {
+  completeFunnel() {
     const duration = Date.now() - this.startTime;
     
     pushToDataLayer({
@@ -522,7 +522,7 @@ export class FunnelTracker {
   }
 
   // Abandon funnel
-  static abandonFunnel(reason?: string) {
+  abandonFunnel(reason?: string) {
     const duration = Date.now() - this.startTime;
     
     pushToDataLayer({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { pageview } from '@/components/analytics/GoogleAnalytics';
 import { trackGTMPageView } from '@/components/analytics/GoogleTagManager';
@@ -20,7 +20,21 @@ export function usePageTracking() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (pathname) {
+    // Check for consent before tracking
+    const hasConsent = () => {
+      try {
+        const preferences = localStorage.getItem('minalesh-cookie-preferences');
+        if (preferences) {
+          const parsed = JSON.parse(preferences);
+          return parsed.analytics === true;
+        }
+      } catch (error) {
+        console.error('Error checking cookie consent:', error);
+      }
+      return false;
+    };
+
+    if (pathname && hasConsent()) {
       const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
       
       // Track in all platforms
@@ -154,20 +168,27 @@ export function useEngagementTracking() {
  * Hook for tracking user funnels
  */
 export function useFunnelTracking() {
+  // Create a funnel instance that persists for this component
+  const funnelRef = useRef<FunnelTracker | null>(null);
+
+  if (!funnelRef.current) {
+    funnelRef.current = new FunnelTracker();
+  }
+
   const startFunnel = useCallback((funnelName: string) => {
-    FunnelTracker.startFunnel(funnelName);
+    funnelRef.current?.startFunnel(funnelName);
   }, []);
 
   const addStep = useCallback((stepName: string) => {
-    FunnelTracker.addStep(stepName);
+    funnelRef.current?.addStep(stepName);
   }, []);
 
   const completeFunnel = useCallback(() => {
-    FunnelTracker.completeFunnel();
+    funnelRef.current?.completeFunnel();
   }, []);
 
   const abandonFunnel = useCallback((reason?: string) => {
-    FunnelTracker.abandonFunnel(reason);
+    funnelRef.current?.abandonFunnel(reason);
   }, []);
 
   return {

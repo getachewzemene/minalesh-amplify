@@ -83,7 +83,11 @@ declare global {
 
 // Push events to GTM dataLayer
 export function pushToDataLayer(event: Record<string, unknown>) {
-  if (typeof window !== 'undefined' && window.dataLayer) {
+  if (typeof window !== 'undefined') {
+    // Initialize dataLayer if it doesn't exist
+    if (!window.dataLayer) {
+      window.dataLayer = [];
+    }
     window.dataLayer.push(event);
   }
 }
