@@ -154,7 +154,8 @@ conversion.trackBeginCheckout(products, totalValue, 'DISCOUNT10');
 
 #### 6. Add Shipping Info
 ```typescript
-conversion.trackAddShippingInfo(products, totalValue, 'Standard Shipping');
+conversion.trackAddShippingInfo(products, totalValue, 50, 'Standard Shipping');
+// Parameters: products, totalValue, shippingCost (number), shippingTier (string label)
 ```
 
 #### 7. Add Payment Info
@@ -408,7 +409,7 @@ function CheckoutPage() {
 
   // Step 2: Shipping info
   const handleShippingSubmit = (shippingData) => {
-    trackAddShippingInfo(cartItems, totalValue, shippingData.method);
+    trackAddShippingInfo(cartItems, totalValue, shippingData.cost, shippingData.method);
     setStep(2);
   };
 

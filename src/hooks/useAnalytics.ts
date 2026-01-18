@@ -59,8 +59,8 @@ export function useConversionTracking() {
   );
 
   const trackAddShippingInfo = useCallback(
-    (products: AnalyticsProduct[], totalValue: number, shippingTier?: string) => {
-      ConversionTracker.trackAddShippingInfo(products, totalValue, shippingTier);
+    (products: AnalyticsProduct[], totalValue: number, shippingCost?: number, shippingTier?: string) => {
+      ConversionTracker.trackAddShippingInfo(products, totalValue, shippingCost, shippingTier);
     },
     []
   );

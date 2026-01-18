@@ -220,7 +220,12 @@ export class ConversionTracker {
   }
 
   // Track add shipping info
-  static trackAddShippingInfo(products: AnalyticsProduct[], totalValue: number, shippingTier?: string) {
+  static trackAddShippingInfo(
+    products: AnalyticsProduct[], 
+    totalValue: number, 
+    shippingCost?: number,
+    shippingTier?: string
+  ) {
     const items = products.map(p => ({
       item_id: p.id,
       item_name: p.name,
@@ -234,7 +239,7 @@ export class ConversionTracker {
       currency: 'ETB',
       value: totalValue,
       items,
-      shipping: shippingTier ? parseFloat(shippingTier) : undefined,
+      shipping: shippingCost,
     });
 
     // Google Tag Manager
@@ -243,6 +248,7 @@ export class ConversionTracker {
         currency: 'ETB',
         value: totalValue,
         shipping_tier: shippingTier,
+        shipping_cost: shippingCost,
         items,
       },
     });
