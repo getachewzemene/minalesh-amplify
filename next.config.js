@@ -11,13 +11,11 @@ const getRemotePatterns = () => {
       .filter(d => d.length > 0); // Filter out empty strings
     
     if (domains.length === 0) {
-      console.warn('WARNING: IMAGE_DOMAINS is set but empty. Using fallback configuration.');
-      return [
-        {
-          protocol: 'https',
-          hostname: 'localhost', // Safe fallback
-        },
-      ];
+      throw new Error(
+        'IMAGE_DOMAINS is set but empty in production. ' +
+        'Please provide at least one allowed image domain. ' +
+        'Example: IMAGE_DOMAINS="your-bucket.s3.amazonaws.com,cdn.yoursite.com"'
+      );
     }
     
     return domains.map(hostname => ({
