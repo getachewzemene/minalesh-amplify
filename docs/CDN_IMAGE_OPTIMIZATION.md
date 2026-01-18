@@ -371,6 +371,10 @@ The `next.config.js` file configures Next.js image optimization:
 ```javascript
 module.exports = {
   images: {
+    // Dynamic remote patterns based on environment
+    // In production: Set IMAGE_DOMAINS="your-bucket.s3.amazonaws.com,*.cloudfront.net"
+    // In development: Allows all HTTPS sources for flexibility
+    remotePatterns: getRemotePatterns(),
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -381,6 +385,8 @@ module.exports = {
   },
 };
 ```
+
+**Security Note:** The configuration automatically restricts image domains in production when `IMAGE_DOMAINS` environment variable is set. In development, all HTTPS sources are allowed for flexibility.
 
 ---
 
@@ -531,6 +537,7 @@ Monitor CDN performance:
 Before deploying to production:
 
 - [ ] Configure CDN (Vercel/CloudFlare/CloudFront)
+- [ ] Set `IMAGE_DOMAINS` environment variable with allowed domains (required for production security)
 - [ ] Set cache headers in `vercel.json`
 - [ ] Enable image optimization in `next.config.js`
 - [ ] Test image loading across devices

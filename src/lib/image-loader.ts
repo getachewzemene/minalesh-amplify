@@ -19,12 +19,22 @@ export interface ImageLoaderProps {
 }
 
 /**
+ * Supported CDN providers
+ */
+export const CDN_PROVIDERS = {
+  CLOUDFLARE: 'cloudflare',
+  CLOUDFRONT: 'cloudfront',
+} as const;
+
+export type CDNProvider = typeof CDN_PROVIDERS[keyof typeof CDN_PROVIDERS];
+
+/**
  * Determine CDN provider from environment
  */
-function getCDNProvider(): 'cloudflare' | 'cloudfront' | null {
+function getCDNProvider(): CDNProvider | null {
   const provider = process.env.NEXT_PUBLIC_CDN_PROVIDER?.toLowerCase();
-  if (provider === 'cloudflare' || provider === 'cloudfront') {
-    return provider;
+  if (provider === CDN_PROVIDERS.CLOUDFLARE || provider === CDN_PROVIDERS.CLOUDFRONT) {
+    return provider as CDNProvider;
   }
   return null;
 }
@@ -47,12 +57,12 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
   // Handle absolute URLs from remote sources
   if (src.startsWith('http://') || src.startsWith('https://')) {
     // For CloudFlare Image Resizing
-    if (provider === 'cloudflare') {
+    if (provider === CDN_PROVIDERS.CLOUDFLARE) {
       return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${src}`;
     }
     
     // For AWS CloudFront with Lambda@Edge
-    if (provider === 'cloudfront') {
+    if (provider === CDN_PROVIDERS.CLOUDFRONT) {
       const url = new URL(src);
       return `${cdnUrl}${url.pathname}?w=${width}&q=${imageQuality}`;
     }
@@ -60,12 +70,12 @@ export default function customImageLoader({ src, width, quality }: ImageLoaderPr
 
   // Handle relative URLs (local images)
   // For CloudFlare Image Resizing
-  if (provider === 'cloudflare') {
+  if (provider === CDN_PROVIDERS.CLOUDFLARE) {
     return `${cdnUrl}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto${src}`;
   }
 
   // For AWS CloudFront or other CDNs
-  if (provider === 'cloudfront') {
+  if (provider === CDN_PROVIDERS.CLOUDFRONT) {
     const params = new URLSearchParams();
     params.set('w', width.toString());
     params.set('q', imageQuality.toString());

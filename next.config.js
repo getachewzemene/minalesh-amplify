@@ -1,24 +1,38 @@
 const { withSentryConfig } = require('@sentry/nextjs');
 
+// Production-safe image domains configuration
+// Set NODE_ENV=production and configure these domains for your deployment
+const getRemotePatterns = () => {
+  // In production, use specific allowed domains
+  if (process.env.NODE_ENV === 'production' && process.env.IMAGE_DOMAINS) {
+    const domains = process.env.IMAGE_DOMAINS.split(',');
+    return domains.map(hostname => ({
+      protocol: 'https',
+      hostname: hostname.trim(),
+    }));
+  }
+  
+  // For development and testing, allow all HTTPS sources
+  return [
+    {
+      protocol: 'https',
+      hostname: '**',
+    },
+    {
+      protocol: 'http',
+      hostname: 'localhost',
+    },
+  ];
+};
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image optimization with CDN support
   images: {
-    remotePatterns: [
-      // Allow all HTTPS sources for flexibility with external CDNs and S3
-      // IMPORTANT: In production, restrict this to specific domains:
-      // Example: { protocol: 'https', hostname: 'your-bucket.s3.amazonaws.com' }
-      // Example: { protocol: 'https', hostname: '*.cloudfront.net' }
-      // Example: { protocol: 'https', hostname: 'your-cdn-domain.com' }
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-    ],
+    // Dynamic remote patterns based on environment
+    // In production: Set IMAGE_DOMAINS="your-bucket.s3.amazonaws.com,*.cloudfront.net"
+    // In development: Allows all HTTPS sources for flexibility
+    remotePatterns: getRemotePatterns(),
     // Enable modern image formats with automatic format selection
     formats: ['image/avif', 'image/webp'],
     // Configure responsive image sizes for different devices
@@ -30,9 +44,10 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Custom loader for CDN (optional - Vercel handles this automatically)
-    // loader: process.env.NEXT_PUBLIC_CDN_URL ? 'custom' : 'default',
-    // loaderFile: process.env.NEXT_PUBLIC_CDN_URL ? './src/lib/image-loader.ts' : undefined,
+    // Custom loader for CDN (requires both NEXT_PUBLIC_CDN_URL and NEXT_PUBLIC_CDN_PROVIDER)
+    // Uncomment the lines below to enable custom CDN integration
+    // loader: process.env.NEXT_PUBLIC_CDN_URL && process.env.NEXT_PUBLIC_CDN_PROVIDER ? 'custom' : 'default',
+    // loaderFile: process.env.NEXT_PUBLIC_CDN_URL && process.env.NEXT_PUBLIC_CDN_PROVIDER ? './src/lib/image-loader.ts' : undefined,
   },
   
   // TypeScript configuration
