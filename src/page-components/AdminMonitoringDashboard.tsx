@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { 
   Activity, TrendingUp, Clock, CheckCircle2, XCircle, 
-  RefreshCw, BarChart3, Download, AlertCircle 
+  RefreshCw, BarChart3, Download, AlertCircle, Server, Database, HardDrive, Bell 
 } from 'lucide-react'
 import { toast } from 'sonner'
+import HealthMetricsDashboard from '@/components/monitoring/HealthMetricsDashboard'
+import AlertsManagement from '@/components/monitoring/AlertsManagement'
 
 interface CronJobStats {
   jobName: string
@@ -157,12 +159,30 @@ export default function AdminMonitoringDashboard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="cron-jobs" className="space-y-4">
+      <Tabs defaultValue="health" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="health">
+            <Server className="h-4 w-4 mr-2" />
+            System Health
+          </TabsTrigger>
+          <TabsTrigger value="alerts">
+            <Bell className="h-4 w-4 mr-2" />
+            Alerts
+          </TabsTrigger>
           <TabsTrigger value="cron-jobs">Cron Jobs</TabsTrigger>
           <TabsTrigger value="disputes">Dispute Analytics</TabsTrigger>
           <TabsTrigger value="exports">Export Analytics</TabsTrigger>
         </TabsList>
+
+        {/* Health Metrics Tab */}
+        <TabsContent value="health" className="space-y-4">
+          <HealthMetricsDashboard />
+        </TabsContent>
+
+        {/* Alerts Tab */}
+        <TabsContent value="alerts" className="space-y-4">
+          <AlertsManagement />
+        </TabsContent>
 
         {/* Cron Jobs Tab */}
         <TabsContent value="cron-jobs" className="space-y-4">
