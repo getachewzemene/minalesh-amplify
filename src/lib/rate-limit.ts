@@ -2,14 +2,20 @@
  * Rate Limiting Middleware
  * 
  * Provides IP-based rate limiting for API routes to prevent abuse.
- * Uses in-memory storage with automatic cleanup of expired entries.
+ * Uses Redis for distributed rate limiting with in-memory fallback.
+ * Integrates with security features (IP whitelist/blacklist, bot detection).
  */
 
 import { NextResponse } from 'next/server';
+import { getRedisClient } from './redis';
+import { performSecurityCheck, isIpWhitelisted, logSecurityEvent } from './security';
+import { verifyCaptcha, isCaptchaConfigured } from './captcha';
 
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
   maxRequests: number; // Maximum requests per window
+  skipWhitelist?: boolean; // Skip whitelist check (default: false)
+  skipSecurityCheck?: boolean; // Skip security checks (default: false)
 }
 
 export interface RateLimitEntry {
@@ -17,7 +23,7 @@ export interface RateLimitEntry {
   resetAt: number; // Timestamp when the window resets
 }
 
-// In-memory store for rate limit tracking
+// In-memory store for rate limit tracking (fallback when Redis unavailable)
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 // Default configurations for different endpoint types
@@ -71,7 +77,78 @@ export function getClientIp(request: Request): string {
 }
 
 /**
- * Check if request is rate limited
+ * Check if request is rate limited using Redis (distributed) or in-memory (fallback)
+ */
+export async function checkRateLimitRedis(
+  clientIp: string,
+  config: RateLimitConfig
+): Promise<{
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+}> {
+  const now = Date.now();
+  const key = `ratelimit:${clientIp}`;
+  const redis = getRedisClient();
+
+  // Use Redis if available
+  if (redis) {
+    try {
+      const windowSeconds = Math.ceil(config.windowMs / 1000);
+      
+      // Use Redis sorted set for sliding window rate limiting
+      // Remove entries older than the window
+      await redis.zremrangebyscore(key, '-inf', now - config.windowMs);
+      
+      // Count requests in current window
+      const count = await redis.zcard(key);
+      
+      // Check if limit exceeded
+      if (count >= config.maxRequests) {
+        // Get oldest entry to calculate reset time
+        const oldest = await redis.zrange(key, 0, 0, 'WITHSCORES');
+        const resetAt = oldest.length > 1 
+          ? parseInt(oldest[1]) + config.windowMs 
+          : now + config.windowMs;
+        
+        return {
+          allowed: false,
+          remaining: 0,
+          resetAt
+        };
+      }
+      
+      // Add current request
+      await redis.zadd(key, now, `${now}-${Math.random()}`);
+      await redis.expire(key, windowSeconds * 2); // Set expiry to 2x window
+      
+      // Get updated count
+      const newCount = await redis.zcard(key);
+      const remaining = Math.max(0, config.maxRequests - newCount);
+      
+      // Calculate reset time (start of window + windowMs)
+      const oldestAfterAdd = await redis.zrange(key, 0, 0, 'WITHSCORES');
+      const resetAt = oldestAfterAdd.length > 1 
+        ? parseInt(oldestAfterAdd[1]) + config.windowMs 
+        : now + config.windowMs;
+      
+      return {
+        allowed: true,
+        remaining,
+        resetAt
+      };
+    } catch (error) {
+      console.error('Redis rate limit error, falling back to memory:', error);
+      // Fall through to in-memory rate limiting
+    }
+  }
+
+  // Fallback to in-memory rate limiting
+  return checkRateLimit(clientIp, config);
+}
+
+/**
+ * Check if request is rate limited (in-memory)
  */
 export function checkRateLimit(
   clientIp: string,
@@ -110,6 +187,7 @@ export function checkRateLimit(
 
 /**
  * Rate limit middleware wrapper for API routes
+ * Integrates with security features (IP whitelist/blacklist, bot detection)
  */
 export function withRateLimit(
   handler: (request: Request, context?: any) => Promise<NextResponse>,
@@ -117,11 +195,118 @@ export function withRateLimit(
 ) {
   return async (request: Request, context?: any): Promise<NextResponse> => {
     const clientIp = getClientIp(request);
-    const { allowed, remaining, resetAt } = checkRateLimit(clientIp, config);
+    const endpoint = new URL(request.url).pathname;
+
+    // Perform security check unless explicitly skipped
+    if (!config.skipSecurityCheck) {
+      const securityCheck = await performSecurityCheck(request, clientIp, endpoint);
+      
+      if (!securityCheck.allowed) {
+        await logSecurityEvent(
+          clientIp,
+          'security_block',
+          securityCheck.severity || 'high',
+          request.headers.get('user-agent'),
+          endpoint,
+          { reason: securityCheck.reason }
+        );
+
+        return NextResponse.json(
+          {
+            error: 'Access denied',
+            message: securityCheck.reason || 'Request blocked for security reasons',
+          },
+          {
+            status: 403,
+            headers: {
+              'X-Security-Block': 'true',
+            },
+          }
+        );
+      }
+
+      // If CAPTCHA required but not provided, return 403 with captcha requirement
+      if (securityCheck.requiresCaptcha) {
+        const captchaToken = request.headers.get('x-captcha-token');
+        
+        if (!captchaToken) {
+          // Only require CAPTCHA if it's configured
+          if (isCaptchaConfigured()) {
+            return NextResponse.json(
+              {
+                error: 'CAPTCHA required',
+                message: 'Please complete the CAPTCHA verification',
+                requiresCaptcha: true,
+              },
+              {
+                status: 403,
+                headers: {
+                  'X-Captcha-Required': 'true',
+                },
+              }
+            );
+          }
+          // If CAPTCHA not configured, log warning but allow request
+          console.warn('CAPTCHA required but not configured, allowing request');
+        } else {
+          // Verify CAPTCHA token
+          const captchaResult = await verifyCaptcha(captchaToken);
+          if (!captchaResult.success) {
+            await logSecurityEvent(
+              clientIp,
+              'captcha_verification_failed',
+              'medium',
+              request.headers.get('user-agent'),
+              endpoint,
+              { error: captchaResult.error }
+            );
+
+            return NextResponse.json(
+              {
+                error: 'CAPTCHA verification failed',
+                message: captchaResult.error || 'Invalid CAPTCHA response',
+              },
+              {
+                status: 403,
+                headers: {
+                  'X-Captcha-Failed': 'true',
+                },
+              }
+            );
+          }
+          // CAPTCHA verified successfully
+          console.log('CAPTCHA verified for suspicious request from', clientIp);
+        }
+      }
+    }
+
+    // Check whitelist unless explicitly skipped
+    if (!config.skipWhitelist) {
+      const isWhitelisted = await isIpWhitelisted(clientIp);
+      if (isWhitelisted) {
+        // Bypass rate limiting for whitelisted IPs
+        const response = await handler(request, context);
+        response.headers.set('X-RateLimit-Bypass', 'whitelist');
+        return response;
+      }
+    }
+
+    // Check rate limit using Redis (with fallback to in-memory)
+    const { allowed, remaining, resetAt } = await checkRateLimitRedis(clientIp, config);
     
     if (!allowed) {
       const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
       
+      // Log rate limit exceeded event
+      await logSecurityEvent(
+        clientIp,
+        'rate_limit_exceeded',
+        'medium',
+        request.headers.get('user-agent'),
+        endpoint,
+        { limit: config.maxRequests, window: config.windowMs }
+      );
+
       return NextResponse.json(
         {
           error: 'Too many requests',
