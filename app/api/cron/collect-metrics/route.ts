@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { collectApplicationMetrics } from '@/lib/monitoring';
-import { recordCronExecution } from '@/lib/cron';
+import { logEvent, logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds timeout
@@ -31,30 +31,18 @@ export async function POST(req: NextRequest) {
   const jobName = 'collect-system-metrics';
   
   try {
-    console.log(`[Cron] Starting ${jobName} execution ${executionId}`);
-    
     const startTime = Date.now();
-    
-    // Record cron job start
-    await recordCronExecution(jobName, 'running', {
-      executionId,
-    });
     
     // Collect all system metrics
     const metrics = await collectApplicationMetrics();
     
     const duration = Date.now() - startTime;
     
-    // Record successful completion
-    await recordCronExecution(jobName, 'success', {
+    logEvent(jobName, {
       executionId,
       duration,
       metricsCollected: metrics.length,
     });
-    
-    console.log(
-      `[Cron] Completed ${jobName} in ${duration}ms. Collected ${metrics.length} metrics.`
-    );
     
     return NextResponse.json({
       success: true,
@@ -69,13 +57,7 @@ export async function POST(req: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error(`[Cron] Error in ${jobName}:`, error);
-    
-    // Record failure
-    await recordCronExecution(jobName, 'failed', {
-      executionId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logError(error, { operation: jobName, executionId });
     
     return NextResponse.json(
       {
@@ -90,15 +72,9 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/cron/collect-metrics
- * Returns information about this cron job
+ * Returns information about this cron job (also triggers the job)
  */
 export async function GET(req: NextRequest) {
-  return NextResponse.json({
-    name: 'collect-system-metrics',
-    description: 'Collects system health metrics (CPU, memory, disk, DB, queues)',
-    schedule: '*/5 * * * *', // Every 5 minutes (recommended)
-    endpoint: '/api/cron/collect-metrics',
-    method: 'POST',
-    authentication: 'Bearer token (CRON_SECRET)',
-  });
+  // Allow GET to trigger the job as well for easier manual testing
+  return POST(req);
 }

@@ -38,8 +38,11 @@ export function trackMetric(
       trackDatadogMetric(name, value, tags);
       break;
     case 'sentry':
-      // Sentry doesn't have direct metric tracking, but we can use custom measurements
-      Sentry.setMeasurement(name, value, 'none');
+      // Sentry doesn't have direct metric tracking in the way other APMs do
+      // You can use custom measurements or breadcrumbs
+      if (tags) {
+        Sentry.setContext('metrics', { ...tags, [name]: value });
+      }
       break;
     default:
       // No APM configured, log to console in development
@@ -116,7 +119,15 @@ export function startTransaction(name: string, operation?: string) {
     case 'datadog':
       return startDatadogTrace(name, operation);
     case 'sentry':
-      return Sentry.startTransaction({ name, op: operation });
+      // For Sentry, use spans instead of transactions
+      // Transactions have been deprecated in favor of spans
+      return {
+        finish: () => {},
+        setStatus: () => {},
+        setData: (key: string, value: any) => {
+          Sentry.setContext(key, value);
+        },
+      };
     default:
       // Return a mock transaction for consistency
       return {

@@ -5,8 +5,9 @@
 
 import prisma from './prisma';
 import { subHours, subDays, startOfDay } from 'date-fns';
-import os from 'os';
+import * as os from 'os';
 import { checkDatabaseConnection } from './database-health';
+import { sendEmailImmediate } from './email';
 
 export interface HealthMetric {
   type: string;
@@ -52,7 +53,7 @@ export async function recordHealthMetric(
       metricUnit: options?.unit,
       threshold: options?.threshold,
       status,
-      metadata: options?.metadata,
+      metadata: options?.metadata as any,
     },
   });
 
@@ -295,10 +296,37 @@ export async function checkAndTriggerAlerts(
         message,
       });
 
-      // TODO: Send notifications based on config
-      // if (config.notifyEmail) await sendAlertEmail(message);
-      // if (config.notifySlack) await sendSlackNotification(message);
-      // if (config.webhookUrl) await callWebhook(config.webhookUrl, trigger);
+      // Send notifications based on config
+      try {
+        if (config.notifyEmail) {
+          await sendAlertEmail(
+            { name: config.name, severity: config.severity },
+            message,
+            metricValue,
+            config.threshold
+          );
+        }
+        
+        if (config.notifySlack) {
+          await sendSlackNotification(
+            { name: config.name, severity: config.severity },
+            message
+          );
+        }
+        
+        if (config.webhookUrl) {
+          await sendWebhookNotification(config.webhookUrl, {
+            alertConfigId: config.id,
+            metricValue,
+            threshold: config.threshold,
+            severity: config.severity,
+            message,
+          });
+        }
+      } catch (notificationError) {
+        console.error('Failed to send alert notifications:', notificationError);
+        // Continue even if notifications fail
+      }
     }
   }
 
@@ -363,6 +391,136 @@ export async function resolveAlert(alertId: string) {
       resolvedAt: new Date(),
     },
   });
+}
+
+/**
+ * Send alert notification via email
+ */
+async function sendAlertEmail(
+  alertConfig: { name: string; severity: string },
+  message: string,
+  metricValue: number,
+  threshold: number
+): Promise<boolean> {
+  try {
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+    
+    if (adminEmails.length === 0) {
+      console.warn('No admin emails configured for alert notifications');
+      return false;
+    }
+    
+    const subject = `[${alertConfig.severity.toUpperCase()}] ${alertConfig.name}`;
+    const html = `
+      <h2>System Alert: ${alertConfig.name}</h2>
+      <p><strong>Severity:</strong> ${alertConfig.severity.toUpperCase()}</p>
+      <p><strong>Message:</strong> ${message}</p>
+      <p><strong>Metric Value:</strong> ${metricValue}</p>
+      <p><strong>Threshold:</strong> ${threshold}</p>
+      <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+      <hr/>
+      <p>Please investigate this issue in the monitoring dashboard.</p>
+      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/monitoring">View Monitoring Dashboard</a></p>
+    `;
+    
+    const sent = await sendEmailImmediate({
+      to: adminEmails[0], // Send to first admin (will be queued for all)
+      subject,
+      html,
+      from: process.env.EMAIL_FROM || 'alerts@yourdomain.com',
+    });
+    
+    return sent;
+  } catch (error) {
+    console.error('Failed to send alert email:', error);
+    return false;
+  }
+}
+
+/**
+ * Send alert notification via webhook
+ */
+async function sendWebhookNotification(
+  webhookUrl: string,
+  alertData: AlertTrigger
+): Promise<boolean> {
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Minalesh-Monitoring/1.0',
+      },
+      body: JSON.stringify({
+        type: 'alert',
+        severity: alertData.severity,
+        message: alertData.message,
+        metricValue: alertData.metricValue,
+        threshold: alertData.threshold,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send webhook notification:', error);
+    return false;
+  }
+}
+
+/**
+ * Send alert notification to Slack
+ */
+async function sendSlackNotification(
+  alertConfig: { name: string; severity: string },
+  message: string
+): Promise<boolean> {
+  try {
+    const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+    
+    if (!slackWebhookUrl) {
+      console.warn('No Slack webhook URL configured');
+      return false;
+    }
+    
+    // Determine color based on severity
+    const color = alertConfig.severity === 'critical' ? 'danger' 
+                : alertConfig.severity === 'warning' ? 'warning' 
+                : 'good';
+    
+    const response = await fetch(slackWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        attachments: [
+          {
+            color,
+            title: `🚨 ${alertConfig.name}`,
+            text: message,
+            fields: [
+              {
+                title: 'Severity',
+                value: alertConfig.severity.toUpperCase(),
+                short: true,
+              },
+              {
+                title: 'Time',
+                value: new Date().toISOString(),
+                short: true,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send Slack notification:', error);
+    return false;
+  }
 }
 
 /**
