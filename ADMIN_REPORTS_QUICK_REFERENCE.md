@@ -59,4 +59,4 @@
 - `src/lib/report-export.ts` - Export utilities
 - `app/admin/reports/page.tsx` - Admin page
 - `src/page-components/AdminReportsDashboard.tsx` - UI component
-- Dependencies: `xlsx`, `papaparse` added
+- Dependencies: `exceljs`, `papaparse` added (xlsx replaced with exceljs for security)

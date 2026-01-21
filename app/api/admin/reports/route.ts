@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
     if (format === 'csv') {
       return createCSVResponse(exportData, `${reportType}-report`);
     } else if (format === 'excel') {
-      return createExcelResponse(exportData, `${reportType}-report`, reportType);
+      return await createExcelResponse(exportData, `${reportType}-report`, reportType);
     } else if (format === 'pdf') {
       return createPDFResponse(exportData, `${reportType}-report`, `${reportType.toUpperCase()} Report`);
     }

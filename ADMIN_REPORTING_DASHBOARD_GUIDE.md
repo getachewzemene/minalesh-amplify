@@ -153,13 +153,15 @@ Access is denied if either check fails.
 
 ### NPM Packages
 - `papaparse` (^5.4.1) - CSV generation
-- `xlsx` (^0.18.5) - Excel file generation
+- `exceljs` (^4.4.0) - Excel file generation (secure alternative to xlsx)
 - `jspdf` (^3.0.4) - PDF generation (already installed)
 
 ### Installation
 ```bash
-npm install papaparse xlsx @types/papaparse
+npm install papaparse exceljs @types/papaparse
 ```
+
+**Security Note:** We use `exceljs` instead of `xlsx` to avoid known vulnerabilities (ReDoS and Prototype Pollution) present in xlsx versions < 0.20.2.
 
 ## Code Structure
 

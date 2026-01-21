@@ -28,10 +28,16 @@ Successfully implemented a comprehensive Admin Reporting Dashboard with all requ
 ```json
 {
   "papaparse": "^5.4.1",
-  "xlsx": "^0.18.5",
+  "exceljs": "^4.4.0",
   "@types/papaparse": "^5.3.x"
 }
 ```
+
+**Security Fix Applied:**
+- Initially used `xlsx` 0.18.5, but immediately replaced with `exceljs` 4.4.0
+- Resolved: ReDoS vulnerability (affects xlsx < 0.20.2)
+- Resolved: Prototype Pollution vulnerability (affects xlsx < 0.19.3)
+- ExcelJS provides better security, active maintenance, and enhanced features
 
 ### Files Created
 - `/src/lib/report-export.ts` - 240 lines of export utilities

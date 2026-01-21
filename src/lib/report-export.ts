@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 
 /**
@@ -46,39 +46,58 @@ export function createCSVResponse(data: any[], filename: string): Response {
 }
 
 /**
- * Convert data to Excel (XLSX) format
+ * Convert data to Excel (XLSX) format using ExcelJS
  */
-export function exportToExcel(data: any[], options: ExportOptions = {}): ArrayBuffer {
+export async function exportToExcel(data: any[], options: ExportOptions = {}): Promise<ArrayBuffer> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(options.title || 'Report');
+
   if (!data || data.length === 0) {
-    const emptyWorkbook = XLSX.utils.book_new();
-    const emptySheet = XLSX.utils.aoa_to_sheet([['No data available']]);
-    XLSX.utils.book_append_sheet(emptyWorkbook, emptySheet, 'Report');
-    return XLSX.write(emptyWorkbook, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+    worksheet.addRow(['No data available']);
+    const buffer = await workbook.xlsx.writeBuffer();
+    return buffer as ArrayBuffer;
   }
 
-  // Create workbook and worksheet
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  // Add headers
+  const headers = options.headers || Object.keys(data[0]);
+  const headerRow = worksheet.addRow(headers);
+  
+  // Style the header row
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' }
+  };
+
+  // Add data rows
+  data.forEach((item) => {
+    const row = headers.map(header => item[header]);
+    worksheet.addRow(row);
+  });
 
   // Auto-size columns
-  const columnWidths = Object.keys(data[0] || {}).map(key => ({
-    wch: Math.max(key.length, 15)
-  }));
-  worksheet['!cols'] = columnWidths;
-
-  // Add worksheet to workbook
-  XLSX.utils.book_append_sheet(workbook, worksheet, options.title || 'Report');
+  worksheet.columns.forEach((column) => {
+    let maxLength = 0;
+    column.eachCell?.({ includeEmpty: true }, (cell) => {
+      const columnLength = cell.value ? String(cell.value).length : 10;
+      if (columnLength > maxLength) {
+        maxLength = columnLength;
+      }
+    });
+    column.width = Math.min(maxLength + 2, 50);
+  });
 
   // Generate buffer
-  const buffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  const buffer = await workbook.xlsx.writeBuffer();
   return buffer as ArrayBuffer;
 }
 
 /**
  * Generate Excel download response
  */
-export function createExcelResponse(data: any[], filename: string, title?: string): Response {
-  const buffer = exportToExcel(data, { title });
+export async function createExcelResponse(data: any[], filename: string, title?: string): Promise<Response> {
+  const buffer = await exportToExcel(data, { title });
   const timestamp = new Date().toISOString().split('T')[0];
   
   return new Response(buffer, {
