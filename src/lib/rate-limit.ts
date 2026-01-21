@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { getRedisClient } from './redis';
 import { performSecurityCheck, isIpWhitelisted, logSecurityEvent } from './security';
+import { verifyCaptcha, isCaptchaConfigured } from './captcha';
 
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -227,22 +228,55 @@ export function withRateLimit(
       // If CAPTCHA required but not provided, return 403 with captcha requirement
       if (securityCheck.requiresCaptcha) {
         const captchaToken = request.headers.get('x-captcha-token');
+        
         if (!captchaToken) {
-          return NextResponse.json(
-            {
-              error: 'CAPTCHA required',
-              message: 'Please complete the CAPTCHA verification',
-              requiresCaptcha: true,
-            },
-            {
-              status: 403,
-              headers: {
-                'X-Captcha-Required': 'true',
+          // Only require CAPTCHA if it's configured
+          if (isCaptchaConfigured()) {
+            return NextResponse.json(
+              {
+                error: 'CAPTCHA required',
+                message: 'Please complete the CAPTCHA verification',
+                requiresCaptcha: true,
               },
-            }
-          );
+              {
+                status: 403,
+                headers: {
+                  'X-Captcha-Required': 'true',
+                },
+              }
+            );
+          }
+          // If CAPTCHA not configured, log warning but allow request
+          console.warn('CAPTCHA required but not configured, allowing request');
+        } else {
+          // Verify CAPTCHA token
+          const captchaResult = await verifyCaptcha(captchaToken);
+          if (!captchaResult.success) {
+            await logSecurityEvent(
+              clientIp,
+              'captcha_verification_failed',
+              'medium',
+              request.headers.get('user-agent'),
+              endpoint,
+              { error: captchaResult.error }
+            );
+
+            return NextResponse.json(
+              {
+                error: 'CAPTCHA verification failed',
+                message: captchaResult.error || 'Invalid CAPTCHA response',
+              },
+              {
+                status: 403,
+                headers: {
+                  'X-Captcha-Failed': 'true',
+                },
+              }
+            );
+          }
+          // CAPTCHA verified successfully
+          console.log('CAPTCHA verified for suspicious request from', clientIp);
         }
-        // TODO: Verify CAPTCHA token (to be implemented with CAPTCHA service)
       }
     }
 
