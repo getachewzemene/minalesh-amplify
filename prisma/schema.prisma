@@ -1748,3 +1748,63 @@ model ProductShare {
   @@index([createdAt])
   @@map("product_shares")
 }
+
+// ============================================
+// Security & DDoS Protection
+// ============================================
+
+// IP Whitelist - Known good IPs that bypass rate limiting
+model IpWhitelist {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress   String   @unique @map("ip_address")
+  reason      String // Why this IP is whitelisted
+  createdBy   String?  @map("created_by") @db.Uuid // Admin who added it
+  createdAt   DateTime @default(now()) @map("created_at")
+  expiresAt   DateTime? @map("expires_at") // Optional expiration
+  isActive    Boolean  @default(true) @map("is_active")
+
+  @@index([ipAddress])
+  @@index([isActive])
+  @@map("ip_whitelist")
+}
+
+// IP Blacklist - Abusive IPs that are blocked
+model IpBlacklist {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress   String   @unique @map("ip_address")
+  reason      String // Why this IP is blacklisted
+  severity    String   @default("medium") // low, medium, high, critical
+  createdBy   String?  @map("created_by") @db.Uuid // Admin who added it or "system" for auto-blacklist
+  createdAt   DateTime @default(now()) @map("created_at")
+  expiresAt   DateTime? @map("expires_at") // Optional expiration for temporary bans
+  isActive    Boolean  @default(true) @map("is_active")
+  blockCount  Int      @default(0) @map("block_count") // How many requests blocked
+  lastBlockedAt DateTime? @map("last_blocked_at")
+
+  @@index([ipAddress])
+  @@index([isActive])
+  @@index([severity])
+  @@map("ip_blacklist")
+}
+
+// Security Events - Track suspicious activity
+model SecurityEvent {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress   String   @map("ip_address")
+  eventType   String   @map("event_type") // rate_limit_exceeded, bot_detected, suspicious_pattern, etc.
+  severity    String   @default("low") // low, medium, high, critical
+  userAgent   String?  @map("user_agent")
+  endpoint    String?  // Which API endpoint was accessed
+  metadata    Json?    // Additional event data
+  createdAt   DateTime @default(now()) @map("created_at")
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime? @map("resolved_at")
+  resolvedBy  String?  @map("resolved_by") @db.Uuid
+
+  @@index([ipAddress])
+  @@index([eventType])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([resolved])
+  @@map("security_events")
+}
