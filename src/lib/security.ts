@@ -207,7 +207,9 @@ export function isSuspiciousUserAgent(userAgent: string | null): boolean {
     /libwww/i,
     /mechanize/i,
     /phantom/i,
-    /headless/i
+    /headless/i,
+    /httpie/i,
+    /selenium/i
   ];
 
   // Check for known good bots (search engines, monitoring services)
