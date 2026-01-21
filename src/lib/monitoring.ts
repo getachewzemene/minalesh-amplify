@@ -5,6 +5,8 @@
 
 import prisma from './prisma';
 import { subHours, subDays, startOfDay } from 'date-fns';
+import os from 'os';
+import { checkDatabaseConnection } from './database-health';
 
 export interface HealthMetric {
   type: string;
@@ -419,6 +421,154 @@ export async function getSystemHealthOverview() {
 }
 
 /**
+ * Get system memory usage metrics
+ */
+export async function collectMemoryMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  
+  // Process memory usage
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
+  const heapTotalMB = memUsage.heapTotal / 1024 / 1024;
+  const rssMB = memUsage.rss / 1024 / 1024;
+  
+  metrics.push(await recordHealthMetric('memory_heap_used_mb', heapUsedMB, {
+    unit: 'MB',
+    threshold: 512,
+  }));
+  
+  metrics.push(await recordHealthMetric('memory_heap_total_mb', heapTotalMB, {
+    unit: 'MB',
+    threshold: 1024,
+  }));
+  
+  metrics.push(await recordHealthMetric('memory_rss_mb', rssMB, {
+    unit: 'MB',
+    threshold: 1024,
+  }));
+  
+  // System memory
+  const totalMemGB = os.totalmem() / 1024 / 1024 / 1024;
+  const freeMemGB = os.freemem() / 1024 / 1024 / 1024;
+  const usedMemPercent = ((totalMemGB - freeMemGB) / totalMemGB) * 100;
+  
+  metrics.push(await recordHealthMetric('system_memory_used_percent', usedMemPercent, {
+    unit: '%',
+    threshold: 85,
+  }));
+  
+  return metrics;
+}
+
+/**
+ * Get system disk usage metrics
+ * Note: This is a basic implementation. For production, consider using a library like 'diskusage'
+ */
+export async function collectDiskMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  
+  try {
+    // Use Node.js to check disk space (basic implementation for Unix-like systems)
+    // In production, you might want to use a more robust library
+    const { execSync } = require('child_process');
+    
+    try {
+      // Try to get disk usage for the root filesystem
+      const dfOutput = execSync('df -k / | tail -1').toString();
+      const parts = dfOutput.split(/\s+/);
+      
+      if (parts.length >= 5) {
+        const usedPercent = parseInt(parts[4].replace('%', ''), 10);
+        
+        metrics.push(await recordHealthMetric('disk_usage_percent', usedPercent, {
+          unit: '%',
+          threshold: 85,
+        }));
+      }
+    } catch (err) {
+      // Fallback: just record that we couldn't check disk
+      console.warn('Could not check disk usage:', err);
+    }
+  } catch (error) {
+    console.error('Error collecting disk metrics:', error);
+  }
+  
+  return metrics;
+}
+
+/**
+ * Get database performance metrics
+ */
+export async function collectDatabaseMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  
+  // Check database connection and latency
+  const dbHealth = await checkDatabaseConnection();
+  
+  if (dbHealth.connected && dbHealth.latency) {
+    metrics.push(await recordHealthMetric('db_latency_ms', dbHealth.latency, {
+      unit: 'ms',
+      threshold: 100,
+    }));
+  }
+  
+  // Count active database queries (if available)
+  try {
+    const activeConnections = await prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) as count 
+      FROM pg_stat_activity 
+      WHERE state = 'active'
+    `;
+    
+    const count = Number(activeConnections[0]?.count ?? 0);
+    metrics.push(await recordHealthMetric('db_active_connections', count, {
+      threshold: 50,
+    }));
+  } catch (error) {
+    console.warn('Could not query database active connections:', error);
+  }
+  
+  return metrics;
+}
+
+/**
+ * Get queue depth metrics for all queues
+ */
+export async function collectQueueMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  const now = new Date();
+  
+  // Email queue
+  const pendingEmails = await prisma.emailQueue.count({
+    where: { status: 'pending' },
+  });
+  metrics.push(await recordHealthMetric('email_queue_depth', pendingEmails, {
+    threshold: 100,
+  }));
+  
+  // Failed emails (last 24 hours)
+  const failedEmails = await prisma.emailQueue.count({
+    where: {
+      status: 'failed',
+      createdAt: { gte: subHours(now, 24) },
+    },
+  });
+  metrics.push(await recordHealthMetric('email_queue_failed_24h', failedEmails, {
+    threshold: 50,
+  }));
+  
+  // Webhook queue
+  const pendingWebhooks = await prisma.webhookEvent.count({
+    where: { status: 'pending' },
+  });
+  metrics.push(await recordHealthMetric('webhook_queue_depth', pendingWebhooks, {
+    threshold: 50,
+  }));
+  
+  return metrics;
+}
+
+/**
  * Collect and record application metrics
  * This should be called periodically (e.g., every minute) to track system health
  */
@@ -427,12 +577,15 @@ export async function collectApplicationMetrics() {
   const metrics: HealthMetric[] = [];
 
   try {
-    // API response time simulation (would use real metrics in production)
-    const apiLatency = Math.random() * 500 + 50; // 50-550ms
-    metrics.push(await recordHealthMetric('api_latency_ms', apiLatency, {
-      unit: 'ms',
-      threshold: 500,
-    }));
+    // Collect all metrics in parallel
+    const [memoryMetrics, diskMetrics, dbMetrics, queueMetrics] = await Promise.all([
+      collectMemoryMetrics(),
+      collectDiskMetrics(),
+      collectDatabaseMetrics(),
+      collectQueueMetrics(),
+    ]);
+    
+    metrics.push(...memoryMetrics, ...diskMetrics, ...dbMetrics, ...queueMetrics);
 
     // Error rate (based on recent webhook failures as proxy)
     const recentWebhooks = await prisma.webhookEvent.count({
@@ -448,20 +601,6 @@ export async function collectApplicationMetrics() {
     metrics.push(await recordHealthMetric('error_rate_percent', errorRate, {
       unit: '%',
       threshold: 5,
-    }));
-
-    // Queue depth (email queue)
-    const pendingEmails = await prisma.emailQueue.count({
-      where: { status: 'pending' },
-    });
-    metrics.push(await recordHealthMetric('email_queue_depth', pendingEmails, {
-      threshold: 100,
-    }));
-
-    // Database connections (simulated)
-    const dbConnections = Math.floor(Math.random() * 20) + 5;
-    metrics.push(await recordHealthMetric('db_connections', dbConnections, {
-      threshold: 50,
     }));
 
     // Check alerts for each metric

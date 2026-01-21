@@ -5,6 +5,10 @@
   
   "crons": [
     {
+      "path": "/api/cron/collect-metrics",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/process-email-queue",
       "schedule": "*/2 * * * *"
     },
