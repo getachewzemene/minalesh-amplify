@@ -7,7 +7,7 @@ import { LanguageProvider } from "@/context/language-context"
 import { ShopProvider } from "@/context/shop-context"
 import { ComparisonProvider } from "@/context/comparison-context"
 import { AIHelper } from "@/components/ai-helper"
-import { GoogleAnalytics } from "@/components/analytics"
+import { GoogleAnalytics, GoogleTagManager, FacebookPixel } from "@/components/analytics"
 import { ComparisonBar } from "@/components/comparison/ComparisonBar"
 import { OrganizationSchema, WebSiteSchema } from "@/components/seo"
 import { createBaseMetadata, BASE_URL, ORGANIZATION_INFO } from "@/lib/seo"
@@ -48,6 +48,8 @@ export default function RootLayout({
                     <ComparisonBar />
                     <AIHelper />
                     <GoogleAnalytics />
+                    <GoogleTagManager />
+                    <FacebookPixel />
                     <Toaster />
                     <Sonner />
                   </ComparisonProvider>
