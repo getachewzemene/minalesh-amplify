@@ -90,10 +90,14 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    // Handle export formats
-    const exportData = reportData.orders || reportData.products || reportData.customers || 
-                       reportData.vendors || reportData.refunds || reportData.shipments || 
-                       reportData.payments || reportData.taxRecords || [];
+    // Handle export formats - extract data based on report type
+    const getExportData = (data: any) => {
+      return data.orders || data.products || data.customers || 
+             data.vendors || data.refunds || data.shipments || 
+             data.payments || data.taxRecords || [];
+    };
+    
+    const exportData = getExportData(reportData);
     
     if (format === 'csv') {
       return createCSVResponse(exportData, `${reportType}-report`);
@@ -831,6 +835,11 @@ async function generateInventoryAgingReport() {
   };
 }
 
+/**
+ * Ethiopian VAT rate - can be adjusted for different tax jurisdictions
+ */
+const ETHIOPIAN_VAT_RATE = 0.15; // 15% VAT
+
 async function generateTaxReport(dateFilter: any) {
   const orders = await prisma.order.findMany({
     where: {
@@ -875,7 +884,7 @@ async function generateTaxReport(dateFilter: any) {
       
       const itemTotal = Number(item.price) * item.quantity;
       taxByVendor[vendorName].totalSales += itemTotal;
-      taxByVendor[vendorName].taxCollected += (itemTotal * 0.15); // Assuming 15% VAT
+      taxByVendor[vendorName].taxCollected += (itemTotal * ETHIOPIAN_VAT_RATE);
       taxByVendor[vendorName].orderCount += 1;
     });
   });

@@ -181,10 +181,18 @@ export function createPDFResponse(data: any[], filename: string, title?: string)
  * Format currency for Ethiopian Birr
  */
 export function formatETB(amount: number): string {
-  return new Intl.NumberFormat('en-ET', {
-    style: 'currency',
-    currency: 'ETB',
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat('en-ET', {
+      style: 'currency',
+      currency: 'ETB',
+    }).format(amount);
+  } catch (error) {
+    // Fallback to en-US if en-ET is not supported
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'ETB',
+    }).format(amount);
+  }
 }
 
 /**
@@ -192,11 +200,20 @@ export function formatETB(amount: number): string {
  */
 export function formatReportDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-ET', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  try {
+    return d.toLocaleDateString('en-ET', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch (error) {
+    // Fallback to en-US if en-ET is not supported
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
 }
 
 /**

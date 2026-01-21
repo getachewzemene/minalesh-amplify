@@ -27,6 +27,29 @@ import {
   Receipt
 } from "lucide-react";
 
+interface ReportData {
+  success?: boolean;
+  reportType?: string;
+  dateRange?: {
+    start: string | null;
+    end: string | null;
+  };
+  data?: {
+    summary?: Record<string, any>;
+    orders?: any[];
+    products?: any[];
+    customers?: any[];
+    vendors?: any[];
+    refunds?: any[];
+    shipments?: any[];
+    payments?: any[];
+    taxRecords?: any[];
+  };
+  generatedAt?: string;
+}
+
+const PERIOD_SUPPORTED_REPORTS = ['sales', 'customer-acquisition'];
+
 const reportTypes = [
   { value: 'sales', label: 'Sales Report', icon: ShoppingCart, description: 'Daily, weekly, and monthly sales analytics' },
   { value: 'vendor-performance', label: 'Vendor Performance', icon: Store, description: 'Vendor sales, commissions, and ratings' },
@@ -61,7 +84,7 @@ export default function AdminReportsDashboard() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState<any>(null);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -192,7 +215,7 @@ export default function AdminReportsDashboard() {
                 </div>
 
                 {/* Period Aggregation (for applicable reports) */}
-                {(['sales', 'customer-acquisition'].includes(selectedReport)) && (
+                {PERIOD_SUPPORTED_REPORTS.includes(selectedReport) && (
                   <div>
                     <label className="text-sm font-medium mb-2 block">Period Aggregation (Optional)</label>
                     <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
