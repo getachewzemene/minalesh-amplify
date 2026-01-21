@@ -323,7 +323,7 @@ export async function logSecurityEvent(
         severity,
         userAgent: userAgent || undefined,
         endpoint,
-        metadata: metadata ? metadata : undefined,
+        metadata,
         resolved: false
       }
     });

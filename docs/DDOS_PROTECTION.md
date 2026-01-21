@@ -479,9 +479,126 @@ If seeing many 429 errors from legitimate users:
 
 ## Future Enhancements
 
-- CAPTCHA integration (hCaptcha/reCAPTCHA)
+- CAPTCHA integration (hCaptcha/reCAPTCHA) ✅ IMPLEMENTED
 - Machine learning-based bot detection
 - Geographic rate limiting
 - API key-based rate limiting
 - WebSocket connection limits
 - GraphQL query complexity analysis
+
+## CAPTCHA Integration (NEW)
+
+### Setup hCaptcha
+
+1. **Sign up for hCaptcha**: Visit https://www.hcaptcha.com/
+2. **Get credentials**: Create a new site and obtain site key and secret key
+3. **Add to environment**:
+```bash
+NEXT_PUBLIC_HCAPTCHA_SITE_KEY=your-site-key
+HCAPTCHA_SECRET_KEY=your-secret-key
+```
+
+### Using CAPTCHA in React Components
+
+```tsx
+import { HCaptcha, useCaptcha } from '@/components/security/HCaptcha';
+
+function LoginForm() {
+  const { 
+    token, 
+    error, 
+    isExpired, 
+    handleVerify, 
+    handleError, 
+    handleExpire 
+  } = useCaptcha();
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    // Include CAPTCHA token in request
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Captcha-Token': token || '', // Include CAPTCHA token
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    // Handle response
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+      
+      {/* CAPTCHA widget */}
+      <HCaptcha
+        onVerify={handleVerify}
+        onError={handleError}
+        onExpire={handleExpire}
+        theme="light"
+        size="normal"
+      />
+      
+      {error && <p className="text-red-500">CAPTCHA error: {error.message}</p>}
+      
+      <button disabled={!token || isExpired}>Submit</button>
+    </form>
+  );
+}
+```
+
+### Server-Side CAPTCHA Verification
+
+The rate limiting middleware automatically handles CAPTCHA verification:
+
+1. **Suspicious activity detected**: Middleware sets `requiresCaptcha: true`
+2. **Client makes request**: Must include `X-Captcha-Token` header
+3. **Server verifies**: Uses `verifyCaptcha()` to validate token
+4. **Success/Failure**: Returns appropriate response
+
+### Manual CAPTCHA Verification
+
+```typescript
+import { verifyCaptcha } from '@/lib/captcha';
+
+async function handler(request: Request) {
+  const captchaToken = request.headers.get('x-captcha-token');
+  
+  if (captchaToken) {
+    const result = await verifyCaptcha(captchaToken);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 403 }
+      );
+    }
+  }
+  
+  // Proceed with request handling
+}
+```
+
+### CAPTCHA Flow
+
+1. **Normal Request**: No CAPTCHA required
+2. **Suspicious Pattern Detected**: 
+   - Server returns `403` with `X-Captcha-Required: true`
+   - Client displays CAPTCHA widget
+3. **User Completes CAPTCHA**:
+   - Client retries request with `X-Captcha-Token` header
+   - Server verifies token and processes request
+4. **Verification Success**: Request proceeds normally
+5. **Verification Failed**: Returns error with reason
+
+### Testing CAPTCHA
+
+For development/testing without CAPTCHA configured:
+- Middleware allows requests without CAPTCHA if not configured
+- Set `HCAPTCHA_SECRET_KEY` to enable strict verification
+- Use hCaptcha test keys for integration testing:
+  - Site key: `10000000-ffff-ffff-ffff-000000000001`
+  - Secret key: `0x0000000000000000000000000000000000000000`

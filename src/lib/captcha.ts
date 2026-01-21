@@ -33,6 +33,7 @@ export async function verifyCaptcha(token: string): Promise<{
     const data = await response.json();
 
     if (!data.success) {
+      // hCaptcha API returns error codes with hyphens in property name
       return {
         success: false,
         error: data['error-codes']?.join(', ') || 'CAPTCHA verification failed',
