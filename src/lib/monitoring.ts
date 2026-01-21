@@ -6,6 +6,7 @@
 import prisma from './prisma';
 import { subHours, subDays, startOfDay } from 'date-fns';
 import * as os from 'os';
+import { execSync } from 'child_process';
 import { checkDatabaseConnection } from './database-health';
 import { sendEmailImmediate } from './email';
 
@@ -53,7 +54,7 @@ export async function recordHealthMetric(
       metricUnit: options?.unit,
       threshold: options?.threshold,
       status,
-      metadata: options?.metadata as any,
+      metadata: (options?.metadata || {}) as any, // TODO: Define proper metadata type
     },
   });
 
@@ -626,12 +627,13 @@ export async function collectDiskMetrics(): Promise<HealthMetric[]> {
   const metrics: HealthMetric[] = [];
   
   try {
-    // Use Node.js to check disk space (basic implementation for Unix-like systems)
-    // In production, you might want to use a more robust library
-    const { execSync } = require('child_process');
+    // Basic disk usage check for Unix-like systems (PostgreSQL typically runs on Linux)
+    // Note: This uses shell commands and may not work on all platforms
+    // In production, consider using a cross-platform library like 'diskusage'
     
     try {
       // Try to get disk usage for the root filesystem
+      // df -k outputs in KB, format: Filesystem 1K-blocks Used Available Use% Mounted
       const dfOutput = execSync('df -k / | tail -1').toString();
       const parts = dfOutput.split(/\s+/);
       
@@ -645,7 +647,8 @@ export async function collectDiskMetrics(): Promise<HealthMetric[]> {
       }
     } catch (err) {
       // Fallback: just record that we couldn't check disk
-      console.warn('Could not check disk usage:', err);
+      // This is expected on non-Unix platforms
+      console.warn('Could not check disk usage (expected on non-Unix systems):', err);
     }
   } catch (error) {
     console.error('Error collecting disk metrics:', error);
@@ -670,7 +673,8 @@ export async function collectDatabaseMetrics(): Promise<HealthMetric[]> {
     }));
   }
   
-  // Count active database queries (if available)
+  // Count active database queries (PostgreSQL-specific)
+  // Note: This query requires PostgreSQL and access to pg_stat_activity view
   try {
     const activeConnections = await prisma.$queryRaw<Array<{ count: bigint }>>`
       SELECT COUNT(*) as count 
@@ -683,7 +687,7 @@ export async function collectDatabaseMetrics(): Promise<HealthMetric[]> {
       threshold: 50,
     }));
   } catch (error) {
-    console.warn('Could not query database active connections:', error);
+    console.warn('Could not query database active connections (requires PostgreSQL):', error);
   }
   
   return metrics;

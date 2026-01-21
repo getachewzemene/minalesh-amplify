@@ -12,9 +12,16 @@ export type APMProvider = 'newrelic' | 'datadog' | 'sentry' | 'none';
 
 /**
  * Get the configured APM provider
+ * Priority: New Relic > Datadog > Sentry > None
+ * 
+ * Environment variables:
+ * - NEW_RELIC_LICENSE_KEY for New Relic
+ * - DATADOG_API_KEY or DD_API_KEY for Datadog (DD_API_KEY preferred)
+ * - SENTRY_DSN for Sentry
  */
 export function getAPMProvider(): APMProvider {
   if (process.env.NEW_RELIC_LICENSE_KEY) return 'newrelic';
+  // Prefer DD_API_KEY over DATADOG_API_KEY for consistency
   if (process.env.DD_API_KEY || process.env.DATADOG_API_KEY) return 'datadog';
   if (process.env.SENTRY_DSN) return 'sentry';
   return 'none';
@@ -212,15 +219,20 @@ function trackDatadogMetric(
   tags?: Record<string, string | number>
 ) {
   try {
-    // Datadog uses a global `DD_TRACE` or StatsD client
+    // Datadog integration requires the dd-trace or dogstatsd library
+    // This is a placeholder that should be replaced with actual Datadog client
     const tracer = (global as any).tracer;
-    if (tracer) {
+    if (tracer && tracer.dogstatsd) {
+      // Use DogStatsD client if available
       const tagArray = tags
         ? Object.entries(tags).map(([k, v]) => `${k}:${v}`)
         : [];
-      
-      // Note: For full Datadog integration, you'd typically use dd-trace or dogstatsd
-      // This is a simplified version
+      tracer.dogstatsd.gauge(name, value, tagArray);
+    } else if (process.env.NODE_ENV === 'development') {
+      // Only log in development
+      const tagArray = tags
+        ? Object.entries(tags).map(([k, v]) => `${k}:${v}`)
+        : [];
       console.log(`[Datadog Metric] ${name}: ${value}`, tagArray);
     }
   } catch (error) {
