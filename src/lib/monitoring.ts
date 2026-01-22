@@ -5,6 +5,10 @@
 
 import prisma from './prisma';
 import { subHours, subDays, startOfDay } from 'date-fns';
+import * as os from 'os';
+import { execSync } from 'child_process';
+import { checkDatabaseConnection } from './database-health';
+import { sendEmailImmediate } from './email';
 
 export interface HealthMetric {
   type: string;
@@ -50,7 +54,7 @@ export async function recordHealthMetric(
       metricUnit: options?.unit,
       threshold: options?.threshold,
       status,
-      metadata: options?.metadata,
+      metadata: (options?.metadata || {}) as any, // TODO: Define proper metadata type
     },
   });
 
@@ -293,10 +297,37 @@ export async function checkAndTriggerAlerts(
         message,
       });
 
-      // TODO: Send notifications based on config
-      // if (config.notifyEmail) await sendAlertEmail(message);
-      // if (config.notifySlack) await sendSlackNotification(message);
-      // if (config.webhookUrl) await callWebhook(config.webhookUrl, trigger);
+      // Send notifications based on config
+      try {
+        if (config.notifyEmail) {
+          await sendAlertEmail(
+            { name: config.name, severity: config.severity },
+            message,
+            metricValue,
+            config.threshold
+          );
+        }
+        
+        if (config.notifySlack) {
+          await sendSlackNotification(
+            { name: config.name, severity: config.severity },
+            message
+          );
+        }
+        
+        if (config.webhookUrl) {
+          await sendWebhookNotification(config.webhookUrl, {
+            alertConfigId: config.id,
+            metricValue,
+            threshold: config.threshold,
+            severity: config.severity,
+            message,
+          });
+        }
+      } catch (notificationError) {
+        console.error('Failed to send alert notifications:', notificationError);
+        // Continue even if notifications fail
+      }
     }
   }
 
@@ -364,6 +395,136 @@ export async function resolveAlert(alertId: string) {
 }
 
 /**
+ * Send alert notification via email
+ */
+async function sendAlertEmail(
+  alertConfig: { name: string; severity: string },
+  message: string,
+  metricValue: number,
+  threshold: number
+): Promise<boolean> {
+  try {
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+    
+    if (adminEmails.length === 0) {
+      console.warn('No admin emails configured for alert notifications');
+      return false;
+    }
+    
+    const subject = `[${alertConfig.severity.toUpperCase()}] ${alertConfig.name}`;
+    const html = `
+      <h2>System Alert: ${alertConfig.name}</h2>
+      <p><strong>Severity:</strong> ${alertConfig.severity.toUpperCase()}</p>
+      <p><strong>Message:</strong> ${message}</p>
+      <p><strong>Metric Value:</strong> ${metricValue}</p>
+      <p><strong>Threshold:</strong> ${threshold}</p>
+      <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+      <hr/>
+      <p>Please investigate this issue in the monitoring dashboard.</p>
+      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/monitoring">View Monitoring Dashboard</a></p>
+    `;
+    
+    const sent = await sendEmailImmediate({
+      to: adminEmails[0], // Send to first admin (will be queued for all)
+      subject,
+      html,
+      from: process.env.EMAIL_FROM || 'alerts@yourdomain.com',
+    });
+    
+    return sent;
+  } catch (error) {
+    console.error('Failed to send alert email:', error);
+    return false;
+  }
+}
+
+/**
+ * Send alert notification via webhook
+ */
+async function sendWebhookNotification(
+  webhookUrl: string,
+  alertData: AlertTrigger
+): Promise<boolean> {
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Minalesh-Monitoring/1.0',
+      },
+      body: JSON.stringify({
+        type: 'alert',
+        severity: alertData.severity,
+        message: alertData.message,
+        metricValue: alertData.metricValue,
+        threshold: alertData.threshold,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send webhook notification:', error);
+    return false;
+  }
+}
+
+/**
+ * Send alert notification to Slack
+ */
+async function sendSlackNotification(
+  alertConfig: { name: string; severity: string },
+  message: string
+): Promise<boolean> {
+  try {
+    const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+    
+    if (!slackWebhookUrl) {
+      console.warn('No Slack webhook URL configured');
+      return false;
+    }
+    
+    // Determine color based on severity
+    const color = alertConfig.severity === 'critical' ? 'danger' 
+                : alertConfig.severity === 'warning' ? 'warning' 
+                : 'good';
+    
+    const response = await fetch(slackWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        attachments: [
+          {
+            color,
+            title: `🚨 ${alertConfig.name}`,
+            text: message,
+            fields: [
+              {
+                title: 'Severity',
+                value: alertConfig.severity.toUpperCase(),
+                short: true,
+              },
+              {
+                title: 'Time',
+                value: new Date().toISOString(),
+                short: true,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send Slack notification:', error);
+    return false;
+  }
+}
+
+/**
  * Get system health overview
  */
 export async function getSystemHealthOverview() {
@@ -419,6 +580,157 @@ export async function getSystemHealthOverview() {
 }
 
 /**
+ * Get system memory usage metrics
+ */
+export async function collectMemoryMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  
+  // Process memory usage
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
+  const heapTotalMB = memUsage.heapTotal / 1024 / 1024;
+  const rssMB = memUsage.rss / 1024 / 1024;
+  
+  metrics.push(await recordHealthMetric('memory_heap_used_mb', heapUsedMB, {
+    unit: 'MB',
+    threshold: 512,
+  }));
+  
+  metrics.push(await recordHealthMetric('memory_heap_total_mb', heapTotalMB, {
+    unit: 'MB',
+    threshold: 1024,
+  }));
+  
+  metrics.push(await recordHealthMetric('memory_rss_mb', rssMB, {
+    unit: 'MB',
+    threshold: 1024,
+  }));
+  
+  // System memory
+  const totalMemGB = os.totalmem() / 1024 / 1024 / 1024;
+  const freeMemGB = os.freemem() / 1024 / 1024 / 1024;
+  const usedMemPercent = ((totalMemGB - freeMemGB) / totalMemGB) * 100;
+  
+  metrics.push(await recordHealthMetric('system_memory_used_percent', usedMemPercent, {
+    unit: '%',
+    threshold: 85,
+  }));
+  
+  return metrics;
+}
+
+/**
+ * Get system disk usage metrics
+ * Note: This is a basic implementation. For production, consider using a library like 'diskusage'
+ */
+export async function collectDiskMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  
+  try {
+    // Basic disk usage check for Unix-like systems (PostgreSQL typically runs on Linux)
+    // Note: This uses shell commands and may not work on all platforms
+    // In production, consider using a cross-platform library like 'diskusage'
+    
+    try {
+      // Try to get disk usage for the root filesystem
+      // df -k outputs in KB, format: Filesystem 1K-blocks Used Available Use% Mounted
+      const dfOutput = execSync('df -k / | tail -1').toString();
+      const parts = dfOutput.split(/\s+/);
+      
+      if (parts.length >= 5) {
+        const usedPercent = parseInt(parts[4].replace('%', ''), 10);
+        
+        metrics.push(await recordHealthMetric('disk_usage_percent', usedPercent, {
+          unit: '%',
+          threshold: 85,
+        }));
+      }
+    } catch (err) {
+      // Fallback: just record that we couldn't check disk
+      // This is expected on non-Unix platforms
+      console.warn('Could not check disk usage (expected on non-Unix systems):', err);
+    }
+  } catch (error) {
+    console.error('Error collecting disk metrics:', error);
+  }
+  
+  return metrics;
+}
+
+/**
+ * Get database performance metrics
+ */
+export async function collectDatabaseMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  
+  // Check database connection and latency
+  const dbHealth = await checkDatabaseConnection();
+  
+  if (dbHealth.connected && dbHealth.latency) {
+    metrics.push(await recordHealthMetric('db_latency_ms', dbHealth.latency, {
+      unit: 'ms',
+      threshold: 100,
+    }));
+  }
+  
+  // Count active database queries (PostgreSQL-specific)
+  // Note: This query requires PostgreSQL and access to pg_stat_activity view
+  try {
+    const activeConnections = await prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) as count 
+      FROM pg_stat_activity 
+      WHERE state = 'active'
+    `;
+    
+    const count = Number(activeConnections[0]?.count ?? 0);
+    metrics.push(await recordHealthMetric('db_active_connections', count, {
+      threshold: 50,
+    }));
+  } catch (error) {
+    console.warn('Could not query database active connections (requires PostgreSQL):', error);
+  }
+  
+  return metrics;
+}
+
+/**
+ * Get queue depth metrics for all queues
+ */
+export async function collectQueueMetrics(): Promise<HealthMetric[]> {
+  const metrics: HealthMetric[] = [];
+  const now = new Date();
+  
+  // Email queue
+  const pendingEmails = await prisma.emailQueue.count({
+    where: { status: 'pending' },
+  });
+  metrics.push(await recordHealthMetric('email_queue_depth', pendingEmails, {
+    threshold: 100,
+  }));
+  
+  // Failed emails (last 24 hours)
+  const failedEmails = await prisma.emailQueue.count({
+    where: {
+      status: 'failed',
+      createdAt: { gte: subHours(now, 24) },
+    },
+  });
+  metrics.push(await recordHealthMetric('email_queue_failed_24h', failedEmails, {
+    threshold: 50,
+  }));
+  
+  // Webhook queue
+  const pendingWebhooks = await prisma.webhookEvent.count({
+    where: { status: 'pending' },
+  });
+  metrics.push(await recordHealthMetric('webhook_queue_depth', pendingWebhooks, {
+    threshold: 50,
+  }));
+  
+  return metrics;
+}
+
+/**
  * Collect and record application metrics
  * This should be called periodically (e.g., every minute) to track system health
  */
@@ -427,12 +739,15 @@ export async function collectApplicationMetrics() {
   const metrics: HealthMetric[] = [];
 
   try {
-    // API response time simulation (would use real metrics in production)
-    const apiLatency = Math.random() * 500 + 50; // 50-550ms
-    metrics.push(await recordHealthMetric('api_latency_ms', apiLatency, {
-      unit: 'ms',
-      threshold: 500,
-    }));
+    // Collect all metrics in parallel
+    const [memoryMetrics, diskMetrics, dbMetrics, queueMetrics] = await Promise.all([
+      collectMemoryMetrics(),
+      collectDiskMetrics(),
+      collectDatabaseMetrics(),
+      collectQueueMetrics(),
+    ]);
+    
+    metrics.push(...memoryMetrics, ...diskMetrics, ...dbMetrics, ...queueMetrics);
 
     // Error rate (based on recent webhook failures as proxy)
     const recentWebhooks = await prisma.webhookEvent.count({
@@ -448,20 +763,6 @@ export async function collectApplicationMetrics() {
     metrics.push(await recordHealthMetric('error_rate_percent', errorRate, {
       unit: '%',
       threshold: 5,
-    }));
-
-    // Queue depth (email queue)
-    const pendingEmails = await prisma.emailQueue.count({
-      where: { status: 'pending' },
-    });
-    metrics.push(await recordHealthMetric('email_queue_depth', pendingEmails, {
-      threshold: 100,
-    }));
-
-    // Database connections (simulated)
-    const dbConnections = Math.floor(Math.random() * 20) + 5;
-    metrics.push(await recordHealthMetric('db_connections', dbConnections, {
-      threshold: 50,
     }));
 
     // Check alerts for each metric
