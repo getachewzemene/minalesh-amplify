@@ -86,6 +86,28 @@ enum UserRole {
   admin
 }
 
+enum ContractStatus {
+  draft
+  pending_signature
+  active
+  expired
+  terminated
+  renewed
+}
+
+enum ContractType {
+  standard
+  premium
+  enterprise
+  custom
+}
+
+enum SignatureStatus {
+  pending
+  signed
+  rejected
+}
+
 // Models
 model User {
   id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -155,6 +177,7 @@ model Profile {
   sellerRatings    SellerRating[]
   disputes         Dispute[]
   productShares    ProductShare[]
+  vendorContracts  VendorContract[]
 
   @@map("profiles")
 }
@@ -1807,4 +1830,110 @@ model SecurityEvent {
   @@index([createdAt])
   @@index([resolved])
   @@map("security_events")
+}
+
+// ============================================
+// Vendor Contract Management
+// ============================================
+
+// Contract Templates - Reusable contract templates by vendor type
+model ContractTemplate {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  contractType    ContractType @map("contract_type")
+  version         String       @default("1.0")
+  content         String       @db.Text // HTML/Markdown content of the contract
+  variables       Json?        // Variables that can be replaced in the template
+  isActive        Boolean      @default(true) @map("is_active")
+  createdBy       String?      @map("created_by") @db.Uuid // Admin who created it
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  contracts       VendorContract[]
+
+  @@index([contractType])
+  @@index([isActive])
+  @@map("contract_templates")
+}
+
+// Vendor Contracts - Main contract records
+model VendorContract {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId              String         @map("vendor_id") @db.Uuid
+  templateId            String?        @map("template_id") @db.Uuid
+  contractNumber        String         @unique @map("contract_number") // Auto-generated contract number
+  contractType          ContractType   @map("contract_type")
+  status                ContractStatus @default(draft)
+  version               Int            @default(1)
+  parentContractId      String?        @map("parent_contract_id") @db.Uuid // For versioning - links to previous version
+  
+  // Contract details
+  title                 String
+  content               String         @db.Text // Final contract content
+  
+  // Terms
+  startDate             DateTime       @map("start_date")
+  endDate               DateTime       @map("end_date")
+  autoRenew             Boolean        @default(false) @map("auto_renew")
+  renewalPeriodMonths   Int?           @map("renewal_period_months") // e.g., 12 for annual renewal
+  
+  // Commission and payment terms
+  commissionRate        Decimal        @default(0.15) @map("commission_rate") @db.Decimal(5, 4)
+  paymentTerms          String?        @map("payment_terms") @db.Text
+  
+  // Document storage
+  documentUrl           String?        @map("document_url") // S3 URL for signed PDF
+  
+  // Termination
+  terminationDate       DateTime?      @map("termination_date")
+  terminationReason     String?        @map("termination_reason") @db.Text
+  terminatedBy          String?        @map("terminated_by") @db.Uuid
+  
+  // Timestamps
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  signedAt              DateTime?      @map("signed_at")
+  
+  // Relations
+  vendor                Profile        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  template              ContractTemplate? @relation(fields: [templateId], references: [id])
+  parentContract        VendorContract?   @relation("ContractVersions", fields: [parentContractId], references: [id])
+  childContracts        VendorContract[]  @relation("ContractVersions")
+  signatures            ContractSignature[]
+
+  @@index([vendorId])
+  @@index([status])
+  @@index([contractType])
+  @@index([endDate])
+  @@index([parentContractId])
+  @@map("vendor_contracts")
+}
+
+// Contract Signatures - E-signature records
+model ContractSignature {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contractId        String          @map("contract_id") @db.Uuid
+  signerId          String          @map("signer_id") @db.Uuid // User who signed
+  signerRole        String          @map("signer_role") // 'vendor' or 'admin'
+  status            SignatureStatus @default(pending)
+  
+  // Signature details
+  signatureData     String?         @map("signature_data") @db.Text // Base64 encoded signature image or text
+  ipAddress         String?         @map("ip_address")
+  userAgent         String?         @map("user_agent")
+  
+  // Rejection details (if applicable)
+  rejectionReason   String?         @map("rejection_reason") @db.Text
+  
+  // Timestamps
+  signedAt          DateTime?       @map("signed_at")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  contract          VendorContract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+  @@index([signerId])
+  @@index([status])
+  @@map("contract_signatures")
 }
