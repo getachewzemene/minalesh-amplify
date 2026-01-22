@@ -160,7 +160,7 @@ async function signContractHandler(
     const vendorSignature = contract.signatures.find(s => s.signerRole === 'vendor');
     const adminSignature = contract.signatures.find(s => s.signerRole === 'admin');
 
-    let newStatus = contract.status;
+    let newStatus: any = contract.status;
     let signedAt = contract.signedAt;
 
     if (accept) {

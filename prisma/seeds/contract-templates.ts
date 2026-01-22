@@ -4,14 +4,14 @@
  * Run with: npx tsx prisma/seeds/contract-templates.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ContractType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const templates = [
   {
     name: 'Standard Vendor Agreement',
-    contractType: 'standard',
+    contractType: 'standard' as ContractType,
     version: '1.0',
     content: `
 <h1>VENDOR AGREEMENT</h1>
@@ -84,7 +84,7 @@ const templates = [
   },
   {
     name: 'Premium Vendor Agreement',
-    contractType: 'premium',
+    contractType: 'premium' as ContractType,
     version: '1.0',
     content: `
 <h1>PREMIUM VENDOR AGREEMENT</h1>
@@ -172,7 +172,7 @@ const templates = [
   },
   {
     name: 'Enterprise Vendor Agreement',
-    contractType: 'enterprise',
+    contractType: 'enterprise' as ContractType,
     version: '1.0',
     content: `
 <h1>ENTERPRISE VENDOR AGREEMENT</h1>

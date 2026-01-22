@@ -159,7 +159,7 @@ export async function GET(request: Request) {
       success: true,
       processed: contractsDueForRenewal.length,
       renewed: renewedContracts.length,
-      errors: errors.length,
+      errorCount: errors.length,
       renewedContracts,
       errors: errors.length > 0 ? errors : undefined,
       timestamp: new Date().toISOString(),
