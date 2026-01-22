@@ -136,9 +136,13 @@ export async function suggestContractType(vendorId: string): Promise<ContractTyp
  * Validate contract dates
  */
 export function validateContractDates(startDate: Date, endDate: Date): { valid: boolean; error?: string } {
-  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of day
   
-  if (startDate < now) {
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  
+  if (start < today) {
     return { valid: false, error: 'Start date cannot be in the past' };
   }
   

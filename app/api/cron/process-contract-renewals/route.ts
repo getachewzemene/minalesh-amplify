@@ -57,6 +57,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             displayName: true,
+            userId: true,
             user: {
               select: {
                 email: true,
@@ -129,7 +130,7 @@ export async function GET(request: Request) {
         await prisma.contractSignature.create({
           data: {
             contractId: renewedContract.id,
-            signerId: contract.vendorId,
+            signerId: contract.vendor.userId,
             signerRole: 'vendor',
             status: 'pending',
           },

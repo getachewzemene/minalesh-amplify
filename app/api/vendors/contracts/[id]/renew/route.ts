@@ -77,6 +77,13 @@ async function renewContractHandler(
     // Get the contract to renew
     const currentContract = await prisma.vendorContract.findUnique({
       where: { id },
+      include: {
+        vendor: {
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!currentContract) {
@@ -153,7 +160,7 @@ async function renewContractHandler(
       prisma.contractSignature.create({
         data: {
           contractId: renewedContract.id,
-          signerId: currentContract.vendorId,
+          signerId: currentContract.vendor.userId,
           signerRole: 'vendor',
           status: 'pending',
         },
