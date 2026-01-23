@@ -25,6 +25,14 @@
       "schedule": "0 8 * * *"
     },
     {
+      "path": "/api/cron/process-premium-renewals",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/subscription-renewal-reminders",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/cron/send-abandoned-cart-emails",
       "schedule": "0 * * * *"
     },
