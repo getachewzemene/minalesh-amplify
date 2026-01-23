@@ -44,13 +44,21 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     if (!isAuthenticated || productIds.length === 0) return
 
     try {
-      await fetch('/api/products/compare', {
+      const response = await fetch('/api/products/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productIds }),
       })
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Failed to sync comparison to server:', error)
+        // Don't show error to user as this is a background sync
+        // The local version will still work
+      }
     } catch (error) {
       console.error('Error syncing to server:', error)
+      // Silent fail - localStorage will continue to work
     }
   }, [isAuthenticated])
 
@@ -101,26 +109,36 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
             // Get the most recent comparison
             const latestComparison = data.comparisons[0]
             if (latestComparison.productIds && latestComparison.productIds.length > 0) {
-              // Fetch product details
+              // Fetch product details with error handling for each product
               const productDetailsPromises = latestComparison.productIds.map((id: string) =>
-                fetch(`/api/products/${id}`).then(r => r.json()).then(d => d.product)
+                fetch(`/api/products/${id}`)
+                  .then(r => r.ok ? r.json() : null)
+                  .then(d => d?.product || null)
+                  .catch(() => null) // Gracefully handle individual product fetch failures
               )
               const products = await Promise.all(productDetailsPromises)
               
-              // Transform to ComparisonProduct format
+              // Transform to ComparisonProduct format, filtering out failed fetches
               const comparisonProducts: ComparisonProduct[] = products
                 .filter(Boolean)
-                .map(p => ({
-                  id: p.id,
-                  name: p.name,
-                  price: parseFloat(String(p.price)),
-                  salePrice: p.salePrice ? parseFloat(String(p.salePrice)) : null,
-                  image: Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? JSON.parse(p.images)[0] : '/placeholder-product.jpg'),
-                  category: p.category?.name,
-                  brand: p.brand,
-                  ratingAverage: parseFloat(String(p.ratingAverage || 0)),
-                  stockQuantity: p.stockQuantity,
-                }))
+                .map(p => {
+                  try {
+                    return {
+                      id: p.id,
+                      name: p.name,
+                      price: parseFloat(String(p.price)),
+                      salePrice: p.salePrice ? parseFloat(String(p.salePrice)) : null,
+                      image: Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? JSON.parse(p.images)[0] : '/placeholder-product.jpg'),
+                      category: p.category?.name,
+                      brand: p.brand,
+                      ratingAverage: parseFloat(String(p.ratingAverage || 0)),
+                      stockQuantity: p.stockQuantity,
+                    }
+                  } catch {
+                    return null
+                  }
+                })
+                .filter(Boolean) as ComparisonProduct[]
               
               if (comparisonProducts.length > 0) {
                 setCompareProducts(comparisonProducts)
@@ -149,7 +167,7 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     if (mounted && typeof window !== 'undefined') {
       if (compareProducts.length > 0) {
         localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(compareProducts))
-        // Sync to server if authenticated
+        // Sync to server if authenticated (but not during initial sync)
         if (isAuthenticated && !isSyncing) {
           syncToServer(compareProducts.map(p => p.id))
         }
@@ -157,7 +175,7 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
         localStorage.removeItem(STORAGE_KEYS.COMPARE_PRODUCTS)
       }
     }
-  }, [compareProducts, mounted, isAuthenticated])
+  }, [compareProducts, mounted, isAuthenticated, isSyncing, syncToServer])
 
   const canAddMore = compareProducts.length < PRODUCT_LIMITS.MAX_COMPARISON
 

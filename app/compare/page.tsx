@@ -100,9 +100,13 @@ function getCategorySpecificGroups(categoryName: string | undefined): Record<str
     },
   }
   
-  // Find matching category group
+  // Find matching category group with exact word matching
   for (const [key, groups] of Object.entries(categoryGroups)) {
-    if (categoryLower.includes(key) || key.includes(categoryLower)) {
+    // Use word boundary for better matching
+    const keyPattern = new RegExp(`\\b${key}\\b`, 'i')
+    const categoryPattern = new RegExp(`\\b${categoryLower}\\b`, 'i')
+    
+    if (keyPattern.test(categoryLower) || categoryPattern.test(key)) {
       return groups
     }
   }
@@ -266,11 +270,19 @@ export default function ComparePage() {
   const ungroupedSpecs: string[] = []
   
   if (hasGroups) {
+    // Pre-compute lowercase versions for optimization
+    const lowercasedGroups = Object.entries(categoryGroups).map(([groupName, groupKeys]) => ({
+      groupName,
+      lowercasedKeys: groupKeys.map(gk => gk.toLowerCase())
+    }))
+    
     // Assign specs to groups
     allSpecKeys.forEach(key => {
+      const keyLower = key.toLowerCase()
       let assigned = false
-      for (const [groupName, groupKeys] of Object.entries(categoryGroups)) {
-        if (groupKeys.some(gk => key.toLowerCase().includes(gk.toLowerCase()) || gk.toLowerCase().includes(key.toLowerCase()))) {
+      
+      for (const { groupName, lowercasedKeys } of lowercasedGroups) {
+        if (lowercasedKeys.some(gk => keyLower.includes(gk) || gk.includes(keyLower))) {
           if (!organizedSpecs[groupName]) {
             organizedSpecs[groupName] = []
           }
