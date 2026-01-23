@@ -43,7 +43,7 @@ export async function findNearestWarehouse(
     city?: string;
     includeInactive?: boolean;
   } = {}
-): Promise<any | null> {
+): Promise<(typeof prisma.warehouse extends { findMany: (...args: any[]) => Promise<infer T extends Array<any>> } ? T[number] : never) & { distance: number } | null> {
   const where: any = {
     isActive: options.includeInactive ? undefined : true,
   };
@@ -76,7 +76,7 @@ export async function findNearestWarehouse(
 /**
  * Get primary warehouse (default fallback)
  */
-export async function getPrimaryWarehouse(): Promise<any | null> {
+export async function getPrimaryWarehouse() {
   return await prisma.warehouse.findFirst({
     where: { isPrimary: true, isActive: true },
   });
@@ -92,7 +92,7 @@ export async function selectWarehouseForOrder(
     preferredCity?: string;
     requiredCapacity?: number;
   } = {}
-): Promise<any | null> {
+) {
   // Try to find in preferred city first
   if (options.preferredCity) {
     const cityWarehouse = await findNearestWarehouse(deliveryLocation, {
@@ -151,7 +151,17 @@ export function estimateDeliveryTime(
 
 /**
  * Get traffic level for a route
- * This is a placeholder - in production, integrate with Google Maps or Mapbox traffic API
+ * 
+ * TODO: Integrate with real traffic API
+ * Environment variables needed:
+ * - GOOGLE_MAPS_API_KEY for Google Maps Directions API
+ *   Endpoint: https://maps.googleapis.com/maps/api/directions/json
+ * - MAPBOX_ACCESS_TOKEN for Mapbox Directions API
+ *   Endpoint: https://api.mapbox.com/directions/v5/mapbox/driving-traffic
+ * - HERE_API_KEY for HERE Traffic API
+ *   Endpoint: https://route.ls.hereapi.com/routing/7.2/calculateroute.json
+ * 
+ * For now, returns mock data based on time of day
  */
 export async function getTrafficLevel(
   origin: Location,

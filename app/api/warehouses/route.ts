@@ -98,6 +98,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate coordinate ranges
+    if (latitude < -90 || latitude > 90) {
+      return NextResponse.json(
+        { success: false, error: 'Latitude must be between -90 and 90' },
+        { status: 400 }
+      );
+    }
+
+    if (longitude < -180 || longitude > 180) {
+      return NextResponse.json(
+        { success: false, error: 'Longitude must be between -180 and 180' },
+        { status: 400 }
+      );
+    }
+
     // Check if code already exists
     const existing = await prisma.warehouse.findUnique({
       where: { code },

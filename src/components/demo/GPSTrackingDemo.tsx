@@ -88,7 +88,7 @@ export default function GPSTrackingDemo() {
         </button>
         <select
           value={theme}
-          onChange={(e) => setTheme(e.target.value as any)}
+          onChange={(e) => setTheme(e.target.value as 'default' | 'dark' | 'satellite')}
           className="px-3 py-2 border rounded-md"
         >
           <option value="default">Default Theme</option>

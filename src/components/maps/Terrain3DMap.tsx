@@ -22,7 +22,7 @@ interface Terrain3DMapProps {
   mapStyle?: 'streets' | 'satellite' | 'outdoors' | 'dark' | 'light';
 }
 
-const DEFAULT_DEMO_TOKEN = 'pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJja2x2dDd2dncwMGFtMm5xczN5bTJpMjU3In0.example'; // Demo token
+const DEFAULT_DEMO_TOKEN = 'DEMO_TOKEN_PLACEHOLDER_GET_YOUR_TOKEN_AT_MAPBOX_DOT_COM'; // Placeholder - not a real token
 
 export default function Terrain3DMap({
   warehouse,
@@ -59,7 +59,7 @@ export default function Terrain3DMap({
     // Note: For production, you need a valid Mapbox access token
     // Get one free at: https://account.mapbox.com/access-tokens/
     if (token === DEFAULT_DEMO_TOKEN) {
-      setError('Mapbox token not configured. Using fallback 2D view.');
+      setError('Mapbox token not configured. Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN environment variable.');
       return;
     }
 
