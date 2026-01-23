@@ -32,6 +32,14 @@ export default function Cart() {
   const [usePoints, setUsePoints] = useState(false);
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
+  
+  // Gift card state
+  const [giftCardCode, setGiftCardCode] = useState('');
+  const [giftCardBalance, setGiftCardBalance] = useState(0);
+  const [giftCardAmount, setGiftCardAmount] = useState(0);
+  const [giftCardApplied, setGiftCardApplied] = useState(false);
+  const [giftCardError, setGiftCardError] = useState('');
+  const [checkingGiftCard, setCheckingGiftCard] = useState(false);
 
   // Fetch loyalty account when user is logged in
   useEffect(() => {
@@ -65,7 +73,10 @@ export default function Cart() {
     }
   }, [usePoints, pointsToRedeem, total]);
 
-  const finalTotal = Math.max(0, total - loyaltyDiscount);
+  // Calculate gift card discount (can't exceed remaining total after loyalty discount)
+  const afterLoyaltyTotal = Math.max(0, total - loyaltyDiscount);
+  const giftCardDiscount = Math.min(giftCardAmount, afterLoyaltyTotal);
+  const finalTotal = Math.max(0, afterLoyaltyTotal - giftCardDiscount);
 
   const handleBuy = async (e: FormEvent) => {
     e.preventDefault();
@@ -87,6 +98,8 @@ export default function Cart() {
         shippingAddress: null,
         billingAddress: null,
         loyaltyPointsToRedeem: usePoints ? pointsToRedeem : undefined,
+        giftCardCode: giftCardApplied ? giftCardCode : undefined,
+        giftCardAmount: giftCardApplied ? giftCardAmount : undefined,
       };
       const token = localStorage.getItem('auth_token');
       const res = await fetch('/api/orders', {
@@ -110,6 +123,73 @@ export default function Cart() {
       console.error('Checkout error', err);
       toast.error('Checkout failed');
     }
+  };
+
+  const handleApplyGiftCard = async () => {
+    if (!giftCardCode.trim()) {
+      setGiftCardError('Please enter a gift card code');
+      return;
+    }
+
+    setCheckingGiftCard(true);
+    setGiftCardError('');
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`/api/gift-cards/balance?code=${encodeURIComponent(giftCardCode)}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setGiftCardError(data.error || 'Invalid gift card code');
+        setGiftCardApplied(false);
+        setGiftCardBalance(0);
+        setGiftCardAmount(0);
+        return;
+      }
+
+      if (data.balance <= 0) {
+        setGiftCardError('This gift card has no remaining balance');
+        setGiftCardApplied(false);
+        setGiftCardBalance(0);
+        setGiftCardAmount(0);
+        return;
+      }
+
+      if (data.isExpired) {
+        setGiftCardError('This gift card has expired');
+        setGiftCardApplied(false);
+        setGiftCardBalance(0);
+        setGiftCardAmount(0);
+        return;
+      }
+
+      // Calculate how much of the gift card to use
+      const remainingTotal = Math.max(0, total - loyaltyDiscount);
+      const amountToUse = Math.min(data.balance, remainingTotal);
+
+      setGiftCardBalance(data.balance);
+      setGiftCardAmount(amountToUse);
+      setGiftCardApplied(true);
+      toast.success(`Gift card applied! ${formatCurrency(amountToUse)} discount`);
+    } catch (error) {
+      console.error('Error checking gift card:', error);
+      setGiftCardError('Failed to verify gift card');
+      setGiftCardApplied(false);
+    } finally {
+      setCheckingGiftCard(false);
+    }
+  };
+
+  const handleRemoveGiftCard = () => {
+    setGiftCardCode('');
+    setGiftCardBalance(0);
+    setGiftCardAmount(0);
+    setGiftCardApplied(false);
+    setGiftCardError('');
+    toast.info('Gift card removed');
   };
 
   return (
@@ -175,11 +255,79 @@ export default function Cart() {
                     <p className="text-sm">-{formatCurrency(loyaltyDiscount)}</p>
                   </div>
                 )}
+                {giftCardDiscount > 0 && (
+                  <div className="flex items-center justify-between text-blue-600">
+                    <p className="text-sm">Gift Card Discount</p>
+                    <p className="text-sm">-{formatCurrency(giftCardDiscount)}</p>
+                  </div>
+                )}
                 <div className="flex items-center justify-between pt-2 border-t">
                   <p className="font-semibold">Total</p>
                   <p className="font-bold text-primary">{formatCurrency(finalTotal)}</p>
                 </div>
               </div>
+
+              {/* Gift Card Redemption */}
+              {user && (
+                <div className="p-4 border rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Gift className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">Have a Gift Card?</h3>
+                  </div>
+                  {!giftCardApplied ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Enter your gift card code to apply it to this order
+                      </p>
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <Input
+                            type="text"
+                            placeholder="XXXX-XXXX-XXXX-XXXX"
+                            value={giftCardCode}
+                            onChange={(e) => {
+                              setGiftCardCode(e.target.value.toUpperCase());
+                              setGiftCardError('');
+                            }}
+                            className={giftCardError ? 'border-red-500' : ''}
+                            disabled={checkingGiftCard}
+                          />
+                          {giftCardError && (
+                            <p className="text-xs text-red-600 mt-1">{giftCardError}</p>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={handleApplyGiftCard}
+                          disabled={checkingGiftCard || !giftCardCode.trim()}
+                        >
+                          {checkingGiftCard ? 'Checking...' : 'Apply'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-white rounded border border-blue-200">
+                        <div>
+                          <p className="text-sm font-medium">Gift Card Applied</p>
+                          <p className="text-xs text-muted-foreground">Code: {giftCardCode}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Using: {formatCurrency(giftCardAmount)} of {formatCurrency(giftCardBalance)} available
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveGiftCard}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Loyalty Points Redemption */}
               {user && loyaltyPoints > 0 && (

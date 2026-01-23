@@ -38,6 +38,8 @@ export interface CreateOrderRequest {
     country?: string;
   };
   loyaltyPointsToRedeem?: number;
+  giftCardCode?: string;
+  giftCardAmount?: number;
 }
 
 export interface OrderItem {
@@ -82,7 +84,7 @@ export async function getUserOrders(userId: string) {
  * Create a new order from cart items
  */
 export async function createOrder(request: CreateOrderRequest): Promise<CreateOrderResult> {
-  const { userId, items, paymentMethod, paymentMeta, shippingAddress, billingAddress, loyaltyPointsToRedeem } = request;
+  const { userId, items, paymentMethod, paymentMeta, shippingAddress, billingAddress, loyaltyPointsToRedeem, giftCardCode, giftCardAmount } = request;
 
   try {
     // Validate TeleBirr specific requirements
@@ -171,8 +173,63 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
       }
     }
 
+    // Handle gift card redemption
+    let giftCardDiscount = 0;
+    let giftCard: any = null;
+    if (giftCardCode && giftCardAmount && giftCardAmount > 0) {
+      try {
+        // Fetch and validate gift card
+        giftCard = await prisma.giftCard.findUnique({
+          where: { code: giftCardCode }
+        });
+
+        if (!giftCard) {
+          return {
+            success: false,
+            error: 'Invalid gift card code'
+          };
+        }
+
+        if (giftCard.balance < giftCardAmount) {
+          return {
+            success: false,
+            error: 'Insufficient gift card balance'
+          };
+        }
+
+        if (giftCard.status !== 'active') {
+          return {
+            success: false,
+            error: 'Gift card is not active'
+          };
+        }
+
+        if (new Date(giftCard.expiresAt) < new Date()) {
+          return {
+            success: false,
+            error: 'Gift card has expired'
+          };
+        }
+
+        // Check if user is authorized to use this gift card
+        if (giftCard.recipientId && giftCard.recipientId !== userId) {
+          return {
+            success: false,
+            error: 'You are not authorized to use this gift card'
+          };
+        }
+
+        giftCardDiscount = giftCardAmount;
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to validate gift card'
+        };
+      }
+    }
+
     const orderNumber = `MIN-${Date.now()}`;
-    const totalAmount = Math.max(0, subtotal - loyaltyDiscount);
+    const totalAmount = Math.max(0, subtotal - loyaltyDiscount - giftCardDiscount);
 
     // Atomic transaction: decrement stock and create order
     try {
@@ -199,7 +256,7 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
             subtotal: subtotal.toFixed(2),
             shippingAmount: '0.00',
             taxAmount: '0.00',
-            discountAmount: loyaltyDiscount.toFixed(2),
+            discountAmount: (loyaltyDiscount + giftCardDiscount).toFixed(2),
             totalAmount: totalAmount.toFixed(2),
             currency: 'ETB',
             shippingAddress: shippingAddress || undefined,
@@ -219,6 +276,29 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
           },
           include: { orderItems: true }
         });
+
+        // Redeem gift card if applicable
+        if (giftCard && giftCardDiscount > 0) {
+          const newBalance = Number(giftCard.balance) - giftCardDiscount;
+          await tx.giftCard.update({
+            where: { id: giftCard.id },
+            data: {
+              balance: newBalance,
+              status: newBalance <= 0 ? 'redeemed' : 'active',
+              redeemedAt: newBalance <= 0 ? new Date() : undefined,
+            }
+          });
+
+          // Create gift card transaction
+          await tx.giftCardTransaction.create({
+            data: {
+              cardId: giftCard.id,
+              orderId: createdOrder.id,
+              amount: giftCardDiscount,
+              type: 'redeem',
+            }
+          });
+        }
 
         return createdOrder;
       });
