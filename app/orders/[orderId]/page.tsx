@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import Link from 'next/link'
+
+// Dynamic import for Leaflet map (client-side only)
+const DeliveryTrackingMap = dynamic(
+  () => import('@/components/maps/DeliveryTrackingMap'),
+  { ssr: false, loading: () => <div className="h-[350px] flex items-center justify-center">Loading map...</div> }
+);
 
 interface OrderItem {
   id: string
@@ -326,6 +333,35 @@ export default function OrderDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Order Tracking Timeline */}
           <OrderTrackingTimeline orderId={orderId} />
+
+          {/* Delivery Tracking Map */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Delivery Tracking Map
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DeliveryTrackingMap
+                destination={{
+                  city: order.shippingAddress.city,
+                  fullAddress: `${order.shippingAddress.addressLine1}${order.shippingAddress.addressLine2 ? ', ' + order.shippingAddress.addressLine2 : ''}`,
+                }}
+                status={order.status as any}
+                height="350px"
+              />
+              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>
+                  Tracking your order to {order.shippingAddress.city}
+                  {order.status === 'delivered' && ' - Delivered!'}
+                  {order.status === 'shipped' && ' - In Transit'}
+                  {['pending', 'confirmed', 'processing'].includes(order.status) && ' - Preparing for Shipment'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Order Items */}
           <Card>
