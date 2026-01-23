@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Container } from "@/components/ui/container";
@@ -10,6 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+
+// Dynamic import for Leaflet map (client-side only)
+const GeographicHeatmap = dynamic(
+  () => import('@/components/maps/GeographicHeatmap'),
+  { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center">Loading map...</div> }
+);
 import {
   ChartContainer,
   ChartTooltip,
@@ -592,11 +599,12 @@ export default function AdvancedAnalyticsDashboard() {
 
             {/* Geographic Distribution Tab */}
             <TabsContent value="geographic" className="space-y-4">
+              {/* Heatmap Card */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Geographic Distribution</CardTitle>
-                    <CardDescription>Sales by region/city</CardDescription>
+                    <CardTitle>Interactive Heatmap</CardTitle>
+                    <CardDescription>Visual representation of sales distribution across Ethiopia</CardDescription>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -618,6 +626,32 @@ export default function AdvancedAnalyticsDashboard() {
                       PDF
                     </Button>
                   </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="h-[400px] flex items-center justify-center">
+                      <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <GeographicHeatmap 
+                      data={regionalData.map(r => ({
+                        city: r.region,
+                        lat: 0,
+                        lng: 0,
+                        orders: r.orders,
+                        revenue: r.revenue,
+                      }))}
+                      height="400px"
+                    />
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Pie Chart Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Distribution Chart</CardTitle>
+                  <CardDescription>Sales breakdown by region/city</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
