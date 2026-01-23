@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 
 // Maximum number of view history items to return from API
+// This is higher than the frontend limit (PRODUCT_LIMITS.MAX_RECENTLY_VIEWED = 20)
+// to allow for future pagination or different display limits
 const MAX_VIEW_HISTORY_ITEMS = 50;
 
 /**
@@ -211,12 +213,16 @@ export async function DELETE(request: Request) {
     const productId = searchParams.get('productId');
 
     if (productId) {
-      // Delete specific entry
-      await prisma.viewHistory.deleteMany({
+      // Delete specific entry using unique constraint
+      await prisma.viewHistory.delete({
         where: {
-          userId: payload.userId,
-          productId,
+          userId_productId: {
+            userId: payload.userId,
+            productId,
+          },
         },
+      }).catch(() => {
+        // Ignore error if entry doesn't exist
       });
 
       return NextResponse.json({

@@ -112,7 +112,8 @@ export function RecentlyViewedProducts() {
       window.removeEventListener('recently-viewed-updated', handleStorageChange)
       window.removeEventListener('browsing-history-preference-changed', handlePreferenceChange)
     }
-  }, [user, loadRecentlyViewed])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   const loadFromLocalStorage = useCallback(() => {
     try {
@@ -242,7 +243,7 @@ export function RecentlyViewedProducts() {
             Recently Viewed Products
           </CardTitle>
           <CardDescription className="mt-1">
-            Your browsing history (last {products.length} products)
+            {isLoading ? 'Loading...' : `Your browsing history (last ${products.length} products)`}
           </CardDescription>
         </div>
         <Button 
