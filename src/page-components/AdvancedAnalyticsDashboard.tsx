@@ -120,113 +120,136 @@ export default function AdvancedAnalyticsDashboard() {
   const [productData, setProductData] = useState<ProductData[]>([]);
   const [regionalData, setRegionalData] = useState<RegionalData[]>([]);
 
-  // Fetch analytics data
-  const fetchAnalytics = async (showRefreshing = false) => {
-    if (showRefreshing) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      // Fetch all analytics data in parallel
-      const [salesRes, conversionRes, productsRes, regionalRes] = await Promise.all([
-        fetch(`/api/analytics/sales?days=${timeRange}`),
-        fetch(`/api/analytics/conversion-funnel?days=${timeRange}`),
-        fetch(`/api/analytics/products?days=${timeRange}`),
-        fetch(`/api/analytics/regional?days=${timeRange}`),
-      ]);
-
-      if (!salesRes.ok || !conversionRes.ok || !productsRes.ok || !regionalRes.ok) {
-        throw new Error('Failed to fetch analytics data');
-      }
-
-      const [salesResult, conversionResult, productsResult, regionalResult] = await Promise.all([
-        salesRes.json(),
-        conversionRes.json(),
-        productsRes.json(),
-        regionalRes.json(),
-      ]);
-
-      // Process sales data
-      if (salesResult.success && salesResult.data) {
-        const dailyData = salesResult.data.daily || [];
-        setSalesData(
-          dailyData.map((d: any) => ({
-            date: d.date,
-            revenue: Number(d.revenue) || 0,
-            orders: d.orderCount || 0,
-          }))
-        );
-
-        // Calculate overview metrics
-        const totalRevenue = dailyData.reduce((sum: number, d: any) => sum + Number(d.revenue || 0), 0);
-        const totalOrders = dailyData.reduce((sum: number, d: any) => sum + (d.orderCount || 0), 0);
-        setOverviewMetrics({
-          totalRevenue,
-          totalOrders,
-          averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
-          conversionRate: 0,
-          revenueChange: 12.5,
-          ordersChange: 8.3,
-        });
-      }
-
-      // Process conversion funnel data
-      if (conversionResult.success && conversionResult.funnel) {
-        setConversionData(conversionResult.funnel);
-        
-        // Update conversion rate in overview
-        if (conversionResult.funnel.length > 0) {
-          const firstStage = conversionResult.funnel[0];
-          const lastStage = conversionResult.funnel[conversionResult.funnel.length - 1];
-          const rate = firstStage.value > 0 ? (lastStage.value / firstStage.value) * 100 : 0;
-          setOverviewMetrics(prev => prev ? { ...prev, conversionRate: rate } : null);
-        }
-      }
-
-      // Process product data
-      if (productsResult.success && productsResult.topProducts) {
-        setProductData(
-          productsResult.topProducts.slice(0, 5).map((p: any) => ({
-            name: p.name || 'Unknown',
-            sales: p.sales || 0,
-            revenue: Number(p.revenue) || 0,
-          }))
-        );
-      }
-
-      // Process regional data
-      if (regionalResult.success && regionalResult.regions) {
-        setRegionalData(
-          regionalResult.regions.slice(0, 6).map((r: any) => ({
-            region: r.city || 'Unknown',
-            orders: r.orderCount || 0,
-            revenue: Number(r.revenue) || 0,
-          }))
-        );
-      }
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch analytics data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setRefreshing(true);
   };
 
   // Auto-refresh every 30 seconds (real-time updates)
   useEffect(() => {
-    fetchAnalytics();
+    const loadData = async () => {
+      if (refreshing) return;
+      
+      try {
+        const [salesRes, conversionRes, productsRes, regionalRes] = await Promise.all([
+          fetch(`/api/analytics/sales?days=${timeRange}`),
+          fetch(`/api/analytics/conversion-funnel?days=${timeRange}`),
+          fetch(`/api/analytics/products?days=${timeRange}`),
+          fetch(`/api/analytics/regional?days=${timeRange}`),
+        ]);
+
+        if (!salesRes.ok || !conversionRes.ok || !productsRes.ok || !regionalRes.ok) {
+          throw new Error('Failed to fetch analytics data');
+        }
+
+        const [salesResult, conversionResult, productsResult, regionalResult] = await Promise.all([
+          salesRes.json(),
+          conversionRes.json(),
+          productsRes.json(),
+          regionalRes.json(),
+        ]);
+
+        // Process sales data
+        if (salesResult.success && salesResult.data) {
+          const dailyData = salesResult.data.daily || [];
+          setSalesData(
+            dailyData.map((d: any) => ({
+              date: d.date,
+              revenue: Number(d.revenue) || 0,
+              orders: d.orderCount || 0,
+            }))
+          );
+
+          // Calculate overview metrics and trends
+          const totalRevenue = dailyData.reduce((sum: number, d: any) => sum + Number(d.revenue || 0), 0);
+          const totalOrders = dailyData.reduce((sum: number, d: any) => sum + (d.orderCount || 0), 0);
+          
+          // Calculate period-over-period changes
+          const midpoint = Math.floor(dailyData.length / 2);
+          const firstHalf = dailyData.slice(0, midpoint);
+          const secondHalf = dailyData.slice(midpoint);
+          
+          const firstHalfRevenue = firstHalf.reduce((sum: number, d: any) => sum + Number(d.revenue || 0), 0);
+          const secondHalfRevenue = secondHalf.reduce((sum: number, d: any) => sum + Number(d.revenue || 0), 0);
+          const firstHalfOrders = firstHalf.reduce((sum: number, d: any) => sum + (d.orderCount || 0), 0);
+          const secondHalfOrders = secondHalf.reduce((sum: number, d: any) => sum + (d.orderCount || 0), 0);
+          
+          const revenueChange = firstHalfRevenue > 0 
+            ? ((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100 
+            : 0;
+          const ordersChange = firstHalfOrders > 0 
+            ? ((secondHalfOrders - firstHalfOrders) / firstHalfOrders) * 100 
+            : 0;
+
+          setOverviewMetrics({
+            totalRevenue,
+            totalOrders,
+            averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+            conversionRate: 0,
+            revenueChange,
+            ordersChange,
+          });
+        }
+
+        // Process conversion funnel data
+        if (conversionResult.success && conversionResult.funnel) {
+          setConversionData(conversionResult.funnel);
+          
+          // Update conversion rate in overview
+          if (conversionResult.funnel.length > 0) {
+            const firstStage = conversionResult.funnel[0];
+            const lastStage = conversionResult.funnel[conversionResult.funnel.length - 1];
+            const rate = firstStage.value > 0 ? (lastStage.value / firstStage.value) * 100 : 0;
+            setOverviewMetrics(prev => prev ? { ...prev, conversionRate: rate } : null);
+          }
+        }
+
+        // Process product data
+        if (productsResult.success && productsResult.topProducts) {
+          setProductData(
+            productsResult.topProducts.slice(0, 5).map((p: any) => ({
+              name: p.name || 'Unknown',
+              sales: p.sales || 0,
+              revenue: Number(p.revenue) || 0,
+            }))
+          );
+        }
+
+        // Process regional data
+        if (regionalResult.success && regionalResult.regions) {
+          setRegionalData(
+            regionalResult.regions.slice(0, 6).map((r: any) => ({
+              region: r.city || 'Unknown',
+              orders: r.orderCount || 0,
+              revenue: Number(r.revenue) || 0,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch analytics data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    };
+
+    // Initial load
+    setLoading(true);
+    loadData();
+
+    // Set up auto-refresh
     const interval = setInterval(() => {
-      fetchAnalytics(true);
+      setRefreshing(true);
+      loadData();
     }, 30000);
+
     return () => clearInterval(interval);
-  }, [timeRange]);
+  }, [timeRange, toast]);
 
   // Export functionality
   const handleExport = async (format: 'csv' | 'excel' | 'pdf', type: string) => {
@@ -271,7 +294,7 @@ export default function AdvancedAnalyticsDashboard() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-ET', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'ETB',
       minimumFractionDigits: 0,
@@ -307,7 +330,7 @@ export default function AdvancedAnalyticsDashboard() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => fetchAnalytics(true)}
+                onClick={handleRefresh}
                 disabled={refreshing}
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />

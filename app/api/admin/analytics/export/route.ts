@@ -226,15 +226,15 @@ export async function GET(req: NextRequest) {
 
       case 'excel':
         const excelBuffer = await exportToExcel(data, { title });
-        content = Buffer.from(excelBuffer);
+        content = Buffer.from(new Uint8Array(excelBuffer));
         contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         filename = `${type}-analytics-${timestamp}.xlsx`;
         break;
 
       case 'pdf':
         const pdf = exportToPDF(data, { title });
-        const pdfArrayBuffer = pdf.output('arraybuffer');
-        content = Buffer.from(pdfArrayBuffer);
+        const pdfOutput = pdf.output('arraybuffer');
+        content = Buffer.from(new Uint8Array(pdfOutput as ArrayBuffer));
         contentType = 'application/pdf';
         filename = `${type}-analytics-${timestamp}.pdf`;
         break;
