@@ -8,6 +8,7 @@
 import prisma from '@/lib/prisma';
 import { sendEmail, createOrderConfirmationEmail } from '@/lib/email';
 import { redeemPoints } from '@/services/LoyaltyService';
+import { checkAndCompleteReferral } from '@/lib/referral';
 import type { PaymentMethod } from '@/types/payment';
 
 export interface CreateOrderRequest {
@@ -308,6 +309,11 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
       // Send order confirmation email asynchronously
       sendOrderConfirmationEmail(userId, order).catch(err => 
         console.error('Failed to send order confirmation email:', err)
+      );
+
+      // Check and complete referral if this is first order
+      checkAndCompleteReferral(userId, order.id).catch(err =>
+        console.error('Failed to check/complete referral:', err)
       );
 
       return { success: true, order };
