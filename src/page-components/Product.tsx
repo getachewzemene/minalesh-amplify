@@ -30,6 +30,7 @@ import { PriceAlertButton } from "@/components/user/PriceAlertButton"
 import { useAuth } from "@/context/auth-context"
 import { VendorStatsCard } from "@/components/seller-ratings"
 import { ProductSocialShare } from "@/components/social"
+import { SubscribeAndSaveButton } from "@/components/subscriptions"
 
 interface ProductData {
   id: string
@@ -461,6 +462,19 @@ export default function Product() {
                     showShareCount={true}
                   />
                 </div>
+
+                {/* Subscribe & Save Button */}
+                {displayProduct.stockQuantity > 0 && (
+                  <SubscribeAndSaveButton
+                    productId={displayProduct.id}
+                    productName={displayProduct.name}
+                    price={currentPrice}
+                    onSubscribed={() => {
+                      // Optionally show success message or redirect
+                      router.push('/subscriptions?tab=products')
+                    }}
+                  />
+                )}
               </div>
 
               {/* Features */}
