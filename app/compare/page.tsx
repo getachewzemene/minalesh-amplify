@@ -102,11 +102,11 @@ function getCategorySpecificGroups(categoryName: string | undefined): Record<str
   
   // Find matching category group with exact word matching
   for (const [key, groups] of Object.entries(categoryGroups)) {
-    // Use word boundary for better matching
-    const keyPattern = new RegExp(`\\b${key}\\b`, 'i')
-    const categoryPattern = new RegExp(`\\b${categoryLower}\\b`, 'i')
-    
-    if (keyPattern.test(categoryLower) || categoryPattern.test(key)) {
+    // Simple word boundary check - category must contain the key as a separate word
+    if (categoryLower === key || 
+        categoryLower.startsWith(key + ' ') || 
+        categoryLower.endsWith(' ' + key) || 
+        categoryLower.includes(' ' + key + ' ')) {
       return groups
     }
   }
@@ -281,8 +281,18 @@ export default function ComparePage() {
       const keyLower = key.toLowerCase()
       let assigned = false
       
+      // Try to find the best matching group
+      // Prioritize exact matches, then substring matches
       for (const { groupName, lowercasedKeys } of lowercasedGroups) {
-        if (lowercasedKeys.some(gk => keyLower.includes(gk) || gk.includes(keyLower))) {
+        // Check for exact match first
+        const exactMatch = lowercasedKeys.some(gk => keyLower === gk)
+        // Then check for word-level match (e.g., "Battery Capacity" matches "Battery")
+        const wordMatch = lowercasedKeys.some(gk => {
+          const words = keyLower.split(/\s+/)
+          return words.includes(gk) || gk.split(/\s+/).some(gkWord => words.includes(gkWord))
+        })
+        
+        if (exactMatch || wordMatch) {
           if (!organizedSpecs[groupName]) {
             organizedSpecs[groupName] = []
           }
@@ -291,6 +301,7 @@ export default function ComparePage() {
           break
         }
       }
+      
       if (!assigned) {
         ungroupedSpecs.push(key)
       }

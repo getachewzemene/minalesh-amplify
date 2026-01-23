@@ -123,12 +123,26 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
                 .filter(Boolean)
                 .map(p => {
                   try {
+                    // Safely parse image field
+                    let imageUrl = '/placeholder-product.jpg'
+                    if (Array.isArray(p.images)) {
+                      imageUrl = p.images[0] || imageUrl
+                    } else if (typeof p.images === 'string') {
+                      try {
+                        const parsed = JSON.parse(p.images)
+                        imageUrl = Array.isArray(parsed) && parsed[0] ? parsed[0] : imageUrl
+                      } catch {
+                        // If JSON parse fails, use the string directly if it looks like a URL
+                        imageUrl = p.images.startsWith('http') || p.images.startsWith('/') ? p.images : imageUrl
+                      }
+                    }
+                    
                     return {
                       id: p.id,
                       name: p.name,
                       price: parseFloat(String(p.price)),
                       salePrice: p.salePrice ? parseFloat(String(p.salePrice)) : null,
-                      image: Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? JSON.parse(p.images)[0] : '/placeholder-product.jpg'),
+                      image: imageUrl,
                       category: p.category?.name,
                       brand: p.brand,
                       ratingAverage: parseFloat(String(p.ratingAverage || 0)),
@@ -160,6 +174,9 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     }
 
     syncWithServer()
+    // Note: compareProducts is intentionally excluded from dependencies to prevent infinite loop
+    // This effect only syncs on mount/authentication change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, isAuthenticated, syncToServer])
 
   // Persist to localStorage and sync to server when compareProducts changes
