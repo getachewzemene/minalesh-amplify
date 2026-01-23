@@ -175,12 +175,13 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
 
     // Handle gift card redemption
     let giftCardDiscount = 0;
-    let giftCard: any = null;
+    let giftCard: { id: string; balance: any; status: string; expiresAt: Date; recipientId: string | null } | null = null;
     if (giftCardCode && giftCardAmount && giftCardAmount > 0) {
       try {
         // Fetch and validate gift card
         giftCard = await prisma.giftCard.findUnique({
-          where: { code: giftCardCode }
+          where: { code: giftCardCode },
+          select: { id: true, balance: true, status: true, expiresAt: true, recipientId: true }
         });
 
         if (!giftCard) {
@@ -190,7 +191,8 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
           };
         }
 
-        if (giftCard.balance < giftCardAmount) {
+        // Use Prisma Decimal comparison
+        if (Number(giftCard.balance) < giftCardAmount) {
           return {
             success: false,
             error: 'Insufficient gift card balance'

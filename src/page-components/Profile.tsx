@@ -94,8 +94,42 @@ export default function Profile() {
   const [referralModalOpen, setReferralModalOpen] = useState(false)
   
   // Gift cards state
-  const [purchasedGiftCards, setPurchasedGiftCards] = useState<any[]>([])
-  const [receivedGiftCards, setReceivedGiftCards] = useState<any[]>([])
+  const [purchasedGiftCards, setPurchasedGiftCards] = useState<Array<{
+    id: string
+    code: string
+    amount: number
+    balance: number
+    status: string
+    message?: string | null
+    recipientEmail?: string | null
+    createdAt: string
+    expiresAt: string
+    transactions?: Array<{
+      id: string
+      amount: number
+      type: string
+      createdAt: string
+    }>
+  }>>([])
+  const [receivedGiftCards, setReceivedGiftCards] = useState<Array<{
+    id: string
+    code: string
+    amount: number
+    balance: number
+    status: string
+    message?: string | null
+    createdAt: string
+    expiresAt: string
+    purchaser?: {
+      email: string
+    }
+    transactions?: Array<{
+      id: string
+      amount: number
+      type: string
+      createdAt: string
+    }>
+  }>>([])
   const [loadingGiftCards, setLoadingGiftCards] = useState(true)
 
   // Fetch recommendations
