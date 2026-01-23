@@ -7,6 +7,7 @@
 
 import prisma from '@/lib/prisma';
 import { sendEmail, createOrderConfirmationEmail } from '@/lib/email';
+import { redeemPoints } from '@/services/LoyaltyService';
 import type { PaymentMethod } from '@/types/payment';
 
 export interface CreateOrderRequest {
@@ -36,6 +37,7 @@ export interface CreateOrderRequest {
     postalCode?: string;
     country?: string;
   };
+  loyaltyPointsToRedeem?: number;
 }
 
 export interface OrderItem {
@@ -80,7 +82,7 @@ export async function getUserOrders(userId: string) {
  * Create a new order from cart items
  */
 export async function createOrder(request: CreateOrderRequest): Promise<CreateOrderResult> {
-  const { userId, items, paymentMethod, paymentMeta, shippingAddress, billingAddress } = request;
+  const { userId, items, paymentMethod, paymentMeta, shippingAddress, billingAddress, loyaltyPointsToRedeem } = request;
 
   try {
     // Validate TeleBirr specific requirements
@@ -147,7 +149,30 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
       };
     }
 
+    // Handle loyalty points redemption
+    let loyaltyDiscount = 0;
+    let redemptionTransactionId: string | undefined;
+    if (loyaltyPointsToRedeem && loyaltyPointsToRedeem > 0) {
+      try {
+        // Initial redemption - will be linked to order after creation
+        const redemption = await redeemPoints(
+          userId,
+          loyaltyPointsToRedeem,
+          `Redeemed for order`,
+          undefined
+        );
+        loyaltyDiscount = redemption.discountAmount;
+        redemptionTransactionId = redemption.transaction.id;
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to redeem points'
+        };
+      }
+    }
+
     const orderNumber = `MIN-${Date.now()}`;
+    const totalAmount = Math.max(0, subtotal - loyaltyDiscount);
 
     // Atomic transaction: decrement stock and create order
     try {
@@ -174,8 +199,8 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
             subtotal: subtotal.toFixed(2),
             shippingAmount: '0.00',
             taxAmount: '0.00',
-            discountAmount: '0.00',
-            totalAmount: subtotal.toFixed(2),
+            discountAmount: loyaltyDiscount.toFixed(2),
+            totalAmount: totalAmount.toFixed(2),
             currency: 'ETB',
             shippingAddress: shippingAddress || undefined,
             billingAddress: billingAddress || undefined,

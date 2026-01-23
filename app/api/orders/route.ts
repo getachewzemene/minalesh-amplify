@@ -100,6 +100,7 @@ export async function POST(request: Request) {
       }).optional(),
       shippingAddress: addressSchema.optional(),
       billingAddress: addressSchema.optional(),
+      loyaltyPointsToRedeem: z.number().int().min(0).optional(),
     });
 
     const json = await request.json();
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Validation failed', issues: parsed.error.issues }, { status: 422 });
     }
-    const { items, paymentMethod, paymentMeta, shippingAddress, billingAddress } = parsed.data;
+    const { items, paymentMethod, paymentMeta, shippingAddress, billingAddress, loyaltyPointsToRedeem } = parsed.data;
 
     // Call OrderService to create the order
     const result = await OrderService.createOrder({
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
       paymentMeta,
       shippingAddress,
       billingAddress,
+      loyaltyPointsToRedeem,
     });
 
     if (!result.success) {

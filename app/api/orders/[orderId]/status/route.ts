@@ -4,6 +4,7 @@ import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
 import { withRole } from '@/lib/middleware';
 import { validateStatusTransition } from '@/lib/order-status';
 import { sendTrackingNotification } from '@/lib/logistics';
+import { awardPointsForPurchase } from '@/services/LoyaltyService';
 import type { OrderStatus } from '@prisma/client';
 
 // PUT - Update order status
@@ -49,6 +50,7 @@ export async function PUT(
         userId: true,
         status: true,
         orderNumber: true,
+        totalAmount: true,
       },
     });
 
@@ -169,6 +171,15 @@ export async function PUT(
       // Send SMS notification asynchronously (don't wait for it)
       sendTrackingNotification(params.orderId, smsStage).catch((error) => {
         console.error('Failed to send SMS notification:', error);
+        // Log error but don't fail the status update
+      });
+    }
+
+    // Award loyalty points when order is delivered
+    if (status === 'delivered' && order.status !== 'delivered') {
+      const orderAmount = parseFloat(order.totalAmount.toString());
+      awardPointsForPurchase(order.userId, order.id, orderAmount).catch((error) => {
+        console.error('Failed to award loyalty points:', error);
         // Log error but don't fail the status update
       });
     }
