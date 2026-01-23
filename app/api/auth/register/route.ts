@@ -74,6 +74,7 @@ async function registerHandler(request: Request): Promise<NextResponse> {
     // Validate referral code if provided
     let referralData = null;
     if (referralCode) {
+      // Referral codes are case-insensitive (stored as uppercase)
       referralData = await prisma.referral.findUnique({
         where: { 
           code: referralCode.toUpperCase(),

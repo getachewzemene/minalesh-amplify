@@ -8,6 +8,7 @@ import { awardPoints, POINTS_RATES } from '@/lib/loyalty/points'
 export async function checkAndCompleteReferral(userId: string, orderId: string): Promise<void> {
   try {
     // Find pending or registered referral where this user is the referee
+    // Only find referrals that haven't been rewarded yet to prevent double completion
     const referral = await prisma.referral.findFirst({
       where: {
         refereeId: userId,
@@ -32,6 +33,7 @@ export async function checkAndCompleteReferral(userId: string, orderId: string):
     // If this is their first completed order, complete the referral
     if (completedOrdersCount === 1) {
       // Update referral status in transaction
+      // Note: rewardIssued is set to true here to prevent race conditions
       await prisma.$transaction(async (tx) => {
         await tx.referral.update({
           where: { id: referral.id },
