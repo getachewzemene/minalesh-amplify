@@ -7,22 +7,36 @@ import { ETHIOPIAN_CITIES, DEFAULT_WAREHOUSE_LOCATION } from '@/lib/ethiopian-ci
 import { fixLeafletIcons } from '@/lib/leaflet-config';
 
 interface DeliveryTrackingMapProps {
-  origin?: { city: string; lat?: number; lng?: number };
+  origin?: { 
+    city: string; 
+    lat?: number; 
+    lng?: number;
+    name?: string; // Warehouse name
+  };
   destination: { 
     city: string; 
     fullAddress: string;
     lat?: number; 
     lng?: number;
   };
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'processing' | 'packed' | 'picked_up' | 'in_transit' | 'out_for_delivery' | 'shipped' | 'delivered' | 'cancelled';
   height?: string;
+  // Enhanced features
+  showTraffic?: boolean;
+  trafficLevel?: 'low' | 'moderate' | 'heavy';
+  estimatedDistance?: number; // in km
+  theme?: 'default' | 'dark' | 'satellite';
 }
 
 export default function DeliveryTrackingMap({ 
   origin, 
   destination, 
   status, 
-  height = '350px' 
+  height = '350px',
+  showTraffic = false,
+  trafficLevel = 'low',
+  estimatedDistance,
+  theme = 'default',
 }: DeliveryTrackingMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -41,9 +55,22 @@ export default function DeliveryTrackingMap({
     const map = L.map(mapContainerRef.current).setView([destCoords.lat, destCoords.lng], 12);
     mapRef.current = map;
 
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    // Map tile layers based on theme
+    const tileLayerUrls = {
+      default: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    };
+
+    const attributions = {
+      default: '© OpenStreetMap contributors',
+      dark: '© OpenStreetMap contributors © CARTO',
+      satellite: '© Esri',
+    };
+
+    // Add tile layer based on theme
+    L.tileLayer(tileLayerUrls[theme], {
+      attribution: attributions[theme],
       maxZoom: 18,
     }).addTo(map);
 
@@ -112,9 +139,10 @@ export default function DeliveryTrackingMap({
         icon: createIcon('#3b82f6', 'W'),
       }).addTo(map);
 
+      const originName = origin.name || 'Warehouse/Seller';
       originMarker.bindPopup(`
         <div style="font-family: sans-serif;">
-          <strong style="font-size: 14px;">Warehouse/Seller</strong>
+          <strong style="font-size: 14px;">📦 ${originName}</strong>
           <div style="margin-top: 4px; font-size: 12px; color: #666;">
             ${origin.city}
           </div>
@@ -126,13 +154,13 @@ export default function DeliveryTrackingMap({
     let destColor = '#10b981'; // green for delivered
     let destLabel = '✓';
     
-    if (status === 'shipped') {
+    if (['in_transit', 'out_for_delivery', 'shipped'].includes(status)) {
       destColor = '#f59e0b'; // orange for in transit
       destLabel = '→';
     } else if (status === 'cancelled') {
       destColor = '#ef4444'; // red for cancelled
       destLabel = '✗';
-    } else if (['pending', 'confirmed', 'processing'].includes(status)) {
+    } else if (['pending', 'confirmed', 'processing', 'packed', 'picked_up'].includes(status)) {
       destColor = '#6b7280'; // gray for not yet shipped
       destLabel = '◉';
     }
@@ -157,18 +185,34 @@ export default function DeliveryTrackingMap({
             border-radius: 12px;
             font-weight: 500;
           ">
-            ${status.toUpperCase()}
+            ${status.toUpperCase().replace(/_/g, ' ')}
           </span>
         </div>
+        ${estimatedDistance ? `
+          <div style="margin-top: 6px; font-size: 11px; color: #666;">
+            📏 Distance: ${estimatedDistance.toFixed(1)} km
+          </div>
+        ` : ''}
+        ${showTraffic && trafficLevel !== 'low' ? `
+          <div style="margin-top: 4px; font-size: 11px; color: ${trafficLevel === 'heavy' ? '#ef4444' : '#f59e0b'};">
+            🚦 Traffic: ${trafficLevel.toUpperCase()}
+          </div>
+        ` : ''}
       </div>
     `);
 
-    // Draw route line if origin exists and status is shipped
-    if (origin && ['shipped', 'delivered'].includes(status)) {
+    // Draw route line if origin exists and status is shipped/in-transit/delivered
+    if (origin && ['in_transit', 'out_for_delivery', 'shipped', 'delivered'].includes(status)) {
+      // Determine line color based on traffic and status
+      let lineColor = status === 'delivered' ? '#10b981' : '#f59e0b';
+      if (showTraffic && trafficLevel === 'heavy') {
+        lineColor = '#ef4444'; // Red for heavy traffic
+      }
+
       const routeLine = L.polyline(
         [[originCoords.lat, originCoords.lng], [destCoords.lat, destCoords.lng]],
         {
-          color: status === 'delivered' ? '#10b981' : '#f59e0b',
+          color: lineColor,
           weight: 3,
           opacity: 0.7,
           dashArray: status === 'delivered' ? undefined : '10, 10',
@@ -185,7 +229,7 @@ export default function DeliveryTrackingMap({
       // Just center on destination
       map.setView([destCoords.lat, destCoords.lng], 12);
     }
-  }, [origin, destination, status]);
+  }, [origin, destination, status, showTraffic, trafficLevel, estimatedDistance, theme]);
 
   return (
     <div 
