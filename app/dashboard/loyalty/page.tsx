@@ -358,63 +358,106 @@ export default function LoyaltyPage() {
 
         {/* How to Earn */}
         <TabsContent value="earn">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ways to Earn Points</CardTitle>
-              <CardDescription>Maximize your rewards with these activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex gap-4">
-                  <div className="rounded-full p-3 bg-blue-100">
-                    <ShoppingBag className="h-6 w-6 text-blue-600" />
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ways to Earn Points</CardTitle>
+                <CardDescription>Maximize your rewards with these activities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="flex gap-4">
+                    <div className="rounded-full p-3 bg-blue-100">
+                      <ShoppingBag className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Make Purchases</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Earn points based on your tier when you shop
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Make Purchases</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Earn points based on your tier when you shop
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex gap-4">
-                  <div className="rounded-full p-3 bg-purple-100">
-                    <MessageSquare className="h-6 w-6 text-purple-600" />
+                  <div className="flex gap-4">
+                    <div className="rounded-full p-3 bg-purple-100">
+                      <MessageSquare className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Write Reviews</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Earn 50 points for each verified product review
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Write Reviews</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Earn 50 points for each verified product review
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex gap-4">
-                  <div className="rounded-full p-3 bg-green-100">
-                    <Users className="h-6 w-6 text-green-600" />
+                  <div className="flex gap-4">
+                    <div className="rounded-full p-3 bg-green-100">
+                      <Users className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Refer Friends</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Earn 200 points when a friend makes their first purchase
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Refer Friends</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Earn 200 points when a friend makes their first purchase
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex gap-4">
-                  <div className="rounded-full p-3 bg-yellow-100">
-                    <Gift className="h-6 w-6 text-yellow-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Birthday Bonus</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Receive 100 bonus points on your birthday
-                    </p>
+                  <div className="flex gap-4">
+                    <div className="rounded-full p-3 bg-yellow-100">
+                      <Gift className="h-6 w-6 text-yellow-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Birthday Bonus</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Receive 100 bonus points on your birthday
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Redemption Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Redeem Your Points</CardTitle>
+                <CardDescription>Use your points for discounts on purchases</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                    <h3 className="font-semibold mb-2">Redemption Rate</h3>
+                    <p className="text-2xl font-bold text-purple-600">100 points = 10 ETB</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Every 100 points can be redeemed for a 10 ETB discount
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Your Available Points</p>
+                      <p className="text-2xl font-bold">{account.points.toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Worth in Discount</p>
+                      <p className="text-2xl font-bold">{(account.points * 0.1).toFixed(2)} ETB</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold mb-2">How to Redeem</h4>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                      <li>Add items to your cart</li>
+                      <li>Proceed to checkout</li>
+                      <li>Select "Use loyalty points" option</li>
+                      <li>Enter the number of points you want to redeem</li>
+                      <li>Your discount will be applied automatically</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
