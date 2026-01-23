@@ -143,6 +143,7 @@ model User {
   productSubscriptions    ProductSubscription[]
   savedSearches           SavedSearch[]
   priceAlerts             PriceAlert[]
+  viewHistory             ViewHistory[]
 
   @@map("users")
 }
@@ -267,6 +268,7 @@ model Product {
   productSubscriptions ProductSubscription[]
   priceAlerts          PriceAlert[]
   shares               ProductShare[]
+  viewHistory          ViewHistory[]
 
   @@map("products")
 }
@@ -511,6 +513,20 @@ model Wishlist {
   product Product @relation(fields: [productId], references: [id])
 
   @@map("wishlists")
+}
+
+model ViewHistory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId, viewedAt])
+  @@map("view_history")
 }
 
 model Notification {

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { formatCurrency } from "@/lib/utils"
 import { STORAGE_KEYS, PRODUCT_LIMITS } from "@/lib/product-constants"
 import { toast } from "sonner"
+import { useAuth } from "@/context/auth-context"
 
 interface ViewedProduct {
   id: string
@@ -67,7 +68,9 @@ export function clearBrowsingHistory(): void {
 export function RecentlyViewedProducts() {
   const [products, setProducts] = useState<ViewedProduct[]>([])
   const [isEnabled, setIsEnabled] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { user } = useAuth()
 
   useEffect(() => {
     // Check if browsing history is enabled
@@ -93,9 +96,9 @@ export function RecentlyViewedProducts() {
       window.removeEventListener('recently-viewed-updated', handleStorageChange)
       window.removeEventListener('browsing-history-preference-changed', handlePreferenceChange)
     }
-  }, [])
+  }, [user])
 
-  const loadRecentlyViewed = () => {
+  const loadRecentlyViewed = async () => {
     try {
       // Don't load if browsing history is disabled
       if (!isBrowsingHistoryEnabled()) {
@@ -103,6 +106,66 @@ export function RecentlyViewedProducts() {
         return
       }
       
+      // If user is authenticated, fetch from API
+      if (user) {
+        setIsLoading(true)
+        const token = localStorage.getItem('auth_token')
+        
+        if (!token) {
+          // Fallback to localStorage if no token
+          loadFromLocalStorage()
+          return
+        }
+        
+        const response = await fetch('/api/user/view-history', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const viewHistory = data.viewHistory || []
+          
+          // Transform API data to ViewedProduct format
+          const transformedProducts: ViewedProduct[] = viewHistory.map((vh: any) => {
+            const images = Array.isArray(vh.product.images) 
+              ? vh.product.images 
+              : typeof vh.product.images === 'string' 
+                ? JSON.parse(vh.product.images) 
+                : []
+            const firstImage = images[0] || '/placeholder-product.jpg'
+            
+            return {
+              id: vh.product.id,
+              name: vh.product.name,
+              price: Number(vh.product.price),
+              salePrice: vh.product.salePrice ? Number(vh.product.salePrice) : null,
+              image: firstImage,
+              viewedAt: new Date(vh.viewedAt).getTime(),
+            }
+          })
+          
+          setProducts(transformedProducts.slice(0, PRODUCT_LIMITS.MAX_RECENTLY_VIEWED))
+        } else {
+          // Fallback to localStorage on error
+          loadFromLocalStorage()
+        }
+        setIsLoading(false)
+      } else {
+        // Anonymous user - use localStorage
+        loadFromLocalStorage()
+      }
+    } catch (error) {
+      console.error('Error loading recently viewed:', error)
+      // Fallback to localStorage on error
+      loadFromLocalStorage()
+      setIsLoading(false)
+    }
+  }
+  
+  const loadFromLocalStorage = () => {
+    try {
       const stored = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
       if (stored) {
         const items = JSON.parse(stored) as ViewedProduct[]
@@ -113,15 +176,34 @@ export function RecentlyViewedProducts() {
         setProducts([])
       }
     } catch (error) {
-      console.error('Error loading recently viewed:', error)
+      console.error('Error loading from localStorage:', error)
       setProducts([])
     }
   }
 
-  const handleClearHistory = () => {
-    clearBrowsingHistory()
-    setProducts([])
-    toast.success('Browsing history cleared')
+  const handleClearHistory = async () => {
+    try {
+      // If user is authenticated, clear from API
+      if (user) {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          await fetch('/api/user/view-history', {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          })
+        }
+      }
+      
+      // Always clear localStorage as well
+      clearBrowsingHistory()
+      setProducts([])
+      toast.success('Browsing history cleared')
+    } catch (error) {
+      console.error('Error clearing history:', error)
+      toast.error('Failed to clear history')
+    }
   }
 
   // Don't render if browsing history is disabled or no products
@@ -192,8 +274,9 @@ export function RecentlyViewedProducts() {
 /**
  * Track a product view - call this when a user views a product detail page
  * Respects user's privacy preferences
+ * For authenticated users, saves to database; for anonymous users, uses localStorage
  */
-export function trackProductView(product: {
+export async function trackProductView(product: {
   id: string
   name: string
   price: number
@@ -205,6 +288,35 @@ export function trackProductView(product: {
     if (!isBrowsingHistoryEnabled()) {
       return
     }
+    
+    // Try to track in database for authenticated users
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    
+    if (token) {
+      // Authenticated user - track in database
+      try {
+        await fetch('/api/user/view-history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ productId: product.id }),
+        })
+        
+        // Also dispatch event to notify components
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('recently-viewed-updated'))
+        }
+        return
+      } catch (error) {
+        console.error('Error tracking view in database, falling back to localStorage:', error)
+        // Fall through to localStorage on error
+      }
+    }
+    
+    // Anonymous user or API error - use localStorage
+    if (typeof window === 'undefined') return
     
     const stored = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
     let items: ViewedProduct[] = stored ? JSON.parse(stored) : []
