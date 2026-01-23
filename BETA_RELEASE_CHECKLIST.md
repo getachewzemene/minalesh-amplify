@@ -102,7 +102,7 @@ These features are **required** before beta release.
 
 ### 2. ✅ Payment Processing
 
-**Status:** ✅ COMPLETE (needs production configuration)
+**Status:** ✅ COMPLETE (production configuration documented)
 
 | Feature | Status | Location |
 |---------|--------|----------|
@@ -111,17 +111,113 @@ These features are **required** before beta release.
 | Webhook handling | ✅ | `app/api/payments/webhook/` |
 | Refund processing | ✅ | `app/api/refunds/` |
 
-**Production Configuration Required:**
+**Production Configuration:**
+
+The payment gateway integration is complete. Follow these guides to configure for production:
+
+**1. Stripe (International Payments):**
+
 ```bash
-# Required environment variables for production
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-TELEBIRR_API_KEY=...
-TELEBIRR_WEBHOOK_SECRET=...
-CBE_API_KEY=...
-CBE_WEBHOOK_SECRET=...
+# Get production keys from https://dashboard.stripe.com
+STRIPE_SECRET_KEY=sk_live_XXXX...  # Your production secret key
+STRIPE_WEBHOOK_SECRET=whsec_XXXX...  # Your webhook signing secret
+
+# Configure webhook endpoint in Stripe Dashboard:
+# URL: https://yourdomain.com/api/payments/webhook
+# Events: payment_intent.succeeded, payment_intent.payment_failed, charge.refunded
 ```
+
+**2. TeleBirr (Ethiopian Mobile Money):**
+
+```bash
+# Contact TeleBirr Business: https://www.ethiotelecom.et/telebirr-business/
+TELEBIRR_API_KEY=your_production_api_key
+TELEBIRR_WEBHOOK_SECRET=your_webhook_secret
+
+# Webhook endpoint: https://yourdomain.com/api/payments/webhook
+```
+
+**3. CBE Birr (Commercial Bank of Ethiopia):**
+
+```bash
+# Contact CBE Digital Banking: https://www.combanketh.et
+CBE_API_KEY=your_production_api_key
+CBE_WEBHOOK_SECRET=your_webhook_secret
+
+# Webhook endpoint: https://yourdomain.com/api/payments/webhook
+```
+
+**4. Awash Bank:**
+
+```bash
+# Contact Awash Bank for merchant registration
+AWASH_API_KEY=your_production_api_key
+AWASH_WEBHOOK_SECRET=your_webhook_secret
+
+# Webhook endpoint: https://yourdomain.com/api/payments/webhook
+```
+
+**5. Generic Webhook Security:**
+
+```bash
+# Additional webhook security
+PAYMENT_WEBHOOK_SECRET=$(openssl rand -base64 32)
+```
+
+**Setup Steps:**
+
+1. **Choose Payment Providers:**
+   - Minimum: Stripe (for international cards)
+   - Recommended: Stripe + at least one Ethiopian provider (TeleBirr/CBE)
+
+2. **Register as Merchant:**
+   - Complete provider's merchant registration
+   - Submit required business documents
+   - Obtain API credentials
+
+3. **Configure Webhooks:**
+   - Add webhook URL in provider dashboard
+   - Copy webhook secret to environment variables
+   - Test webhook with provider's testing tool
+
+4. **Test Payment Flow:**
+   - Create test order with test credentials
+   - Process payment through provider
+   - Verify webhook received and order updated
+   - Test refund functionality
+
+5. **Switch to Production:**
+   - Replace test keys with production keys
+   - Verify all webhooks configured
+   - Monitor first real transactions closely
+
+**Documentation:**
+- 📚 [Production Setup Guide](docs/PRODUCTION_SETUP_GUIDE.md) - Complete payment setup walkthrough
+- 📚 [Refunds & Captures Guide](docs/REFUNDS_AND_CAPTURES.md) - Payment operations
+- 📚 [Cart, Orders & Payments](docs/CART_ORDERS_PAYMENTS.md) - Technical reference
+
+**Testing Checklist:**
+
+- [ ] Stripe test payment successful
+- [ ] Stripe webhook received and processed
+- [ ] Ethiopian provider payment tested (if configured)
+- [ ] Refund processing works
+- [ ] Payment capture works (for manual capture)
+- [ ] Failed payment handled gracefully
+- [ ] Webhook signature validation working
+- [ ] Order status updates correctly after payment
+
+**Production Checklist:**
+
+- [ ] Production API keys configured
+- [ ] Webhook secrets set
+- [ ] Webhook URLs registered with providers
+- [ ] SSL/HTTPS enabled
+- [ ] Test transaction completed successfully
+- [ ] Monitoring configured for payment failures
+- [ ] Backup payment method available
+
+**Status:** ✅ COMPLETE - Ready for production with proper configuration
 
 ---
 
@@ -174,56 +270,59 @@ CRON_SECRET=<random-secret>
 
 ---
 
-### 6. ❌ Environment & Secrets Management
+### 6. ✅ Environment & Secrets Management
 
-**Status:** ❌ NOT IMPLEMENTED
+**Status:** ✅ COMPLETE
 
 **Description:** Validate environment variables at startup and ensure all secrets are properly configured.
 
-**Implementation Procedure:**
+**What's Implemented:**
 
-1. **Create environment validation schema:**
-   ```typescript
-   // src/lib/env.ts
-   import { z } from 'zod';
+1. **Environment Validation** (`src/lib/env.ts`)
+   - ✅ Zod-based validation schema
+   - ✅ Required variable enforcement
+   - ✅ Type-safe environment access
+   - ✅ Startup validation via instrumentation
+   - ✅ Production warnings for missing optional services
 
-   const envSchema = z.object({
-     // Database
-     DATABASE_URL: z.string().url(),
-     
-     // Authentication
-     JWT_SECRET: z.string().min(32),
-     CRON_SECRET: z.string().min(16),
-     
-     // Email
-     RESEND_API_KEY: z.string().optional(),
-     
-     // Stripe
-     STRIPE_SECRET_KEY: z.string().optional(),
-     STRIPE_PUBLISHABLE_KEY: z.string().optional(),
-     STRIPE_WEBHOOK_SECRET: z.string().optional(),
-     
-     // Storage
-     AWS_S3_BUCKET: z.string().optional(),
-     AWS_ACCESS_KEY_ID: z.string().optional(),
-     AWS_SECRET_ACCESS_KEY: z.string().optional(),
-     
-     // Observability
-     SENTRY_DSN: z.string().optional(),
-     LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
-     
-     // Feature flags
-     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-   });
+2. **Feature Detection:**
+   - ✅ Runtime checks for optional services
+   - ✅ `features.hasEmail()`, `features.hasSMS()`, etc.
+   - ✅ Configuration summary for health checks
 
-   export const env = envSchema.parse(process.env);
-   ```
+3. **Security:**
+   - ✅ Minimum secret lengths enforced (JWT: 32, CRON: 16 chars)
+   - ✅ URL validation for database and service URLs
+   - ✅ Email format validation
 
-2. **Update `.env.example` with all required variables**
+4. **Testing:**
+   - ✅ 15 passing tests in `src/__tests__/env.test.ts`
+   - ✅ Required variable validation
+   - ✅ Optional variable defaults
+   - ✅ Feature detection tests
 
-3. **Add startup validation in `next.config.js`**
+**Production Configuration:**
 
-**Estimated Time:** 2-4 hours
+```bash
+# Required variables
+DATABASE_URL=postgresql://...
+JWT_SECRET=$(openssl rand -base64 32)  # Min 32 chars
+CRON_SECRET=$(openssl rand -base64 16) # Min 16 chars
+
+# Recommended for production
+RESEND_API_KEY=re_...               # Email notifications
+STRIPE_SECRET_KEY=sk_live_...       # Payment processing
+AWS_S3_BUCKET=...                   # File storage
+SENTRY_DSN=https://...              # Error tracking
+SMS_PROVIDER=africas_talking        # SMS notifications
+```
+
+**Documentation:**
+- 📚 [Environment Implementation Guide](ENVIRONMENT_IMPLEMENTATION.md) - Complete guide
+- 📚 [Environment Validation Summary](ENV_VALIDATION_SUMMARY.md) - Quick reference
+- 📚 [Production Setup Guide](docs/PRODUCTION_SETUP_GUIDE.md) - Deployment guide
+
+**Status:** ✅ COMPLETE - Production Ready
 
 ---
 
@@ -565,47 +664,67 @@ These features should be implemented for a good beta experience.
 
 ---
 
-### 14. ❌ SMS Notifications
+### 14. ✅ SMS Notifications
 
-**Status:** ❌ NOT IMPLEMENTED
+**Status:** ✅ COMPLETE (needs production configuration)
 
 **Description:** Send SMS notifications for order updates, OTP verification, etc.
 
-**Implementation Procedure:**
+**What's Implemented:**
 
-1. **Choose SMS provider:**
-   - Recommended for Ethiopia: Africas Talking, Infobip, or local providers
-   - Alternative: Twilio (international)
+1. **SMS Service Framework** (`src/lib/sms.ts`)
+   - ✅ Multiple provider support (Africa's Talking, Twilio, Mock)
+   - ✅ Phone number formatting for Ethiopian numbers
+   - ✅ Message templates for all order stages
+   - ✅ SMS delivery tracking in database
 
-2. **Create SMS service:**
-   ```typescript
-   // src/lib/sms.ts
-   interface SMSProvider {
-     send(to: string, message: string): Promise<void>;
-   }
+2. **Order Integration** (`src/lib/logistics.ts`)
+   - ✅ Automatic SMS on order status changes
+   - ✅ SMS notifications for tracking updates
+   - ✅ Courier information in SMS
+   - ✅ Delivery time estimates in SMS
 
-   class AfricasTalkingSMS implements SMSProvider {
-     async send(to: string, message: string) {
-       // Implementation
-     }
-   }
-   ```
+3. **Automatic Notifications:**
+   - ✅ Order placed (pending)
+   - ✅ Order confirmed
+   - ✅ Order packed
+   - ✅ Picked up by courier
+   - ✅ In transit
+   - ✅ Out for delivery
+   - ✅ Delivered
 
-3. **Add SMS queue (similar to email queue):**
-   ```prisma
-   model SMSQueue {
-     id        String   @id @default(uuid())
-     to        String
-     message   String
-     status    String   @default("pending")
-     attempts  Int      @default(0)
-     createdAt DateTime @default(now())
-   }
-   ```
+**Production Configuration Required:**
 
-4. **Integrate with order status updates**
+```bash
+# Choose SMS provider
+SMS_PROVIDER=africas_talking  # or twilio, or none
 
-**Estimated Time:** 8-12 hours
+# Africa's Talking (recommended for Ethiopia)
+AFRICAS_TALKING_USERNAME=your_username
+AFRICAS_TALKING_API_KEY=your_production_api_key
+AFRICAS_TALKING_SHORT_CODE=MINALESH  # Optional: Custom sender ID
+
+# Twilio (alternative)
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=...
+TWILIO_PHONE_NUMBER=+1234567890
+```
+
+**Setup Steps:**
+
+1. Sign up at [Africa's Talking](https://africastalking.com)
+2. Complete business verification
+3. Add credit to account (recommend ETB 5,000-10,000 for testing)
+4. Get API credentials from dashboard
+5. Request custom sender ID (optional, takes 1-3 days)
+6. Configure environment variables
+7. Test with sample order
+
+**Documentation:**
+- 📚 [SMS Notifications Guide](docs/SMS_NOTIFICATIONS_GUIDE.md) - Complete setup guide
+- 📚 [Production Setup Guide](docs/PRODUCTION_SETUP_GUIDE.md) - SMS configuration section
+
+**Estimated Time to Configure:** 2-4 hours (including account setup)
 
 ---
 

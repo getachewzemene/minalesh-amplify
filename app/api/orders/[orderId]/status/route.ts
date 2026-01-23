@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
 import { withRole } from '@/lib/middleware';
 import { validateStatusTransition } from '@/lib/order-status';
+import { sendTrackingNotification } from '@/lib/logistics';
 import type { OrderStatus } from '@prisma/client';
 
 // PUT - Update order status
@@ -150,6 +151,27 @@ export async function PUT(
 
       return updated;
     });
+
+    // Send SMS notification for tracking-related status changes
+    // Map order status to SMS notification stages
+    const smsStageMapping: Record<string, string> = {
+      'pending': 'pending',
+      'confirmed': 'confirmed',
+      'packed': 'packed',
+      'picked_up': 'picked_up',
+      'in_transit': 'in_transit',
+      'out_for_delivery': 'out_for_delivery',
+      'delivered': 'delivered',
+    };
+
+    const smsStage = smsStageMapping[status];
+    if (smsStage) {
+      // Send SMS notification asynchronously (don't wait for it)
+      sendTrackingNotification(params.orderId, smsStage).catch((error) => {
+        console.error('Failed to send SMS notification:', error);
+        // Log error but don't fail the status update
+      });
+    }
 
     return NextResponse.json(updatedOrder);
   } catch (error) {
