@@ -92,6 +92,45 @@ export default function Profile() {
   const [loadingRecommendations, setLoadingRecommendations] = useState(true)
   const [loadingRecentlyViewed, setLoadingRecentlyViewed] = useState(true)
   const [referralModalOpen, setReferralModalOpen] = useState(false)
+  
+  // Gift cards state
+  const [purchasedGiftCards, setPurchasedGiftCards] = useState<Array<{
+    id: string
+    code: string
+    amount: number
+    balance: number
+    status: string
+    message?: string | null
+    recipientEmail?: string | null
+    createdAt: string
+    expiresAt: string
+    transactions?: Array<{
+      id: string
+      amount: number
+      type: string
+      createdAt: string
+    }>
+  }>>([])
+  const [receivedGiftCards, setReceivedGiftCards] = useState<Array<{
+    id: string
+    code: string
+    amount: number
+    balance: number
+    status: string
+    message?: string | null
+    createdAt: string
+    expiresAt: string
+    purchaser?: {
+      email: string
+    }
+    transactions?: Array<{
+      id: string
+      amount: number
+      type: string
+      createdAt: string
+    }>
+  }>>([])
+  const [loadingGiftCards, setLoadingGiftCards] = useState(true)
 
   // Fetch recommendations
   useEffect(() => {
@@ -171,6 +210,33 @@ export default function Profile() {
 
     if (user) {
       fetchWishlist()
+    }
+  }, [user])
+
+  // Fetch gift cards
+  useEffect(() => {
+    const fetchGiftCards = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        const response = await fetch('/api/gift-cards/my-cards', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setPurchasedGiftCards(data.purchased || [])
+          setReceivedGiftCards(data.received || [])
+        }
+      } catch (error) {
+        console.error('Error fetching gift cards:', error)
+      } finally {
+        setLoadingGiftCards(false)
+      }
+    }
+
+    if (user) {
+      fetchGiftCards()
+    } else {
+      setLoadingGiftCards(false)
     }
   }, [user])
 
@@ -282,12 +348,13 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 lg:w-auto">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-8 lg:w-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="recommendations">For You</TabsTrigger>
                 <TabsTrigger value="rewards">Rewards</TabsTrigger>
+                <TabsTrigger value="gift-cards">Gift Cards</TabsTrigger>
                 <TabsTrigger value="security">Security</TabsTrigger>
                 <TabsTrigger value="privacy">Privacy</TabsTrigger>
               </TabsList>
@@ -848,6 +915,210 @@ export default function Profile() {
                   </Card>
 
                   <ProductComparison />
+                </div>
+              </TabsContent>
+
+              {/* Gift Cards Tab */}
+              <TabsContent value="gift-cards" className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Purchased Gift Cards */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Gift className="h-5 w-5" />
+                        Gift Cards I Purchased
+                      </CardTitle>
+                      <CardDescription>
+                        Gift cards you bought for yourself or others
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingGiftCards ? (
+                        <p className="text-sm text-muted-foreground">Loading...</p>
+                      ) : purchasedGiftCards.length > 0 ? (
+                        <div className="space-y-4">
+                          {purchasedGiftCards.map((card: any) => (
+                            <div key={card.id} className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-blue-50">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <p className="font-medium text-lg">{card.code}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {card.recipientEmail ? `Sent to: ${card.recipientEmail}` : 'For yourself'}
+                                  </p>
+                                </div>
+                                <Badge variant={
+                                  card.status === 'active' ? 'default' :
+                                  card.status === 'redeemed' ? 'secondary' :
+                                  'outline'
+                                }>
+                                  {card.status}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Original Amount</p>
+                                  <p className="font-semibold">{Number(card.amount).toFixed(2)} ETB</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Balance</p>
+                                  <p className="font-semibold">{Number(card.balance).toFixed(2)} ETB</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 mt-2">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Purchased</p>
+                                  <p className="text-sm">{new Date(card.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Expires</p>
+                                  <p className="text-sm">{new Date(card.expiresAt).toLocaleDateString()}</p>
+                                </div>
+                              </div>
+                              {card.message && (
+                                <div className="mt-3 p-2 bg-white rounded">
+                                  <p className="text-xs text-muted-foreground">Message</p>
+                                  <p className="text-sm italic">&quot;{card.message}&quot;</p>
+                                </div>
+                              )}
+                              {card.transactions && card.transactions.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-xs text-muted-foreground mb-2">Recent Transactions</p>
+                                  <div className="space-y-1">
+                                    {card.transactions.map((txn: any) => (
+                                      <div key={txn.id} className="flex items-center justify-between text-xs">
+                                        <span className="capitalize">{txn.type}</span>
+                                        <span>{Number(txn.amount).toFixed(2)} ETB</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">No gift cards purchased yet</p>
+                          <Link href="/gift-cards">
+                            <Button variant="outline" className="mt-4">
+                              Purchase Gift Card
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Received Gift Cards */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Gift className="h-5 w-5 text-green-600" />
+                        Gift Cards I Received
+                      </CardTitle>
+                      <CardDescription>
+                        Gift cards sent to you by others
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingGiftCards ? (
+                        <p className="text-sm text-muted-foreground">Loading...</p>
+                      ) : receivedGiftCards.length > 0 ? (
+                        <div className="space-y-4">
+                          {receivedGiftCards.map((card: any) => (
+                            <div key={card.id} className="p-4 border rounded-lg bg-gradient-to-br from-green-50 to-emerald-50">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <p className="font-medium text-lg">{card.code}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    From: {card.purchaser?.email || 'Unknown'}
+                                  </p>
+                                </div>
+                                <Badge variant={
+                                  card.status === 'active' ? 'default' :
+                                  card.status === 'redeemed' ? 'secondary' :
+                                  'outline'
+                                }>
+                                  {card.status}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Original Amount</p>
+                                  <p className="font-semibold">{Number(card.amount).toFixed(2)} ETB</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Balance</p>
+                                  <p className="font-semibold">{Number(card.balance).toFixed(2)} ETB</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 mt-2">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Received</p>
+                                  <p className="text-sm">{new Date(card.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Expires</p>
+                                  <p className="text-sm">{new Date(card.expiresAt).toLocaleDateString()}</p>
+                                </div>
+                              </div>
+                              {card.message && (
+                                <div className="mt-3 p-2 bg-white rounded">
+                                  <p className="text-xs text-muted-foreground">Personal Message</p>
+                                  <p className="text-sm italic">&quot;{card.message}&quot;</p>
+                                </div>
+                              )}
+                              {card.transactions && card.transactions.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-xs text-muted-foreground mb-2">Recent Transactions</p>
+                                  <div className="space-y-1">
+                                    {card.transactions.map((txn: any) => (
+                                      <div key={txn.id} className="flex items-center justify-between text-xs">
+                                        <span className="capitalize">{txn.type}</span>
+                                        <span>{Number(txn.amount).toFixed(2)} ETB</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">No gift cards received yet</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Quick Actions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ShoppingBag className="h-5 w-5" />
+                        Gift Card Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <Link href="/gift-cards" className="flex-1">
+                          <Button className="w-full" variant="default">
+                            <Gift className="h-4 w-4 mr-2" />
+                            Purchase Gift Card
+                          </Button>
+                        </Link>
+                        <Link href="/cart" className="flex-1">
+                          <Button className="w-full" variant="outline">
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Use Gift Card at Checkout
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 

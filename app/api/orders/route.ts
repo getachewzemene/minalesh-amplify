@@ -101,6 +101,8 @@ export async function POST(request: Request) {
       shippingAddress: addressSchema.optional(),
       billingAddress: addressSchema.optional(),
       loyaltyPointsToRedeem: z.number().int().min(0).optional(),
+      giftCardCode: z.string().optional(),
+      giftCardAmount: z.number().min(0).optional(),
     });
 
     const json = await request.json();
@@ -108,7 +110,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Validation failed', issues: parsed.error.issues }, { status: 422 });
     }
-    const { items, paymentMethod, paymentMeta, shippingAddress, billingAddress, loyaltyPointsToRedeem } = parsed.data;
+    const { items, paymentMethod, paymentMeta, shippingAddress, billingAddress, loyaltyPointsToRedeem, giftCardCode, giftCardAmount } = parsed.data;
 
     // Call OrderService to create the order
     const result = await OrderService.createOrder({
@@ -119,6 +121,8 @@ export async function POST(request: Request) {
       shippingAddress,
       billingAddress,
       loyaltyPointsToRedeem,
+      giftCardCode,
+      giftCardAmount,
     });
 
     if (!result.success) {
