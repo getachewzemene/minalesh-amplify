@@ -142,23 +142,28 @@ export async function GET(req: NextRequest) {
         const customers = await prisma.user.findMany({
           where: {
             createdAt: { gte: startDate, lte: endDate },
-            isVendor: false,
+            role: 'customer',
           },
           select: {
             id: true,
             email: true,
             createdAt: true,
-            _count: {
-              select: { orders: true },
-            },
           },
         });
 
-        data = customers.map(customer => ({
-          'Customer Email': customer.email,
-          'Joined Date': customer.createdAt.toISOString().split('T')[0],
-          'Total Orders': customer._count.orders,
-        }));
+        const customerData = await Promise.all(
+          customers.map(async (customer) => {
+            const orderCount = await prisma.order.count({
+              where: { userId: customer.id },
+            });
+            return {
+              'Customer Email': customer.email,
+              'Joined Date': customer.createdAt.toISOString().split('T')[0],
+              'Total Orders': orderCount,
+            };
+          })
+        );
+        data = customerData;
         break;
 
       case 'regional':
@@ -168,16 +173,20 @@ export async function GET(req: NextRequest) {
             createdAt: { gte: startDate, lte: endDate },
             status: { notIn: ['cancelled', 'refunded'] },
           },
-          include: {
-            shippingAddress: {
-              select: { city: true },
-            },
+          select: {
+            id: true,
+            totalAmount: true,
+            shippingAddress: true,
           },
         });
 
         const regionMap = new Map<string, { orders: number; revenue: number }>();
         regionalOrders.forEach(order => {
-          const city = order.shippingAddress?.city || 'Unknown';
+          let city = 'Unknown';
+          if (order.shippingAddress && typeof order.shippingAddress === 'object') {
+            const addr = order.shippingAddress as any;
+            city = addr.city || 'Unknown';
+          }
           const existing = regionMap.get(city) || { orders: 0, revenue: 0 };
           regionMap.set(city, {
             orders: existing.orders + 1,
@@ -201,7 +210,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Generate export based on format
-    let content: Buffer;
+    let content: ArrayBuffer | Buffer;
     let contentType: string;
     let filename: string;
 
@@ -209,19 +218,23 @@ export async function GET(req: NextRequest) {
 
     switch (format) {
       case 'csv':
-        content = Buffer.from(await exportToCSV(data, title));
+        const csvString = exportToCSV(data, { title });
+        content = Buffer.from(csvString);
         contentType = 'text/csv';
         filename = `${type}-analytics-${timestamp}.csv`;
         break;
 
       case 'excel':
-        content = await exportToExcel(data, title);
+        const excelBuffer = await exportToExcel(data, { title });
+        content = Buffer.from(excelBuffer);
         contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         filename = `${type}-analytics-${timestamp}.xlsx`;
         break;
 
       case 'pdf':
-        content = await exportToPDF(data, title);
+        const pdf = exportToPDF(data, { title });
+        const pdfArrayBuffer = pdf.output('arraybuffer');
+        content = Buffer.from(pdfArrayBuffer);
         contentType = 'application/pdf';
         filename = `${type}-analytics-${timestamp}.pdf`;
         break;
@@ -233,7 +246,7 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    return new NextResponse(content, {
+    return new NextResponse(new Uint8Array(content), {
       status: 200,
       headers: {
         'Content-Type': contentType,
