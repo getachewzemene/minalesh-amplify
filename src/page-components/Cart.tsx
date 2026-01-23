@@ -16,6 +16,9 @@ import { PAYMENT_METHODS, PAYMENT_INSTRUCTIONS, PaymentMethod } from "@/types/pa
 import { formatCurrency } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Redemption rate: 100 points = 10 ETB (1 point = 0.1 ETB)
+const POINTS_TO_CURRENCY_RATE = 0.1;
+
 export default function Cart() {
   const { cart, removeFromCart, updateCartQuantity } = useShop();
   const { user } = useAuth();
@@ -55,8 +58,7 @@ export default function Cart() {
   // Calculate discount when points change
   useEffect(() => {
     if (usePoints && pointsToRedeem > 0) {
-      // 100 points = 10 ETB, so 1 point = 0.1 ETB
-      const discount = pointsToRedeem * 0.1;
+      const discount = pointsToRedeem * POINTS_TO_CURRENCY_RATE;
       setLoyaltyDiscount(Math.min(discount, total)); // Can't discount more than total
     } else {
       setLoyaltyDiscount(0);
@@ -188,7 +190,7 @@ export default function Cart() {
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
                     You have <span className="font-bold text-purple-600">{loyaltyPoints}</span> points available
-                    (Worth {formatCurrency(loyaltyPoints * 0.1)})
+                    (Worth {formatCurrency(loyaltyPoints * POINTS_TO_CURRENCY_RATE)})
                   </p>
                   <div className="flex items-center gap-2 mb-3">
                     <Checkbox 
@@ -212,11 +214,11 @@ export default function Cart() {
                         <Input
                           type="number"
                           min="0"
-                          max={Math.min(loyaltyPoints, Math.floor(total * 10))}
+                          max={Math.min(loyaltyPoints, Math.floor(total / POINTS_TO_CURRENCY_RATE))}
                           value={pointsToRedeem}
                           onChange={(e) => {
                             const value = parseInt(e.target.value) || 0;
-                            const maxPoints = Math.min(loyaltyPoints, Math.floor(total * 10));
+                            const maxPoints = Math.min(loyaltyPoints, Math.floor(total / POINTS_TO_CURRENCY_RATE));
                             setPointsToRedeem(Math.min(value, maxPoints));
                           }}
                           className="flex-1"
@@ -227,7 +229,7 @@ export default function Cart() {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const maxPoints = Math.min(loyaltyPoints, Math.floor(total * 10));
+                            const maxPoints = Math.min(loyaltyPoints, Math.floor(total / POINTS_TO_CURRENCY_RATE));
                             setPointsToRedeem(maxPoints);
                           }}
                         >

@@ -170,6 +170,12 @@ export async function redeemPoints(
 
 /**
  * Award points for a completed purchase
+ * 
+ * Note: Points are calculated based on the user's tier at the time of delivery,
+ * not at the time of order creation. This rewards customers who achieve higher
+ * tiers and encourages tier progression.
+ * 
+ * Alternative approach: Store tier at order creation and use that value.
  */
 export async function awardPointsForPurchase(
   userId: string,

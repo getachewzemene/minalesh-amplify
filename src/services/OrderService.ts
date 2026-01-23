@@ -151,15 +151,18 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
 
     // Handle loyalty points redemption
     let loyaltyDiscount = 0;
+    let redemptionTransactionId: string | undefined;
     if (loyaltyPointsToRedeem && loyaltyPointsToRedeem > 0) {
       try {
+        // Initial redemption - will be linked to order after creation
         const redemption = await redeemPoints(
           userId,
           loyaltyPointsToRedeem,
-          `Redemption for order`,
-          undefined // Will update with orderId after creation
+          `Redeemed for order`,
+          undefined
         );
         loyaltyDiscount = redemption.discountAmount;
+        redemptionTransactionId = redemption.transaction.id;
       } catch (error) {
         return {
           success: false,
