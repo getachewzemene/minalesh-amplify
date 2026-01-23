@@ -5,6 +5,7 @@ import { sendEmail, createEmailVerificationEmail } from '@/lib/email';
 import { validateRequestBody, authSchemas } from '@/lib/validation';
 import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 import { withApiLogger } from '@/lib/api-logger';
+import { awardPoints, POINTS_RATES } from '@/lib/loyalty/points';
 
 /**
  * @swagger
@@ -135,12 +136,10 @@ async function registerHandler(request: Request): Promise<NextResponse> {
         });
 
         // Award welcome points to new user (referee)
-        // Import awardPoints from loyalty/points
-        const { awardPoints } = await import('@/lib/loyalty/points');
         try {
           await awardPoints(
             newUser.id,
-            50, // POINTS_RATES.referralReferee
+            POINTS_RATES.referralReferee,
             'referral',
             'Welcome bonus for signing up with a referral code',
             referralData.id
