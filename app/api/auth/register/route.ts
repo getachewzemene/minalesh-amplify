@@ -48,7 +48,7 @@ async function registerHandler(request: Request): Promise<NextResponse> {
     return validation.response;
   }
   
-  const { email, password, firstName, lastName } = validation.data;
+  const { email, password, firstName, lastName, referralCode } = validation.data;
 
   try {
 
@@ -70,23 +70,88 @@ async function registerHandler(request: Request): Promise<NextResponse> {
     // Generate email verification token
     const emailVerificationToken = generateRandomToken();
 
+    // Validate referral code if provided
+    let referralData = null;
+    if (referralCode) {
+      referralData = await prisma.referral.findUnique({
+        where: { 
+          code: referralCode.toUpperCase(),
+        },
+      });
+
+      // Validate referral code
+      if (!referralData) {
+        return NextResponse.json(
+          { error: 'Invalid referral code' },
+          { status: 400 }
+        );
+      }
+
+      if (referralData.expiresAt < new Date()) {
+        return NextResponse.json(
+          { error: 'Referral code has expired' },
+          { status: 400 }
+        );
+      }
+
+      if (referralData.status !== 'pending') {
+        return NextResponse.json(
+          { error: 'Referral code has already been used' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create user and profile
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        emailVerificationToken,
-        profile: {
-          create: {
-            displayName: email,
-            firstName,
-            lastName,
+    const user = await prisma.$transaction(async (tx) => {
+      // Create user
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          emailVerificationToken,
+          profile: {
+            create: {
+              displayName: email,
+              firstName,
+              lastName,
+            },
           },
         },
-      },
-      include: {
-        profile: true,
-      },
+        include: {
+          profile: true,
+        },
+      });
+
+      // If referral code was provided, update referral and award points
+      if (referralData) {
+        // Update referral status
+        await tx.referral.update({
+          where: { id: referralData.id },
+          data: {
+            refereeId: newUser.id,
+            status: 'registered',
+          },
+        });
+
+        // Award welcome points to new user (referee)
+        // Import awardPoints from loyalty/points
+        const { awardPoints } = await import('@/lib/loyalty/points');
+        try {
+          await awardPoints(
+            newUser.id,
+            50, // POINTS_RATES.referralReferee
+            'referral',
+            'Welcome bonus for signing up with a referral code',
+            referralData.id
+          );
+        } catch (error) {
+          console.error('Error awarding referral points to referee:', error);
+          // Don't fail registration if points award fails
+        }
+      }
+
+      return newUser;
     });
 
     // Send email verification

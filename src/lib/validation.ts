@@ -157,6 +157,7 @@ export const authSchemas = {
     password: commonSchemas.password,
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
+    referralCode: z.string().optional(),
   }),
   
   registerVendor: z.object({

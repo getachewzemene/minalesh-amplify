@@ -310,6 +310,12 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
         console.error('Failed to send order confirmation email:', err)
       );
 
+      // Check and complete referral if this is first order
+      const { checkAndCompleteReferral } = await import('@/lib/referral');
+      checkAndCompleteReferral(userId, order.id).catch(err =>
+        console.error('Failed to check/complete referral:', err)
+      );
+
       return { success: true, order };
     } catch (txErr: unknown) {
       console.error('Transaction error creating order:', txErr);
