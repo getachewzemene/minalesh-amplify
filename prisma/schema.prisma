@@ -331,6 +331,8 @@ model Order {
   shippingAddress        Json?         @map("shipping_address")
   billingAddress         Json?         @map("billing_address")
   notes                  String?
+  // Warehouse origin for delivery
+  warehouseId            String?       @map("warehouse_id") @db.Uuid
   // Buyer Protection fields
   buyerProtectionEnabled Boolean       @default(false) @map("buyer_protection_enabled")
   protectionFee          Decimal       @default(0) @map("protection_fee") @db.Decimal(10, 2)
@@ -378,7 +380,9 @@ model Order {
   subscriptionOrders   SubscriptionOrder[]
   protectionClaims     ProtectionClaim[]
   deliveryTracking     DeliveryTracking?
+  warehouse            Warehouse?            @relation("WarehouseOrders", fields: [warehouseId], references: [id])
 
+  @@index([warehouseId])
   @@map("orders")
 }
 
@@ -425,6 +429,13 @@ model DeliveryTracking {
   recipientName          String?   @map("recipient_name")
   // SMS Notification Tracking
   smsNotificationsSent   Json      @default("[]") @map("sms_notifications_sent")
+  // Traffic and Route Information
+  routeData              Json?     @map("route_data") // Stores route geometry, waypoints
+  trafficConditions      Json?     @map("traffic_conditions") // Traffic data from API
+  estimatedDistanceKm    Decimal?  @map("estimated_distance_km") @db.Decimal(8, 2)
+  estimatedDurationMin   Int?      @map("estimated_duration_min")
+  trafficDelayMin        Int?      @map("traffic_delay_min") @default(0)
+  lastRouteUpdate        DateTime? @map("last_route_update")
   // Metadata
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
@@ -1952,4 +1963,45 @@ model ContractSignature {
   @@index([signerId])
   @@index([status])
   @@map("contract_signatures")
+}
+
+// Warehouse model for multi-origin delivery tracking
+model Warehouse {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  code        String   @unique // Short code like "AA-01" for Addis Ababa Warehouse 1
+  address     String
+  city        String
+  region      String?
+  country     String   @default("Ethiopia")
+  postalCode  String?  @map("postal_code")
+  
+  // GPS coordinates for map visualization
+  latitude    Decimal  @db.Decimal(10, 8)
+  longitude   Decimal  @db.Decimal(11, 8)
+  
+  // Warehouse details
+  phone       String?
+  email       String?
+  managerName String?  @map("manager_name")
+  capacity    Int?     // Max items capacity
+  
+  // Operating hours (JSON format: {monday: {open: "08:00", close: "18:00"}, ...})
+  operatingHours Json?  @default("{}") @map("operating_hours")
+  
+  // Status
+  isActive    Boolean  @default(true) @map("is_active")
+  isPrimary   Boolean  @default(false) @map("is_primary") // Primary/default warehouse
+  
+  // Metadata
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  orders      Order[]  @relation("WarehouseOrders")
+  
+  @@index([city])
+  @@index([isActive])
+  @@index([isPrimary])
+  @@map("warehouses")
 }
