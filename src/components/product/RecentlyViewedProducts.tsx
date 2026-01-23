@@ -148,6 +148,7 @@ export function RecentlyViewedProducts() {
         if (!token) {
           // Fallback to localStorage if no token
           loadFromLocalStorage()
+          setIsLoading(false)
           return
         }
         
