@@ -36,8 +36,38 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
   const [compareProducts, setCompareProducts] = useState<ComparisonProduct[]>([])
   const [isCompareBarVisible, setCompareBarVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
-  // Load from localStorage on mount
+  // Helper function to sync to server
+  const syncToServer = useCallback(async (productIds: string[]) => {
+    if (!isAuthenticated || productIds.length === 0) return
+
+    try {
+      await fetch('/api/products/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds }),
+      })
+    } catch (error) {
+      console.error('Error syncing to server:', error)
+    }
+  }, [isAuthenticated])
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        setIsAuthenticated(response.ok)
+      } catch {
+        setIsAuthenticated(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  // Load from localStorage on mount, then sync with server if authenticated
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
@@ -56,16 +86,78 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
-  // Persist to localStorage when compareProducts changes
+  // Sync with server when authenticated
+  useEffect(() => {
+    const syncWithServer = async () => {
+      if (!mounted || !isAuthenticated || isSyncing) return
+
+      setIsSyncing(true)
+      try {
+        // First, try to load from server
+        const response = await fetch('/api/products/compare')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.comparisons && data.comparisons.length > 0) {
+            // Get the most recent comparison
+            const latestComparison = data.comparisons[0]
+            if (latestComparison.productIds && latestComparison.productIds.length > 0) {
+              // Fetch product details
+              const productDetailsPromises = latestComparison.productIds.map((id: string) =>
+                fetch(`/api/products/${id}`).then(r => r.json()).then(d => d.product)
+              )
+              const products = await Promise.all(productDetailsPromises)
+              
+              // Transform to ComparisonProduct format
+              const comparisonProducts: ComparisonProduct[] = products
+                .filter(Boolean)
+                .map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  price: parseFloat(String(p.price)),
+                  salePrice: p.salePrice ? parseFloat(String(p.salePrice)) : null,
+                  image: Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? JSON.parse(p.images)[0] : '/placeholder-product.jpg'),
+                  category: p.category?.name,
+                  brand: p.brand,
+                  ratingAverage: parseFloat(String(p.ratingAverage || 0)),
+                  stockQuantity: p.stockQuantity,
+                }))
+              
+              if (comparisonProducts.length > 0) {
+                setCompareProducts(comparisonProducts)
+                setCompareBarVisible(true)
+                // Update localStorage
+                localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(comparisonProducts))
+              }
+            }
+          } else if (compareProducts.length > 0) {
+            // If server has no comparison but we have local data, sync to server
+            await syncToServer(compareProducts.map(p => p.id))
+          }
+        }
+      } catch (error) {
+        console.error('Error syncing comparison with server:', error)
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
+    syncWithServer()
+  }, [mounted, isAuthenticated, syncToServer])
+
+  // Persist to localStorage and sync to server when compareProducts changes
   useEffect(() => {
     if (mounted && typeof window !== 'undefined') {
       if (compareProducts.length > 0) {
         localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(compareProducts))
+        // Sync to server if authenticated
+        if (isAuthenticated && !isSyncing) {
+          syncToServer(compareProducts.map(p => p.id))
+        }
       } else {
         localStorage.removeItem(STORAGE_KEYS.COMPARE_PRODUCTS)
       }
     }
-  }, [compareProducts, mounted])
+  }, [compareProducts, mounted, isAuthenticated])
 
   const canAddMore = compareProducts.length < PRODUCT_LIMITS.MAX_COMPARISON
 
