@@ -51,7 +51,7 @@ This document tracks the progress of features and components required for deploy
 - Data export requests (schema)
 - Enhanced delivery tracking (schema)
 - Email campaigns (schema)
-- Social sharing (full component with tracking)
+- Social sharing (component with tracking)
 
 **🔄 Partially Implemented:**
 - Multi-language support (infrastructure exists via next-intl, needs translations)
