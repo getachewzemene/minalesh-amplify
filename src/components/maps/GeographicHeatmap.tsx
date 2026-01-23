@@ -3,14 +3,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
-// Fix for default marker icons in Leaflet with Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { ETHIOPIAN_CITIES, ETHIOPIA_MAP_CENTER, ETHIOPIA_DEFAULT_ZOOM } from '@/lib/ethiopian-cities';
+import { fixLeafletIcons } from '@/lib/leaflet-config';
 
 interface LocationData {
   city: string;
@@ -25,25 +19,6 @@ interface GeographicHeatmapProps {
   height?: string;
 }
 
-// Ethiopian cities coordinates (approximate)
-const ETHIOPIAN_CITIES: Record<string, { lat: number; lng: number }> = {
-  'Addis Ababa': { lat: 9.0320, lng: 38.7469 },
-  'Dire Dawa': { lat: 9.5930, lng: 41.8661 },
-  'Mekele': { lat: 13.4967, lng: 39.4753 },
-  'Gondar': { lat: 12.6000, lng: 37.4667 },
-  'Awasa': { lat: 7.0500, lng: 38.4667 },
-  'Bahir Dar': { lat: 11.5933, lng: 37.3906 },
-  'Jimma': { lat: 7.6833, lng: 36.8333 },
-  'Jijiga': { lat: 9.3500, lng: 42.8000 },
-  'Harar': { lat: 9.3131, lng: 42.1180 },
-  'Dessie': { lat: 11.1333, lng: 39.6333 },
-  'Adama': { lat: 8.5400, lng: 39.2689 },
-  'Nekemte': { lat: 9.0833, lng: 36.5500 },
-  'Debre Birhan': { lat: 9.6833, lng: 39.5333 },
-  'Asella': { lat: 7.9500, lng: 39.1333 },
-  'Debre Markos': { lat: 10.3500, lng: 37.7333 },
-};
-
 export default function GeographicHeatmap({ data, height = '400px' }: GeographicHeatmapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -51,8 +26,14 @@ export default function GeographicHeatmap({ data, height = '400px' }: Geographic
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
+    // Fix Leaflet icons for Next.js
+    fixLeafletIcons();
+
     // Initialize map centered on Ethiopia
-    const map = L.map(mapContainerRef.current).setView([9.145, 40.489673], 6);
+    const map = L.map(mapContainerRef.current).setView(
+      [ETHIOPIA_MAP_CENTER.lat, ETHIOPIA_MAP_CENTER.lng],
+      ETHIOPIA_DEFAULT_ZOOM
+    );
     mapRef.current = map;
 
     // Add OpenStreetMap tile layer

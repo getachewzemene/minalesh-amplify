@@ -3,14 +3,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
-// Fix for default marker icons in Leaflet with Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { ETHIOPIAN_CITIES, DEFAULT_WAREHOUSE_LOCATION } from '@/lib/ethiopian-cities';
+import { fixLeafletIcons } from '@/lib/leaflet-config';
 
 interface DeliveryTrackingMapProps {
   origin?: { city: string; lat?: number; lng?: number };
@@ -24,28 +18,6 @@ interface DeliveryTrackingMapProps {
   height?: string;
 }
 
-// Ethiopian cities coordinates (approximate)
-const ETHIOPIAN_CITIES: Record<string, { lat: number; lng: number }> = {
-  'Addis Ababa': { lat: 9.0320, lng: 38.7469 },
-  'Dire Dawa': { lat: 9.5930, lng: 41.8661 },
-  'Mekele': { lat: 13.4967, lng: 39.4753 },
-  'Gondar': { lat: 12.6000, lng: 37.4667 },
-  'Awasa': { lat: 7.0500, lng: 38.4667 },
-  'Bahir Dar': { lat: 11.5933, lng: 37.3906 },
-  'Jimma': { lat: 7.6833, lng: 36.8333 },
-  'Jijiga': { lat: 9.3500, lng: 42.8000 },
-  'Harar': { lat: 9.3131, lng: 42.1180 },
-  'Dessie': { lat: 11.1333, lng: 39.6333 },
-  'Adama': { lat: 8.5400, lng: 39.2689 },
-  'Nekemte': { lat: 9.0833, lng: 36.5500 },
-  'Debre Birhan': { lat: 9.6833, lng: 39.5333 },
-  'Asella': { lat: 7.9500, lng: 39.1333 },
-  'Debre Markos': { lat: 10.3500, lng: 37.7333 },
-};
-
-// Default warehouse location (Addis Ababa)
-const DEFAULT_ORIGIN = { lat: 9.0320, lng: 38.7469 };
-
 export default function DeliveryTrackingMap({ 
   origin, 
   destination, 
@@ -57,6 +29,9 @@ export default function DeliveryTrackingMap({
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
+
+    // Fix Leaflet icons for Next.js
+    fixLeafletIcons();
 
     // Get destination coordinates
     const destCoords = ETHIOPIAN_CITIES[destination.city] || 
@@ -94,8 +69,8 @@ export default function DeliveryTrackingMap({
 
     // Get coordinates
     const originCoords = origin 
-      ? (ETHIOPIAN_CITIES[origin.city] || { lat: origin.lat || DEFAULT_ORIGIN.lat, lng: origin.lng || DEFAULT_ORIGIN.lng })
-      : DEFAULT_ORIGIN;
+      ? (ETHIOPIAN_CITIES[origin.city] || { lat: origin.lat || DEFAULT_WAREHOUSE_LOCATION.lat, lng: origin.lng || DEFAULT_WAREHOUSE_LOCATION.lng })
+      : DEFAULT_WAREHOUSE_LOCATION;
 
     const destCoords = ETHIOPIAN_CITIES[destination.city] || 
                        { lat: destination.lat || 9.0320, lng: destination.lng || 38.7469 };
