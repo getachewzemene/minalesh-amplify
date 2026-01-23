@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 
+// Maximum number of view history items to return from API
+const MAX_VIEW_HISTORY_ITEMS = 50;
+
 /**
  * @swagger
  * /api/user/view-history:
@@ -59,7 +62,7 @@ export async function GET(request: Request) {
       orderBy: {
         viewedAt: 'desc',
       },
-      take: Math.min(limit, 50), // Cap at 50
+      take: Math.min(limit, MAX_VIEW_HISTORY_ITEMS),
     });
 
     // Filter out inactive products

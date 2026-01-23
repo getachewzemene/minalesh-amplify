@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Clock, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,22 @@ import { formatCurrency } from "@/lib/utils"
 import { STORAGE_KEYS, PRODUCT_LIMITS } from "@/lib/product-constants"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
+
+interface ViewHistoryItem {
+  product: {
+    id: string
+    name: string
+    price: number
+    salePrice?: number | null
+    images: string | string[]
+    isActive: boolean
+  }
+  viewedAt: string
+}
+
+interface ViewHistoryResponse {
+  viewHistory: ViewHistoryItem[]
+}
 
 interface ViewedProduct {
   id: string
@@ -96,9 +112,26 @@ export function RecentlyViewedProducts() {
       window.removeEventListener('recently-viewed-updated', handleStorageChange)
       window.removeEventListener('browsing-history-preference-changed', handlePreferenceChange)
     }
-  }, [user])
+  }, [user, loadRecentlyViewed])
 
-  const loadRecentlyViewed = async () => {
+  const loadFromLocalStorage = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
+      if (stored) {
+        const items = JSON.parse(stored) as ViewedProduct[]
+        // Sort by most recent first
+        const sorted = items.sort((a, b) => b.viewedAt - a.viewedAt)
+        setProducts(sorted.slice(0, PRODUCT_LIMITS.MAX_RECENTLY_VIEWED))
+      } else {
+        setProducts([])
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error)
+      setProducts([])
+    }
+  }, [])
+
+  const loadRecentlyViewed = useCallback(async () => {
     try {
       // Don't load if browsing history is disabled
       if (!isBrowsingHistoryEnabled()) {
@@ -124,16 +157,22 @@ export function RecentlyViewedProducts() {
         })
         
         if (response.ok) {
-          const data = await response.json()
+          const data: ViewHistoryResponse = await response.json()
           const viewHistory = data.viewHistory || []
           
           // Transform API data to ViewedProduct format
-          const transformedProducts: ViewedProduct[] = viewHistory.map((vh: any) => {
-            const images = Array.isArray(vh.product.images) 
-              ? vh.product.images 
-              : typeof vh.product.images === 'string' 
-                ? JSON.parse(vh.product.images) 
-                : []
+          const transformedProducts: ViewedProduct[] = viewHistory.map((vh) => {
+            let images: string[] = []
+            try {
+              images = Array.isArray(vh.product.images) 
+                ? vh.product.images 
+                : typeof vh.product.images === 'string' 
+                  ? JSON.parse(vh.product.images) 
+                  : []
+            } catch (error) {
+              console.error('Error parsing product images:', error)
+              images = []
+            }
             const firstImage = images[0] || '/placeholder-product.jpg'
             
             return {
@@ -162,24 +201,7 @@ export function RecentlyViewedProducts() {
       loadFromLocalStorage()
       setIsLoading(false)
     }
-  }
-  
-  const loadFromLocalStorage = () => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.RECENTLY_VIEWED)
-      if (stored) {
-        const items = JSON.parse(stored) as ViewedProduct[]
-        // Sort by most recent first
-        const sorted = items.sort((a, b) => b.viewedAt - a.viewedAt)
-        setProducts(sorted.slice(0, PRODUCT_LIMITS.MAX_RECENTLY_VIEWED))
-      } else {
-        setProducts([])
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error)
-      setProducts([])
-    }
-  }
+  }, [user, loadFromLocalStorage])
 
   const handleClearHistory = async () => {
     try {
