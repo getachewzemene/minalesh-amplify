@@ -124,9 +124,8 @@ async function registerHandler(request: Request): Promise<NextResponse> {
         },
       });
 
-      // If referral code was provided, update referral and award points
+      // If referral code was provided, update referral status
       if (referralData) {
-        // Update referral status
         await tx.referral.update({
           where: { id: referralData.id },
           data: {
@@ -134,24 +133,26 @@ async function registerHandler(request: Request): Promise<NextResponse> {
             status: 'registered',
           },
         });
-
-        // Award welcome points to new user (referee)
-        try {
-          await awardPoints(
-            newUser.id,
-            POINTS_RATES.referralReferee,
-            'referral',
-            'Welcome bonus for signing up with a referral code',
-            referralData.id
-          );
-        } catch (error) {
-          console.error('Error awarding referral points to referee:', error);
-          // Don't fail registration if points award fails
-        }
       }
 
       return newUser;
     });
+
+    // Award welcome points to new user (referee) - done outside transaction to avoid nested transactions
+    if (referralData) {
+      try {
+        await awardPoints(
+          user.id,
+          POINTS_RATES.referralReferee,
+          'referral',
+          'Welcome bonus for signing up with a referral code',
+          referralData.id
+        );
+      } catch (error) {
+        console.error('Error awarding referral points to referee:', error);
+        // Don't fail registration if points award fails
+      }
+    }
 
     // Send email verification
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

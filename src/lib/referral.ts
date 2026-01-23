@@ -31,8 +31,8 @@ export async function checkAndCompleteReferral(userId: string, orderId: string):
 
     // If this is their first completed order, complete the referral
     if (completedOrdersCount === 1) {
+      // Update referral status in transaction
       await prisma.$transaction(async (tx) => {
-        // Update referral status
         await tx.referral.update({
           where: { id: referral.id },
           data: {
@@ -41,21 +41,21 @@ export async function checkAndCompleteReferral(userId: string, orderId: string):
             rewardIssued: true,
           },
         })
-
-        // Award points to the referrer
-        try {
-          await awardPoints(
-            referral.referrerId,
-            POINTS_RATES.referralReferrer, // 100 points
-            'referral',
-            'Reward for successful referral',
-            referral.id
-          )
-        } catch (error) {
-          console.error('Error awarding points to referrer:', error)
-          // Continue with referral completion even if points fail
-        }
       })
+
+      // Award points to the referrer outside transaction to avoid nested transactions
+      try {
+        await awardPoints(
+          referral.referrerId,
+          POINTS_RATES.referralReferrer, // 100 points
+          'referral',
+          'Reward for successful referral',
+          referral.id
+        )
+      } catch (error) {
+        console.error('Error awarding points to referrer:', error)
+        // Continue even if points award fails
+      }
     }
   } catch (error) {
     console.error('Error checking and completing referral:', error)

@@ -22,7 +22,8 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
 
-// Import points rates for consistency
+// Points rates - defined locally since this is a client component
+// These values should match POINTS_RATES from '@/lib/loyalty/points'
 const POINTS_RATES = {
   referralReferrer: 100,
   referralReferee: 50,
