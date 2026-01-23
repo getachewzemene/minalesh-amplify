@@ -22,6 +22,12 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
 
+// Import points rates for consistency
+const POINTS_RATES = {
+  referralReferrer: 100,
+  referralReferee: 50,
+}
+
 interface ReferralStats {
   totalReferrals: number
   registeredReferrals: number
@@ -237,7 +243,7 @@ export default function ReferralsPage() {
                         {referral.rewardIssued && (
                           <div className="flex items-center gap-1 text-sm font-medium text-green-600">
                             <Gift className="h-4 w-4" />
-                            <span>100 pts</span>
+                            <span>{POINTS_RATES.referralReferrer} pts</span>
                           </div>
                         )}
                       </div>
@@ -274,7 +280,7 @@ export default function ReferralsPage() {
                     <h3 className="font-semibold">2. Friend Signs Up</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    When they register using your code, they get 50 loyalty points as a welcome bonus.
+                    When they register using your code, they get {POINTS_RATES.referralReferee} loyalty points as a welcome bonus.
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -285,7 +291,7 @@ export default function ReferralsPage() {
                     <h3 className="font-semibold">3. Earn Rewards</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    When they make their first purchase, you earn 100 loyalty points that you can use for discounts!
+                    When they make their first purchase, you earn {POINTS_RATES.referralReferrer} loyalty points that you can use for discounts!
                   </p>
                 </div>
               </div>

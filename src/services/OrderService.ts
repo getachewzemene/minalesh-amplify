@@ -8,6 +8,7 @@
 import prisma from '@/lib/prisma';
 import { sendEmail, createOrderConfirmationEmail } from '@/lib/email';
 import { redeemPoints } from '@/services/LoyaltyService';
+import { checkAndCompleteReferral } from '@/lib/referral';
 import type { PaymentMethod } from '@/types/payment';
 
 export interface CreateOrderRequest {
@@ -311,7 +312,6 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
       );
 
       // Check and complete referral if this is first order
-      const { checkAndCompleteReferral } = await import('@/lib/referral');
       checkAndCompleteReferral(userId, order.id).catch(err =>
         console.error('Failed to check/complete referral:', err)
       );
