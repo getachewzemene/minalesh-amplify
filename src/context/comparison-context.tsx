@@ -36,8 +36,46 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
   const [compareProducts, setCompareProducts] = useState<ComparisonProduct[]>([])
   const [isCompareBarVisible, setCompareBarVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
-  // Load from localStorage on mount
+  // Helper function to sync to server
+  const syncToServer = useCallback(async (productIds: string[]) => {
+    if (!isAuthenticated || productIds.length === 0) return
+
+    try {
+      const response = await fetch('/api/products/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds }),
+      })
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Failed to sync comparison to server:', error)
+        // Don't show error to user as this is a background sync
+        // The local version will still work
+      }
+    } catch (error) {
+      console.error('Error syncing to server:', error)
+      // Silent fail - localStorage will continue to work
+    }
+  }, [isAuthenticated])
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        setIsAuthenticated(response.ok)
+      } catch {
+        setIsAuthenticated(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  // Load from localStorage on mount, then sync with server if authenticated
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
@@ -56,16 +94,105 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
-  // Persist to localStorage when compareProducts changes
+  // Sync with server when authenticated
+  useEffect(() => {
+    const syncWithServer = async () => {
+      if (!mounted || !isAuthenticated || isSyncing) return
+
+      setIsSyncing(true)
+      try {
+        // First, try to load from server
+        const response = await fetch('/api/products/compare')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.comparisons && data.comparisons.length > 0) {
+            // Get the most recent comparison
+            const latestComparison = data.comparisons[0]
+            if (latestComparison.productIds && latestComparison.productIds.length > 0) {
+              // Fetch product details with error handling for each product
+              const productDetailsPromises = latestComparison.productIds.map((id: string) =>
+                fetch(`/api/products/${id}`)
+                  .then(r => r.ok ? r.json() : null)
+                  .then(d => d?.product || null)
+                  .catch(() => null) // Gracefully handle individual product fetch failures
+              )
+              const products = await Promise.all(productDetailsPromises)
+              
+              // Transform to ComparisonProduct format, filtering out failed fetches
+              const comparisonProducts: ComparisonProduct[] = products
+                .filter(Boolean)
+                .map(p => {
+                  try {
+                    // Safely parse image field
+                    let imageUrl = '/placeholder-product.jpg'
+                    if (Array.isArray(p.images)) {
+                      imageUrl = p.images[0] || imageUrl
+                    } else if (typeof p.images === 'string') {
+                      try {
+                        const parsed = JSON.parse(p.images)
+                        imageUrl = Array.isArray(parsed) && parsed[0] ? parsed[0] : imageUrl
+                      } catch {
+                        // If JSON parse fails, use the string directly if it looks like a URL
+                        imageUrl = p.images.startsWith('http') || p.images.startsWith('/') ? p.images : imageUrl
+                      }
+                    }
+                    
+                    return {
+                      id: p.id,
+                      name: p.name,
+                      price: parseFloat(String(p.price)),
+                      salePrice: p.salePrice ? parseFloat(String(p.salePrice)) : null,
+                      image: imageUrl,
+                      category: p.category?.name,
+                      brand: p.brand,
+                      ratingAverage: parseFloat(String(p.ratingAverage || 0)),
+                      stockQuantity: p.stockQuantity,
+                    }
+                  } catch {
+                    return null
+                  }
+                })
+                .filter(Boolean) as ComparisonProduct[]
+              
+              if (comparisonProducts.length > 0) {
+                setCompareProducts(comparisonProducts)
+                setCompareBarVisible(true)
+                // Update localStorage
+                localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(comparisonProducts))
+              }
+            }
+          } else if (compareProducts.length > 0) {
+            // If server has no comparison but we have local data, sync to server
+            await syncToServer(compareProducts.map(p => p.id))
+          }
+        }
+      } catch (error) {
+        console.error('Error syncing comparison with server:', error)
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
+    syncWithServer()
+    // Note: compareProducts is intentionally excluded from dependencies to prevent infinite loop
+    // This effect only syncs on mount/authentication change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, isAuthenticated, syncToServer])
+
+  // Persist to localStorage and sync to server when compareProducts changes
   useEffect(() => {
     if (mounted && typeof window !== 'undefined') {
       if (compareProducts.length > 0) {
         localStorage.setItem(STORAGE_KEYS.COMPARE_PRODUCTS, JSON.stringify(compareProducts))
+        // Sync to server if authenticated (but not during initial sync)
+        if (isAuthenticated && !isSyncing) {
+          syncToServer(compareProducts.map(p => p.id))
+        }
       } else {
         localStorage.removeItem(STORAGE_KEYS.COMPARE_PRODUCTS)
       }
     }
-  }, [compareProducts, mounted])
+  }, [compareProducts, mounted, isAuthenticated, isSyncing, syncToServer])
 
   const canAddMore = compareProducts.length < PRODUCT_LIMITS.MAX_COMPARISON
 

@@ -50,6 +50,70 @@ function hasSpecDifference(products: ProductComparisonData[], specKey: string): 
   return uniqueValues.size > 1
 }
 
+// Helper to check if products are from the same category
+function isSameCategory(products: ProductComparisonData[]): boolean {
+  if (products.length === 0) return true
+  const categories = products.map(p => p.category?.name).filter(Boolean)
+  return new Set(categories).size <= 1
+}
+
+// Helper to get category-specific attribute groups
+function getCategorySpecificGroups(categoryName: string | undefined): Record<string, string[]> {
+  if (!categoryName) return {}
+  
+  const categoryLower = categoryName.toLowerCase()
+  
+  // Define category-specific specification groups
+  const categoryGroups: Record<string, Record<string, string[]>> = {
+    'electronics': {
+      'Display': ['Screen Size', 'Resolution', 'Display Type', 'Refresh Rate', 'Screen'],
+      'Performance': ['Processor', 'CPU', 'RAM', 'Storage', 'GPU', 'Graphics'],
+      'Camera': ['Main Camera', 'Front Camera', 'Camera Resolution', 'Video Recording'],
+      'Battery': ['Battery Capacity', 'Charging Speed', 'Battery Life'],
+      'Connectivity': ['WiFi', 'Bluetooth', '5G', 'NFC', 'USB'],
+    },
+    'phones': {
+      'Display': ['Screen Size', 'Resolution', 'Display Type', 'Refresh Rate'],
+      'Performance': ['Processor', 'RAM', 'Storage', 'GPU'],
+      'Camera': ['Main Camera', 'Front Camera', 'Camera Resolution'],
+      'Battery': ['Battery Capacity', 'Charging Speed'],
+      'Connectivity': ['5G', 'WiFi', 'Bluetooth', 'NFC'],
+    },
+    'laptops': {
+      'Display': ['Screen Size', 'Resolution', 'Panel Type'],
+      'Performance': ['Processor', 'CPU', 'RAM', 'Storage', 'GPU', 'Graphics Card'],
+      'Connectivity': ['WiFi', 'Bluetooth', 'USB Ports', 'HDMI'],
+      'Battery': ['Battery Life', 'Battery Capacity'],
+    },
+    'clothing': {
+      'Specifications': ['Size', 'Material', 'Color', 'Fabric'],
+      'Details': ['Fit', 'Pattern', 'Sleeve Type', 'Collar Type'],
+    },
+    'shoes': {
+      'Specifications': ['Size', 'Material', 'Color'],
+      'Details': ['Sole Material', 'Closure Type', 'Heel Type'],
+    },
+    'furniture': {
+      'Dimensions': ['Width', 'Height', 'Depth', 'Weight'],
+      'Materials': ['Material', 'Finish', 'Color'],
+      'Features': ['Assembly Required', 'Weight Capacity'],
+    },
+  }
+  
+  // Find matching category group with exact word matching
+  for (const [key, groups] of Object.entries(categoryGroups)) {
+    // Simple word boundary check - category must contain the key as a separate word
+    if (categoryLower === key || 
+        categoryLower.startsWith(key + ' ') || 
+        categoryLower.endsWith(' ' + key) || 
+        categoryLower.includes(' ' + key + ' ')) {
+      return groups
+    }
+  }
+  
+  return {}
+}
+
 // Helper to get best/lowest price
 function getBestPrice(products: ProductComparisonData[]): number {
   return Math.min(...products.map(p => p.salePrice || p.price))
@@ -192,6 +256,60 @@ export default function ComparePage() {
     const specs = parseJsonField<Record<string, string>>(product.specifications, {})
     Object.keys(specs).forEach(key => allSpecKeys.add(key))
   })
+
+  // Check if all products are from the same category
+  const sameCategory = isSameCategory(products)
+  const categoryName = sameCategory && products.length > 0 ? products[0].category?.name : undefined
+  
+  // Get category-specific groups if applicable
+  const categoryGroups = sameCategory ? getCategorySpecificGroups(categoryName) : {}
+  const hasGroups = Object.keys(categoryGroups).length > 0
+
+  // Organize specs by category-specific groups
+  const organizedSpecs: Record<string, string[]> = {}
+  const ungroupedSpecs: string[] = []
+  
+  if (hasGroups) {
+    // Pre-compute lowercase versions for optimization
+    const lowercasedGroups = Object.entries(categoryGroups).map(([groupName, groupKeys]) => ({
+      groupName,
+      lowercasedKeys: groupKeys.map(gk => gk.toLowerCase())
+    }))
+    
+    // Assign specs to groups
+    allSpecKeys.forEach(key => {
+      const keyLower = key.toLowerCase()
+      let assigned = false
+      
+      // Try to find the best matching group
+      // Prioritize exact matches, then substring matches
+      for (const { groupName, lowercasedKeys } of lowercasedGroups) {
+        // Check for exact match first
+        const exactMatch = lowercasedKeys.some(gk => keyLower === gk)
+        // Then check for word-level match (e.g., "Battery Capacity" matches "Battery")
+        const wordMatch = lowercasedKeys.some(gk => {
+          const words = keyLower.split(/\s+/)
+          return words.includes(gk) || gk.split(/\s+/).some(gkWord => words.includes(gkWord))
+        })
+        
+        if (exactMatch || wordMatch) {
+          if (!organizedSpecs[groupName]) {
+            organizedSpecs[groupName] = []
+          }
+          organizedSpecs[groupName].push(key)
+          assigned = true
+          break
+        }
+      }
+      
+      if (!assigned) {
+        ungroupedSpecs.push(key)
+      }
+    })
+  } else {
+    // No grouping, use all specs as ungrouped
+    ungroupedSpecs.push(...Array.from(allSpecKeys))
+  }
 
   // Determine best values for highlighting
   const bestPrice = getBestPrice(products)
@@ -364,33 +482,87 @@ export default function ComparePage() {
               {allSpecKeys.size > 0 && (
                 <Card className="mb-8">
                   <CardHeader>
-                    <CardTitle>Specifications</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Specifications</CardTitle>
+                      {sameCategory && categoryName && (
+                        <Badge variant="secondary" className="text-sm">
+                          {categoryName} - Category-Specific View
+                        </Badge>
+                      )}
+                      {!sameCategory && (
+                        <Badge variant="outline" className="text-sm text-yellow-600 dark:text-yellow-400">
+                          Mixed Categories
+                        </Badge>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {Array.from(allSpecKeys).map((specKey) => {
-                        const hasDiff = hasSpecDifference(products, specKey)
-                        return (
-                          <div 
-                            key={specKey} 
-                            className={`grid gap-4 ${hasDiff ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded-md' : ''}`}
-                            style={{ gridTemplateColumns: `200px repeat(${products.length}, minmax(280px, 1fr))` }}
-                          >
-                            <div className={`font-medium py-2 px-4 bg-muted rounded flex items-center gap-2 ${hasDiff ? 'text-yellow-700 dark:text-yellow-400' : ''}`}>
-                              {specKey}
-                              {hasDiff && <Badge variant="outline" className="text-xs bg-yellow-100 dark:bg-yellow-900">Different</Badge>}
-                            </div>
-                            {products.map((product) => {
-                              const specs = parseJsonField<Record<string, string>>(product.specifications, {})
-                              return (
-                                <div key={product.id} className={`py-2 px-4 border rounded ${hasDiff ? 'border-yellow-300 dark:border-yellow-700' : ''}`}>
-                                  {specs[specKey] || '-'}
+                    <div className="space-y-6">
+                      {/* Render grouped specifications */}
+                      {hasGroups && Object.entries(organizedSpecs).map(([groupName, specKeys]) => (
+                        <div key={groupName} className="space-y-2">
+                          <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">
+                            {groupName}
+                          </h3>
+                          {specKeys.map((specKey) => {
+                            const hasDiff = hasSpecDifference(products, specKey)
+                            return (
+                              <div 
+                                key={specKey} 
+                                className={`grid gap-4 ${hasDiff ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded-md' : ''}`}
+                                style={{ gridTemplateColumns: `200px repeat(${products.length}, minmax(280px, 1fr))` }}
+                              >
+                                <div className={`font-medium py-2 px-4 bg-muted rounded flex items-center gap-2 ${hasDiff ? 'text-yellow-700 dark:text-yellow-400' : ''}`}>
+                                  {specKey}
+                                  {hasDiff && <Badge variant="outline" className="text-xs bg-yellow-100 dark:bg-yellow-900">Different</Badge>}
                                 </div>
-                              )
-                            })}
-                          </div>
-                        )
-                      })}
+                                {products.map((product) => {
+                                  const specs = parseJsonField<Record<string, string>>(product.specifications, {})
+                                  return (
+                                    <div key={product.id} className={`py-2 px-4 border rounded ${hasDiff ? 'border-yellow-300 dark:border-yellow-700' : ''}`}>
+                                      {specs[specKey] || '-'}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
+                      
+                      {/* Render ungrouped specifications */}
+                      {ungroupedSpecs.length > 0 && (
+                        <div className="space-y-2">
+                          {hasGroups && (
+                            <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">
+                              Other Specifications
+                            </h3>
+                          )}
+                          {ungroupedSpecs.map((specKey) => {
+                            const hasDiff = hasSpecDifference(products, specKey)
+                            return (
+                              <div 
+                                key={specKey} 
+                                className={`grid gap-4 ${hasDiff ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded-md' : ''}`}
+                                style={{ gridTemplateColumns: `200px repeat(${products.length}, minmax(280px, 1fr))` }}
+                              >
+                                <div className={`font-medium py-2 px-4 bg-muted rounded flex items-center gap-2 ${hasDiff ? 'text-yellow-700 dark:text-yellow-400' : ''}`}>
+                                  {specKey}
+                                  {hasDiff && <Badge variant="outline" className="text-xs bg-yellow-100 dark:bg-yellow-900">Different</Badge>}
+                                </div>
+                                {products.map((product) => {
+                                  const specs = parseJsonField<Record<string, string>>(product.specifications, {})
+                                  return (
+                                    <div key={product.id} className={`py-2 px-4 border rounded ${hasDiff ? 'border-yellow-300 dark:border-yellow-700' : ''}`}>
+                                      {specs[specKey] || '-'}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
