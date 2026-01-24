@@ -7,17 +7,9 @@ import { Sparkles } from "lucide-react"
 
 export function PersonalizedRecommendations() {
   const { user } = useAuth()
-  const [hasRecommendations, setHasRecommendations] = useState(false)
-
-  useEffect(() => {
-    // Only check if user is logged in
-    if (user) {
-      setHasRecommendations(true)
-    }
-  }, [user])
 
   // Don't render anything if user is not logged in
-  if (!user || !hasRecommendations) {
+  if (!user) {
     return null
   }
 

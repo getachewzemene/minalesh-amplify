@@ -202,11 +202,12 @@ The implementation uses these Prisma models:
 
 ### Performance Considerations
 
-1. **Caching:** Consider implementing Redis caching for recommendation results
-2. **Pagination:** APIs support pagination with limit parameters
-3. **Indexing:** Database indexes on userId, productId, viewedAt for fast queries
-4. **Batch Operations:** Recommendation scores created in batches (max 50)
-5. **Error Handling:** Graceful fallbacks when APIs fail
+1. **API Response Format:** ProductSection component updated to handle both response formats (`data.products` and `data.data`) for maximum compatibility
+2. **Caching:** Consider implementing Redis caching for recommendation results
+3. **Pagination:** APIs support pagination with limit parameters
+4. **Indexing:** Database indexes on userId, productId, viewedAt for fast queries
+5. **Batch Operations:** Recommendation scores created in batches (max 50)
+6. **Error Handling:** Graceful fallbacks when APIs fail
 
 ## Testing Recommendations
 
