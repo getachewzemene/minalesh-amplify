@@ -145,6 +145,22 @@ model User {
   savedSearches           SavedSearch[]
   priceAlerts             PriceAlert[]
   viewHistory             ViewHistory[]
+  // New: Next-gen features
+  recommendationScores    RecommendationScore[]
+  customerChats           ChatConversation[]      @relation("CustomerChats")
+  vendorChats             ChatConversation[]      @relation("VendorChats")
+  adminChats              ChatConversation[]      @relation("AdminChats")
+  chatMessages            ChatMessage[]
+  voiceSearches           VoiceSearch[]
+  groupPurchasesInitiated GroupPurchase[]         @relation("GroupPurchaseInitiator")
+  groupPurchaseMembers    GroupPurchaseMember[]
+  socialShares            SocialShare[]
+  autoReorderRules        AutoReorderRule[]
+  purchaseOrders          PurchaseOrder[]
+  achievements            UserAchievement[]
+  dailyCheckIns           DailyCheckIn[]
+  gameScores              GameScore[]
+  flashSaleRegistrations  FlashSaleRegistration[]
 
   @@map("users")
 }
@@ -270,6 +286,14 @@ model Product {
   priceAlerts          PriceAlert[]
   shares               ProductShare[]
   viewHistory          ViewHistory[]
+  // New: Next-gen features
+  recommendationScores RecommendationScore[]
+  chatConversations    ChatConversation[]
+  groupPurchases       GroupPurchase[]
+  socialShares         SocialShare[]
+  inventoryForecasts   InventoryForecast[]
+  autoReorderRules     AutoReorderRule[]
+  liveStockCounters    LiveStockCounter[]
 
   @@map("products")
 }
@@ -382,6 +406,9 @@ model Order {
   protectionClaims     ProtectionClaim[]
   deliveryTracking     DeliveryTracking?
   warehouse            Warehouse?            @relation("WarehouseOrders", fields: [warehouseId], references: [id])
+  // New: Next-gen features
+  chatConversations    ChatConversation[]
+  groupPurchaseMembers GroupPurchaseMember[]
 
   @@index([warehouseId])
   @@map("orders")
@@ -689,6 +716,9 @@ model FlashSale {
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // New: Next-gen features
+  registrations FlashSaleRegistration[]
+  liveStockCounters LiveStockCounter[]
 
   @@index([productId])
   @@index([startsAt, endsAt])
@@ -2000,9 +2030,378 @@ model Warehouse {
   
   // Relations
   orders      Order[]  @relation("WarehouseOrders")
+  // New: Next-gen features
+  inventoryForecasts InventoryForecast[]
+  autoReorderRules AutoReorderRule[]
   
   @@index([city])
   @@index([isActive])
   @@index([isPrimary])
   @@map("warehouses")
+}
+
+// ============================================
+// NEXT-GENERATION E-COMMERCE FEATURES
+// ============================================
+
+// AI-Powered Recommendations
+model RecommendationScore {
+  id          String   @id @default(uuid())
+  userId      String   @db.Uuid
+  productId   String   @db.Uuid
+  score       Float    // 0-1 recommendation confidence
+  algorithm   String   // collaborative, content_based, trending, hybrid
+  factors     Json     // Factors that influenced recommendation
+  generatedAt DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId, algorithm])
+  @@index([userId, score])
+  @@index([productId])
+  @@index([generatedAt])
+  @@map("recommendation_scores")
+}
+
+// Live Chat & Real-Time Support
+enum ChatStatus {
+  active
+  archived
+  closed
+}
+
+model ChatConversation {
+  id            String      @id @default(uuid())
+  customerId    String      @db.Uuid
+  vendorId      String?     @db.Uuid
+  adminId       String?     @db.Uuid
+  productId     String?     @db.Uuid  // Related product
+  orderId       String?     @db.Uuid  // Related order
+  subject       String?
+  status        ChatStatus  @default(active)
+  lastMessageAt DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  customer      User        @relation("CustomerChats", fields: [customerId], references: [id], onDelete: Cascade)
+  vendor        User?       @relation("VendorChats", fields: [vendorId], references: [id], onDelete: Cascade)
+  admin         User?       @relation("AdminChats", fields: [adminId], references: [id], onDelete: Cascade)
+  product       Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order         Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  messages      ChatMessage[]
+  
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([adminId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String           @db.Uuid
+  senderId       String           @db.Uuid
+  senderType     String           // customer, vendor, admin, bot
+  message        String           @db.Text
+  attachments    String[]         // URLs to images/files
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+  
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([isRead])
+  @@map("chat_messages")
+}
+
+// Voice Search & Commands
+model VoiceSearch {
+  id             String   @id @default(uuid())
+  userId         String?  @db.Uuid
+  sessionId      String   // Anonymous session tracking
+  language       String   // en, am, om
+  audioUrl       String?  // S3 URL to audio file
+  transcription  String   // Text from speech
+  intent         String?  // search, navigate, command
+  confidence     Float    // 0-1 transcription confidence
+  resultCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+  
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([language])
+  @@index([createdAt])
+  @@map("voice_searches")
+}
+
+// Social Commerce & Group Buying
+enum GroupPurchaseStatus {
+  active
+  completed
+  expired
+  cancelled
+}
+
+model GroupPurchase {
+  id              String               @id @default(uuid())
+  productId       String               @db.Uuid
+  initiatorId     String               @db.Uuid
+  title           String
+  description     String?              @db.Text
+  requiredMembers Int                  // Minimum members to activate
+  currentMembers  Int                  @default(1)
+  maxMembers      Int?                 // Optional max limit
+  pricePerPerson  Float                // Discounted price
+  regularPrice    Float                // Original price
+  discount        Float                // Discount percentage
+  expiresAt       DateTime
+  status          GroupPurchaseStatus  @default(active)
+  createdAt       DateTime             @default(now())
+  completedAt     DateTime?
+  
+  product         Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  initiator       User                 @relation("GroupPurchaseInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  members         GroupPurchaseMember[]
+  
+  @@index([productId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([currentMembers])
+  @@map("group_purchases")
+}
+
+model GroupPurchaseMember {
+  id              String        @id @default(uuid())
+  groupPurchaseId String        @db.Uuid
+  userId          String        @db.Uuid
+  isPaid          Boolean       @default(false)
+  paidAmount      Float?
+  orderId         String?       @db.Uuid
+  joinedAt        DateTime      @default(now())
+  
+  groupPurchase   GroupPurchase @relation(fields: [groupPurchaseId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order           Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  
+  @@unique([groupPurchaseId, userId])
+  @@index([userId])
+  @@index([isPaid])
+  @@map("group_purchase_members")
+}
+
+model SocialShare {
+  id        String   @id @default(uuid())
+  userId    String   @db.Uuid
+  productId String   @db.Uuid
+  platform  String   // whatsapp, telegram, facebook, twitter, messenger
+  shareCode String   @unique
+  shareUrl  String
+  views     Int      @default(0)
+  clicks    Int      @default(0)
+  purchases Int      @default(0)
+  revenue   Float    @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([productId])
+  @@index([shareCode])
+  @@index([platform])
+  @@map("social_shares")
+}
+
+// Smart Inventory Forecasting
+model InventoryForecast {
+  id              String    @id @default(uuid())
+  productId       String    @db.Uuid
+  warehouseId     String?   @db.Uuid
+  forecastDate    DateTime  // Date for the forecast
+  predictedDemand Float     // Predicted units
+  confidence      Float     // 0-1 confidence score
+  actualDemand    Float?    // Filled after date passes
+  accuracy        Float?    // Calculated accuracy after fact
+  factors         Json      // Factors influencing forecast
+  modelVersion    String    // ML model version used
+  createdAt       DateTime  @default(now())
+  
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse       Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  
+  @@unique([productId, warehouseId, forecastDate])
+  @@index([forecastDate])
+  @@index([confidence])
+  @@map("inventory_forecasts")
+}
+
+model AutoReorderRule {
+  id              String    @id @default(uuid())
+  productId       String    @db.Uuid
+  vendorId        String    @db.Uuid
+  warehouseId     String?   @db.Uuid
+  reorderPoint    Int       // When to reorder
+  reorderQuantity Int       // How much to reorder
+  leadTimeDays    Int       // Supplier lead time
+  safetyStock     Int       // Buffer stock
+  minOrderQty     Int?      // Minimum order quantity
+  maxOrderQty     Int?      // Maximum order quantity
+  isActive        Boolean   @default(true)
+  lastTriggered   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vendor          User      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  warehouse       Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  
+  @@unique([productId, warehouseId])
+  @@index([vendorId])
+  @@index([isActive])
+  @@map("auto_reorder_rules")
+}
+
+enum POStatus {
+  draft
+  pending_approval
+  approved
+  sent_to_supplier
+  partially_received
+  received
+  cancelled
+}
+
+model PurchaseOrder {
+  id               String    @id @default(uuid())
+  poNumber         String    @unique  // PO-2026-001
+  vendorId         String    @db.Uuid
+  supplierId       String    @db.Uuid  // External supplier
+  supplierName     String
+  items            Json      // Array of {productId, quantity, unitPrice}
+  subtotal         Float
+  taxAmount        Float     @default(0)
+  totalAmount      Float
+  status           POStatus  @default(draft)
+  expectedDelivery DateTime
+  actualDelivery   DateTime?
+  autoGenerated    Boolean   @default(false)
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  vendor           User      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId])
+  @@index([status])
+  @@index([expectedDelivery])
+  @@map("purchase_orders")
+}
+
+// Gamification System
+model UserAchievement {
+  id             String   @id @default(uuid())
+  userId         String   @db.Uuid
+  achievementKey String   // first_purchase, power_reviewer, etc.
+  achievementName String
+  description    String
+  iconUrl        String?
+  points         Int      @default(0)
+  earnedAt       DateTime @default(now())
+  rewardClaimed  Boolean  @default(false)
+  claimedAt      DateTime?
+  
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, achievementKey])
+  @@index([userId])
+  @@index([earnedAt])
+  @@map("user_achievements")
+}
+
+model DailyCheckIn {
+  id          String   @id @default(uuid())
+  userId      String   @db.Uuid
+  checkInDate DateTime @db.Date
+  streakCount Int      @default(1)
+  reward      Int      // Points earned
+  bonusReward Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, checkInDate])
+  @@index([userId])
+  @@index([checkInDate])
+  @@map("daily_check_ins")
+}
+
+enum GameType {
+  spin_wheel
+  scratch_card
+  quiz
+  survey
+  mini_game
+}
+
+model GameScore {
+  id        String   @id @default(uuid())
+  userId    String   @db.Uuid
+  gameType  GameType
+  score     Int      @default(0)
+  reward    Int      // Points or discount earned
+  rewardType String  // points, discount_code, free_shipping
+  metadata  Json?    // Game-specific data
+  playedAt  DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([gameType])
+  @@index([playedAt])
+  @@map("game_scores")
+}
+
+// Enhanced Flash Sales
+model FlashSaleRegistration {
+  id          String    @id @default(uuid())
+  userId      String    @db.Uuid
+  flashSaleId String    @db.Uuid
+  notified    Boolean   @default(false)
+  notifiedAt  DateTime?
+  purchased   Boolean   @default(false)
+  registeredAt DateTime @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashSale   FlashSale @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, flashSaleId])
+  @@index([flashSaleId])
+  @@index([notified])
+  @@map("flash_sale_registrations")
+}
+
+// Live Stock Counter for Flash Sales
+model LiveStockCounter {
+  id          String   @id @default(uuid())
+  productId   String   @db.Uuid
+  flashSaleId String?  @db.Uuid
+  totalStock  Int
+  soldCount   Int      @default(0)
+  reservedCount Int    @default(0)
+  viewCount   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  flashSale   FlashSale? @relation(fields: [flashSaleId], references: [id], onDelete: SetNull)
+  
+  @@unique([productId, flashSaleId])
+  @@index([productId])
+  @@map("live_stock_counters")
 }
