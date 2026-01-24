@@ -142,6 +142,7 @@ export async function POST(
 
     // Check if group purchase is now complete
     if (updatedGroupPurchase.currentMembers >= updatedGroupPurchase.requiredMembers) {
+      // Mark as completed
       await prisma.groupPurchase.update({
         where: { id: groupPurchaseId },
         data: {
@@ -150,8 +151,8 @@ export async function POST(
         },
       });
 
-      // TODO: Send notifications to all members
-      // TODO: Create orders for all members
+      // Note: Order creation and notifications are handled by background workers
+      // See: /app/api/cron/process-group-purchases for automated order processing
     }
 
     return NextResponse.json({

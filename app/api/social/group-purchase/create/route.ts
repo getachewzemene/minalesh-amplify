@@ -55,9 +55,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    if (!product.isActive || product.stockQuantity < requiredMembers) {
+    // Check if product has enough stock for the maximum possible members
+    const requiredStock = maxMembers || requiredMembers;
+    if (!product.isActive || product.stockQuantity < requiredStock) {
       return NextResponse.json(
-        { error: 'Product is not available for group purchase' },
+        { error: 'Product is not available for group purchase - insufficient stock' },
         { status: 400 }
       );
     }

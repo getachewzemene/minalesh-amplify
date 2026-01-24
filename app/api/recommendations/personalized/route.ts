@@ -5,6 +5,42 @@ import { verifyToken } from '@/src/lib/auth';
 const prisma = new PrismaClient();
 
 /**
+ * Helper function to extract unique category IDs from user interactions
+ */
+function extractCategoryIds(
+  userOrders: any[],
+  viewHistory: any[],
+  wishlist: any[]
+): Set<string> {
+  const categoryIds = new Set<string>();
+
+  // From purchase history
+  userOrders.forEach(order => {
+    order.orderItems.forEach((item: any) => {
+      if (item.product.categoryId) {
+        categoryIds.add(item.product.categoryId);
+      }
+    });
+  });
+
+  // From view history
+  viewHistory.forEach(vh => {
+    if (vh.product.categoryId) {
+      categoryIds.add(vh.product.categoryId);
+    }
+  });
+
+  // From wishlist
+  wishlist.forEach(w => {
+    if (w.product.categoryId) {
+      categoryIds.add(w.product.categoryId);
+    }
+  });
+
+  return categoryIds;
+}
+
+/**
  * GET /api/recommendations/personalized
  * 
  * Get personalized product recommendations for the authenticated user
@@ -90,19 +126,8 @@ export async function GET(request: NextRequest) {
       wishlist.map(w => w.productId)
     );
 
-    const interactedCategoryIds = new Set([
-      ...userOrders.flatMap(order => 
-        order.orderItems
-          .map(item => item.product.categoryId)
-          .filter(id => id !== null)
-      ),
-      ...viewHistory
-        .map(vh => vh.product.categoryId)
-        .filter(id => id !== null),
-      ...wishlist
-        .map(w => w.product.categoryId)
-        .filter(id => id !== null),
-    ]);
+    // Extract category IDs using helper function
+    const interactedCategoryIds = extractCategoryIds(userOrders, viewHistory, wishlist);
 
     let recommendations: any[] = [];
 
