@@ -2,15 +2,15 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // Optimize for serverless environments
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Use DATABASE_URL for pooled connections (runtime)
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
   // Use DIRECT_URL for direct connections (migrations)
   // This is especially important for Supabase where:
   // - DATABASE_URL uses port 6543 (PgBouncer pooler)
@@ -462,7 +462,7 @@ model DeliveryTracking {
   trafficConditions      Json?     @map("traffic_conditions") // Traffic data from API
   estimatedDistanceKm    Decimal?  @map("estimated_distance_km") @db.Decimal(8, 2)
   estimatedDurationMin   Int?      @map("estimated_duration_min")
-  trafficDelayMin        Int?      @map("traffic_delay_min") @default(0)
+  trafficDelayMin        Int?      @default(0) @map("traffic_delay_min")
   lastRouteUpdate        DateTime? @map("last_route_update")
   // Metadata
   createdAt              DateTime  @default(now()) @map("created_at")
@@ -715,9 +715,9 @@ model FlashSale {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product           Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
   // New: Next-gen features
-  registrations FlashSaleRegistration[]
+  registrations     FlashSaleRegistration[]
   liveStockCounters LiveStockCounter[]
 
   @@index([productId])
@@ -1836,13 +1836,13 @@ model ProductShare {
 
 // IP Whitelist - Known good IPs that bypass rate limiting
 model IpWhitelist {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ipAddress   String   @unique @map("ip_address")
-  reason      String // Why this IP is whitelisted
-  createdBy   String?  @map("created_by") @db.Uuid // Admin who added it
-  createdAt   DateTime @default(now()) @map("created_at")
-  expiresAt   DateTime? @map("expires_at") // Optional expiration
-  isActive    Boolean  @default(true) @map("is_active")
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress String    @unique @map("ip_address")
+  reason    String // Why this IP is whitelisted
+  createdBy String?   @map("created_by") @db.Uuid // Admin who added it
+  createdAt DateTime  @default(now()) @map("created_at")
+  expiresAt DateTime? @map("expires_at") // Optional expiration
+  isActive  Boolean   @default(true) @map("is_active")
 
   @@index([ipAddress])
   @@index([isActive])
@@ -1851,15 +1851,15 @@ model IpWhitelist {
 
 // IP Blacklist - Abusive IPs that are blocked
 model IpBlacklist {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ipAddress   String   @unique @map("ip_address")
-  reason      String // Why this IP is blacklisted
-  severity    String   @default("medium") // low, medium, high, critical
-  createdBy   String?  @map("created_by") @db.Uuid // Admin who added it or "system" for auto-blacklist
-  createdAt   DateTime @default(now()) @map("created_at")
-  expiresAt   DateTime? @map("expires_at") // Optional expiration for temporary bans
-  isActive    Boolean  @default(true) @map("is_active")
-  blockCount  Int      @default(0) @map("block_count") // How many requests blocked
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress     String    @unique @map("ip_address")
+  reason        String // Why this IP is blacklisted
+  severity      String    @default("medium") // low, medium, high, critical
+  createdBy     String?   @map("created_by") @db.Uuid // Admin who added it or "system" for auto-blacklist
+  createdAt     DateTime  @default(now()) @map("created_at")
+  expiresAt     DateTime? @map("expires_at") // Optional expiration for temporary bans
+  isActive      Boolean   @default(true) @map("is_active")
+  blockCount    Int       @default(0) @map("block_count") // How many requests blocked
   lastBlockedAt DateTime? @map("last_blocked_at")
 
   @@index([ipAddress])
@@ -1870,17 +1870,17 @@ model IpBlacklist {
 
 // Security Events - Track suspicious activity
 model SecurityEvent {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ipAddress   String   @map("ip_address")
-  eventType   String   @map("event_type") // rate_limit_exceeded, bot_detected, suspicious_pattern, etc.
-  severity    String   @default("low") // low, medium, high, critical
-  userAgent   String?  @map("user_agent")
-  endpoint    String?  // Which API endpoint was accessed
-  metadata    Json?    // Additional event data
-  createdAt   DateTime @default(now()) @map("created_at")
-  resolved    Boolean  @default(false)
-  resolvedAt  DateTime? @map("resolved_at")
-  resolvedBy  String?  @map("resolved_by") @db.Uuid
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ipAddress  String    @map("ip_address")
+  eventType  String    @map("event_type") // rate_limit_exceeded, bot_detected, suspicious_pattern, etc.
+  severity   String    @default("low") // low, medium, high, critical
+  userAgent  String?   @map("user_agent")
+  endpoint   String? // Which API endpoint was accessed
+  metadata   Json? // Additional event data
+  createdAt  DateTime  @default(now()) @map("created_at")
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime? @map("resolved_at")
+  resolvedBy String?   @map("resolved_by") @db.Uuid
 
   @@index([ipAddress])
   @@index([eventType])
@@ -1896,18 +1896,18 @@ model SecurityEvent {
 
 // Contract Templates - Reusable contract templates by vendor type
 model ContractTemplate {
-  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  contractType    ContractType @map("contract_type")
-  version         String       @default("1.0")
-  content         String       @db.Text // HTML/Markdown content of the contract
-  variables       Json?        // Variables that can be replaced in the template
-  isActive        Boolean      @default(true) @map("is_active")
-  createdBy       String?      @map("created_by") @db.Uuid // Admin who created it
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  contractType ContractType @map("contract_type")
+  version      String       @default("1.0")
+  content      String       @db.Text // HTML/Markdown content of the contract
+  variables    Json? // Variables that can be replaced in the template
+  isActive     Boolean      @default(true) @map("is_active")
+  createdBy    String?      @map("created_by") @db.Uuid // Admin who created it
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
-  contracts       VendorContract[]
+  contracts VendorContract[]
 
   @@index([contractType])
   @@index([isActive])
@@ -1916,48 +1916,48 @@ model ContractTemplate {
 
 // Vendor Contracts - Main contract records
 model VendorContract {
-  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vendorId              String         @map("vendor_id") @db.Uuid
-  templateId            String?        @map("template_id") @db.Uuid
-  contractNumber        String         @unique @map("contract_number") // Auto-generated contract number
-  contractType          ContractType   @map("contract_type")
-  status                ContractStatus @default(draft)
-  version               Int            @default(1)
-  parentContractId      String?        @map("parent_contract_id") @db.Uuid // For versioning - links to previous version
-  
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendorId         String         @map("vendor_id") @db.Uuid
+  templateId       String?        @map("template_id") @db.Uuid
+  contractNumber   String         @unique @map("contract_number") // Auto-generated contract number
+  contractType     ContractType   @map("contract_type")
+  status           ContractStatus @default(draft)
+  version          Int            @default(1)
+  parentContractId String?        @map("parent_contract_id") @db.Uuid // For versioning - links to previous version
+
   // Contract details
-  title                 String
-  content               String         @db.Text // Final contract content
-  
+  title   String
+  content String @db.Text // Final contract content
+
   // Terms
-  startDate             DateTime       @map("start_date")
-  endDate               DateTime       @map("end_date")
-  autoRenew             Boolean        @default(false) @map("auto_renew")
-  renewalPeriodMonths   Int?           @map("renewal_period_months") // e.g., 12 for annual renewal
-  
+  startDate           DateTime @map("start_date")
+  endDate             DateTime @map("end_date")
+  autoRenew           Boolean  @default(false) @map("auto_renew")
+  renewalPeriodMonths Int?     @map("renewal_period_months") // e.g., 12 for annual renewal
+
   // Commission and payment terms
-  commissionRate        Decimal        @default(0.15) @map("commission_rate") @db.Decimal(5, 4)
-  paymentTerms          String?        @map("payment_terms") @db.Text
-  
+  commissionRate Decimal @default(0.15) @map("commission_rate") @db.Decimal(5, 4)
+  paymentTerms   String? @map("payment_terms") @db.Text
+
   // Document storage
-  documentUrl           String?        @map("document_url") // S3 URL for signed PDF
-  
+  documentUrl String? @map("document_url") // S3 URL for signed PDF
+
   // Termination
-  terminationDate       DateTime?      @map("termination_date")
-  terminationReason     String?        @map("termination_reason") @db.Text
-  terminatedBy          String?        @map("terminated_by") @db.Uuid
-  
+  terminationDate   DateTime? @map("termination_date")
+  terminationReason String?   @map("termination_reason") @db.Text
+  terminatedBy      String?   @map("terminated_by") @db.Uuid
+
   // Timestamps
-  createdAt             DateTime       @default(now()) @map("created_at")
-  updatedAt             DateTime       @updatedAt @map("updated_at")
-  signedAt              DateTime?      @map("signed_at")
-  
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  signedAt  DateTime? @map("signed_at")
+
   // Relations
-  vendor                Profile        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  template              ContractTemplate? @relation(fields: [templateId], references: [id])
-  parentContract        VendorContract?   @relation("ContractVersions", fields: [parentContractId], references: [id])
-  childContracts        VendorContract[]  @relation("ContractVersions")
-  signatures            ContractSignature[]
+  vendor         Profile             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  template       ContractTemplate?   @relation(fields: [templateId], references: [id])
+  parentContract VendorContract?     @relation("ContractVersions", fields: [parentContractId], references: [id])
+  childContracts VendorContract[]    @relation("ContractVersions")
+  signatures     ContractSignature[]
 
   @@index([vendorId])
   @@index([status])
@@ -1969,26 +1969,26 @@ model VendorContract {
 
 // Contract Signatures - E-signature records
 model ContractSignature {
-  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  contractId        String          @map("contract_id") @db.Uuid
-  signerId          String          @map("signer_id") @db.Uuid // User who signed
-  signerRole        String          @map("signer_role") // 'vendor' or 'admin'
-  status            SignatureStatus @default(pending)
-  
-  // Signature details
-  signatureData     String?         @map("signature_data") @db.Text // Base64 encoded signature image or text
-  ipAddress         String?         @map("ip_address")
-  userAgent         String?         @map("user_agent")
-  
-  // Rejection details (if applicable)
-  rejectionReason   String?         @map("rejection_reason") @db.Text
-  
-  // Timestamps
-  signedAt          DateTime?       @map("signed_at")
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contractId String          @map("contract_id") @db.Uuid
+  signerId   String          @map("signer_id") @db.Uuid // User who signed
+  signerRole String          @map("signer_role") // 'vendor' or 'admin'
+  status     SignatureStatus @default(pending)
 
-  contract          VendorContract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  // Signature details
+  signatureData String? @map("signature_data") @db.Text // Base64 encoded signature image or text
+  ipAddress     String? @map("ip_address")
+  userAgent     String? @map("user_agent")
+
+  // Rejection details (if applicable)
+  rejectionReason String? @map("rejection_reason") @db.Text
+
+  // Timestamps
+  signedAt  DateTime? @map("signed_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  contract VendorContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   @@index([contractId])
   @@index([signerId])
@@ -1998,42 +1998,42 @@ model ContractSignature {
 
 // Warehouse model for multi-origin delivery tracking
 model Warehouse {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  code        String   @unique // Short code like "AA-01" for Addis Ababa Warehouse 1
-  address     String
-  city        String
-  region      String?
-  country     String   @default("Ethiopia")
-  postalCode  String?  @map("postal_code")
-  
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  code       String  @unique // Short code like "AA-01" for Addis Ababa Warehouse 1
+  address    String
+  city       String
+  region     String?
+  country    String  @default("Ethiopia")
+  postalCode String? @map("postal_code")
+
   // GPS coordinates for map visualization
-  latitude    Decimal  @db.Decimal(10, 8)
-  longitude   Decimal  @db.Decimal(11, 8)
-  
+  latitude  Decimal @db.Decimal(10, 8)
+  longitude Decimal @db.Decimal(11, 8)
+
   // Warehouse details
   phone       String?
   email       String?
-  managerName String?  @map("manager_name")
-  capacity    Int?     // Max items capacity
-  
+  managerName String? @map("manager_name")
+  capacity    Int? // Max items capacity
+
   // Operating hours (JSON format: {monday: {open: "08:00", close: "18:00"}, ...})
-  operatingHours Json?  @default("{}") @map("operating_hours")
-  
+  operatingHours Json? @default("{}") @map("operating_hours")
+
   // Status
-  isActive    Boolean  @default(true) @map("is_active")
-  isPrimary   Boolean  @default(false) @map("is_primary") // Primary/default warehouse
-  
+  isActive  Boolean @default(true) @map("is_active")
+  isPrimary Boolean @default(false) @map("is_primary") // Primary/default warehouse
+
   // Metadata
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // Relations
-  orders      Order[]  @relation("WarehouseOrders")
+  orders             Order[]             @relation("WarehouseOrders")
   // New: Next-gen features
   inventoryForecasts InventoryForecast[]
-  autoReorderRules AutoReorderRule[]
-  
+  autoReorderRules   AutoReorderRule[]
+
   @@index([city])
   @@index([isActive])
   @@index([isPrimary])
@@ -2049,14 +2049,14 @@ model RecommendationScore {
   id          String   @id @default(uuid())
   userId      String   @db.Uuid
   productId   String   @db.Uuid
-  score       Float    // 0-1 recommendation confidence
-  algorithm   String   // collaborative, content_based, trending, hybrid
-  factors     Json     // Factors that influenced recommendation
+  score       Float // 0-1 recommendation confidence
+  algorithm   String // collaborative, content_based, trending, hybrid
+  factors     Json // Factors that influenced recommendation
   generatedAt DateTime @default(now())
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@unique([userId, productId, algorithm])
   @@index([userId, score])
   @@index([productId])
@@ -2072,25 +2072,25 @@ enum ChatStatus {
 }
 
 model ChatConversation {
-  id            String      @id @default(uuid())
-  customerId    String      @db.Uuid
-  vendorId      String?     @db.Uuid
-  adminId       String?     @db.Uuid
-  productId     String?     @db.Uuid  // Related product
-  orderId       String?     @db.Uuid  // Related order
+  id            String     @id @default(uuid())
+  customerId    String     @db.Uuid
+  vendorId      String?    @db.Uuid
+  adminId       String?    @db.Uuid
+  productId     String?    @db.Uuid // Related product
+  orderId       String?    @db.Uuid // Related order
   subject       String?
-  status        ChatStatus  @default(active)
+  status        ChatStatus @default(active)
   lastMessageAt DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  
-  customer      User        @relation("CustomerChats", fields: [customerId], references: [id], onDelete: Cascade)
-  vendor        User?       @relation("VendorChats", fields: [vendorId], references: [id], onDelete: Cascade)
-  admin         User?       @relation("AdminChats", fields: [adminId], references: [id], onDelete: Cascade)
-  product       Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
-  order         Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  messages      ChatMessage[]
-  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  customer User          @relation("CustomerChats", fields: [customerId], references: [id], onDelete: Cascade)
+  vendor   User?         @relation("VendorChats", fields: [vendorId], references: [id], onDelete: Cascade)
+  admin    User?         @relation("AdminChats", fields: [adminId], references: [id], onDelete: Cascade)
+  product  Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order    Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  messages ChatMessage[]
+
   @@index([customerId])
   @@index([vendorId])
   @@index([adminId])
@@ -2100,19 +2100,19 @@ model ChatConversation {
 }
 
 model ChatMessage {
-  id             String           @id @default(uuid())
-  conversationId String           @db.Uuid
-  senderId       String           @db.Uuid
-  senderType     String           // customer, vendor, admin, bot
-  message        String           @db.Text
-  attachments    String[]         // URLs to images/files
-  isRead         Boolean          @default(false)
+  id             String    @id @default(uuid())
+  conversationId String    @db.Uuid
+  senderId       String    @db.Uuid
+  senderType     String // customer, vendor, admin, bot
+  message        String    @db.Text
+  attachments    String[] // URLs to images/files
+  isRead         Boolean   @default(false)
   readAt         DateTime?
-  createdAt      DateTime         @default(now())
-  
-  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  
+  createdAt      DateTime  @default(now())
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([isRead])
@@ -2121,19 +2121,19 @@ model ChatMessage {
 
 // Voice Search & Commands
 model VoiceSearch {
-  id             String   @id @default(uuid())
-  userId         String?  @db.Uuid
-  sessionId      String   // Anonymous session tracking
-  language       String   // en, am, om
-  audioUrl       String?  // S3 URL to audio file
-  transcription  String   // Text from speech
-  intent         String?  // search, navigate, command
-  confidence     Float    // 0-1 transcription confidence
-  resultCount    Int      @default(0)
-  createdAt      DateTime @default(now())
-  
-  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  id            String   @id @default(uuid())
+  userId        String?  @db.Uuid
+  sessionId     String // Anonymous session tracking
+  language      String // en, am, om
+  audioUrl      String? // S3 URL to audio file
+  transcription String // Text from speech
+  intent        String? // search, navigate, command
+  confidence    Float // 0-1 transcription confidence
+  resultCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([language])
   @@index([createdAt])
@@ -2149,26 +2149,26 @@ enum GroupPurchaseStatus {
 }
 
 model GroupPurchase {
-  id              String               @id @default(uuid())
-  productId       String               @db.Uuid
-  initiatorId     String               @db.Uuid
+  id              String              @id @default(uuid())
+  productId       String              @db.Uuid
+  initiatorId     String              @db.Uuid
   title           String
-  description     String?              @db.Text
-  requiredMembers Int                  // Minimum members to activate
-  currentMembers  Int                  @default(1)
-  maxMembers      Int?                 // Optional max limit
-  pricePerPerson  Float                // Discounted price
-  regularPrice    Float                // Original price
-  discount        Float                // Discount percentage
+  description     String?             @db.Text
+  requiredMembers Int // Minimum members to activate
+  currentMembers  Int                 @default(1)
+  maxMembers      Int? // Optional max limit
+  pricePerPerson  Float // Discounted price
+  regularPrice    Float // Original price
+  discount        Float // Discount percentage
   expiresAt       DateTime
-  status          GroupPurchaseStatus  @default(active)
-  createdAt       DateTime             @default(now())
+  status          GroupPurchaseStatus @default(active)
+  createdAt       DateTime            @default(now())
   completedAt     DateTime?
-  
-  product         Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
-  initiator       User                 @relation("GroupPurchaseInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
-  members         GroupPurchaseMember[]
-  
+
+  product   Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  initiator User                  @relation("GroupPurchaseInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  members   GroupPurchaseMember[]
+
   @@index([productId])
   @@index([status])
   @@index([expiresAt])
@@ -2177,18 +2177,18 @@ model GroupPurchase {
 }
 
 model GroupPurchaseMember {
-  id              String        @id @default(uuid())
-  groupPurchaseId String        @db.Uuid
-  userId          String        @db.Uuid
-  isPaid          Boolean       @default(false)
+  id              String   @id @default(uuid())
+  groupPurchaseId String   @db.Uuid
+  userId          String   @db.Uuid
+  isPaid          Boolean  @default(false)
   paidAmount      Float?
-  orderId         String?       @db.Uuid
-  joinedAt        DateTime      @default(now())
-  
-  groupPurchase   GroupPurchase @relation(fields: [groupPurchaseId], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order           Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  
+  orderId         String?  @db.Uuid
+  joinedAt        DateTime @default(now())
+
+  groupPurchase GroupPurchase @relation(fields: [groupPurchaseId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order         Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
   @@unique([groupPurchaseId, userId])
   @@index([userId])
   @@index([isPaid])
@@ -2196,22 +2196,22 @@ model GroupPurchaseMember {
 }
 
 model SocialShare {
-  id        String   @id @default(uuid())
-  userId    String   @db.Uuid
-  productId String   @db.Uuid
-  platform  String   // whatsapp, telegram, facebook, twitter, messenger
-  shareCode String   @unique
+  id        String    @id @default(uuid())
+  userId    String    @db.Uuid
+  productId String    @db.Uuid
+  platform  String // whatsapp, telegram, facebook, twitter, messenger
+  shareCode String    @unique
   shareUrl  String
-  views     Int      @default(0)
-  clicks    Int      @default(0)
-  purchases Int      @default(0)
-  revenue   Float    @default(0)
-  createdAt DateTime @default(now())
+  views     Int       @default(0)
+  clicks    Int       @default(0)
+  purchases Int       @default(0)
+  revenue   Float     @default(0)
+  createdAt DateTime  @default(now())
   expiresAt DateTime?
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([productId])
   @@index([shareCode])
@@ -2221,21 +2221,21 @@ model SocialShare {
 
 // Smart Inventory Forecasting
 model InventoryForecast {
-  id              String    @id @default(uuid())
-  productId       String    @db.Uuid
-  warehouseId     String?   @db.Uuid
-  forecastDate    DateTime  // Date for the forecast
-  predictedDemand Float     // Predicted units
-  confidence      Float     // 0-1 confidence score
-  actualDemand    Float?    // Filled after date passes
-  accuracy        Float?    // Calculated accuracy after fact
-  factors         Json      // Factors influencing forecast
-  modelVersion    String    // ML model version used
-  createdAt       DateTime  @default(now())
-  
-  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse       Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
-  
+  id              String   @id @default(uuid())
+  productId       String   @db.Uuid
+  warehouseId     String?  @db.Uuid
+  forecastDate    DateTime // Date for the forecast
+  predictedDemand Float // Predicted units
+  confidence      Float // 0-1 confidence score
+  actualDemand    Float? // Filled after date passes
+  accuracy        Float? // Calculated accuracy after fact
+  factors         Json // Factors influencing forecast
+  modelVersion    String // ML model version used
+  createdAt       DateTime @default(now())
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+
   @@unique([productId, warehouseId, forecastDate])
   @@index([forecastDate])
   @@index([confidence])
@@ -2247,21 +2247,21 @@ model AutoReorderRule {
   productId       String    @db.Uuid
   vendorId        String    @db.Uuid
   warehouseId     String?   @db.Uuid
-  reorderPoint    Int       // When to reorder
-  reorderQuantity Int       // How much to reorder
-  leadTimeDays    Int       // Supplier lead time
-  safetyStock     Int       // Buffer stock
-  minOrderQty     Int?      // Minimum order quantity
-  maxOrderQty     Int?      // Maximum order quantity
+  reorderPoint    Int // When to reorder
+  reorderQuantity Int // How much to reorder
+  leadTimeDays    Int // Supplier lead time
+  safetyStock     Int // Buffer stock
+  minOrderQty     Int? // Minimum order quantity
+  maxOrderQty     Int? // Maximum order quantity
   isActive        Boolean   @default(true)
   lastTriggered   DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
-  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  vendor          User      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  warehouse       Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
-  
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vendor    User       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  warehouse Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+
   @@unique([productId, warehouseId])
   @@index([vendorId])
   @@index([isActive])
@@ -2280,11 +2280,11 @@ enum POStatus {
 
 model PurchaseOrder {
   id               String    @id @default(uuid())
-  poNumber         String    @unique  // PO-2026-001
+  poNumber         String    @unique // PO-2026-001
   vendorId         String    @db.Uuid
-  supplierId       String    @db.Uuid  // External supplier
+  supplierId       String    @db.Uuid // External supplier
   supplierName     String
-  items            Json      // Array of {productId, quantity, unitPrice}
+  items            Json // Array of {productId, quantity, unitPrice}
   subtotal         Float
   taxAmount        Float     @default(0)
   totalAmount      Float
@@ -2295,9 +2295,9 @@ model PurchaseOrder {
   notes            String?   @db.Text
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  
-  vendor           User      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  
+
+  vendor User @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
   @@index([vendorId])
   @@index([status])
   @@index([expectedDelivery])
@@ -2306,19 +2306,19 @@ model PurchaseOrder {
 
 // Gamification System
 model UserAchievement {
-  id             String   @id @default(uuid())
-  userId         String   @db.Uuid
-  achievementKey String   // first_purchase, power_reviewer, etc.
+  id              String    @id @default(uuid())
+  userId          String    @db.Uuid
+  achievementKey  String // first_purchase, power_reviewer, etc.
   achievementName String
-  description    String
-  iconUrl        String?
-  points         Int      @default(0)
-  earnedAt       DateTime @default(now())
-  rewardClaimed  Boolean  @default(false)
-  claimedAt      DateTime?
-  
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  description     String
+  iconUrl         String?
+  points          Int       @default(0)
+  earnedAt        DateTime  @default(now())
+  rewardClaimed   Boolean   @default(false)
+  claimedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, achievementKey])
   @@index([userId])
   @@index([earnedAt])
@@ -2330,12 +2330,12 @@ model DailyCheckIn {
   userId      String   @db.Uuid
   checkInDate DateTime @db.Date
   streakCount Int      @default(1)
-  reward      Int      // Points earned
+  reward      Int // Points earned
   bonusReward Int      @default(0)
   createdAt   DateTime @default(now())
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, checkInDate])
   @@index([userId])
   @@index([checkInDate])
@@ -2351,17 +2351,17 @@ enum GameType {
 }
 
 model GameScore {
-  id        String   @id @default(uuid())
-  userId    String   @db.Uuid
-  gameType  GameType
-  score     Int      @default(0)
-  reward    Int      // Points or discount earned
-  rewardType String  // points, discount_code, free_shipping
-  metadata  Json?    // Game-specific data
-  playedAt  DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(uuid())
+  userId     String   @db.Uuid
+  gameType   GameType
+  score      Int      @default(0)
+  reward     Int // Points or discount earned
+  rewardType String // points, discount_code, free_shipping
+  metadata   Json? // Game-specific data
+  playedAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([gameType])
   @@index([playedAt])
@@ -2370,17 +2370,17 @@ model GameScore {
 
 // Enhanced Flash Sales
 model FlashSaleRegistration {
-  id          String    @id @default(uuid())
-  userId      String    @db.Uuid
-  flashSaleId String    @db.Uuid
-  notified    Boolean   @default(false)
-  notifiedAt  DateTime?
-  purchased   Boolean   @default(false)
-  registeredAt DateTime @default(now())
-  
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  flashSale   FlashSale @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
-  
+  id           String    @id @default(uuid())
+  userId       String    @db.Uuid
+  flashSaleId  String    @db.Uuid
+  notified     Boolean   @default(false)
+  notifiedAt   DateTime?
+  purchased    Boolean   @default(false)
+  registeredAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashSale FlashSale @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
+
   @@unique([userId, flashSaleId])
   @@index([flashSaleId])
   @@index([notified])
@@ -2389,18 +2389,18 @@ model FlashSaleRegistration {
 
 // Live Stock Counter for Flash Sales
 model LiveStockCounter {
-  id          String   @id @default(uuid())
-  productId   String   @db.Uuid
-  flashSaleId String?  @db.Uuid
-  totalStock  Int
-  soldCount   Int      @default(0)
-  reservedCount Int    @default(0)
-  viewCount   Int      @default(0)
-  updatedAt   DateTime @updatedAt
-  
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  flashSale   FlashSale? @relation(fields: [flashSaleId], references: [id], onDelete: SetNull)
-  
+  id            String   @id @default(uuid())
+  productId     String   @db.Uuid
+  flashSaleId   String?  @db.Uuid
+  totalStock    Int
+  soldCount     Int      @default(0)
+  reservedCount Int      @default(0)
+  viewCount     Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  flashSale FlashSale? @relation(fields: [flashSaleId], references: [id], onDelete: SetNull)
+
   @@unique([productId, flashSaleId])
   @@index([productId])
   @@map("live_stock_counters")
