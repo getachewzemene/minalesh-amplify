@@ -17,7 +17,8 @@ datasource db {
   // - DIRECT_URL uses port 5432 (direct connection)
   // For other providers where pooling is automatic (like Neon),
   // DIRECT_URL is optional and can be the same as DATABASE_URL
-  // directUrl intentionally omitted in dev to avoid env requirement
+  // Falls back to DATABASE_URL if DIRECT_URL is not set (development)
+  directUrl = env("DIRECT_URL")
 }
 
 // Enums

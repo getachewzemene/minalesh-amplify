@@ -36,6 +36,11 @@ build/
 .env
 .env.test
 
+# Temporary files and generated secrets
+tmp/
+*.tmp
+*secrets*.txt
+
 # Test files
 test-env*.ts
 
