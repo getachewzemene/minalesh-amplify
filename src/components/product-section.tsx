@@ -74,7 +74,8 @@ export function ProductSection({
         const response = await fetch(`${endpoint}?${params.toString()}`)
         if (response.ok) {
           const data = await response.json()
-          setProducts(data.products || [])
+          // Handle both response formats: data.products and data.data
+          setProducts(data.products || data.data || [])
         }
       } catch (error) {
         console.error('Error fetching products:', error)

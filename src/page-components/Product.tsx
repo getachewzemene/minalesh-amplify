@@ -31,6 +31,7 @@ import { useAuth } from "@/context/auth-context"
 import { VendorStatsCard } from "@/components/seller-ratings"
 import { ProductSocialShare } from "@/components/social"
 import { SubscribeAndSaveButton } from "@/components/subscriptions"
+import { SimilarProducts } from "@/components/recommendations"
 
 interface ProductData {
   id: string
@@ -574,6 +575,9 @@ export default function Product() {
 
           {/* Product Q&A */}
           <ProductQA productId={displayProduct.id} />
+
+          {/* Similar Products */}
+          <SimilarProducts productId={displayProduct.id} limit={8} />
 
           {/* Recently Viewed Products */}
           <RecentlyViewedProducts />

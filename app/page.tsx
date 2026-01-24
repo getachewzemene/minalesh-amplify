@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer"
 import { useAuth } from "@/context/auth-context"
 import { RecentlyViewedProducts } from "@/components/product/RecentlyViewedProducts"
 import { Container } from "@/components/ui/container"
+import { PersonalizedRecommendations, TrendingProducts } from "@/components/recommendations"
 
 export default function Home() {
   const { user } = useAuth()
@@ -45,16 +46,11 @@ export default function Home() {
           viewAllLink="/products?sort=popular"
         />
 
-        {/* Recommended Products Section - only show if user is logged in */}
-        {user && (
-          <ProductSection
-            title="Recommended for You"
-            description="Personalized product recommendations based on your interests"
-            endpoint="/api/products/recommendations"
-            limit={8}
-            showViewAll={false}
-          />
-        )}
+        {/* Trending Products Section */}
+        <TrendingProducts limit={8} days={7} />
+
+        {/* Personalized Recommendations Section - only show if user is logged in */}
+        <PersonalizedRecommendations />
 
         {/* Recently Viewed Products */}
         <Container className="py-8">
