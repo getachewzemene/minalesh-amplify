@@ -34,8 +34,9 @@ const SECRET_BYTES = {
 
 /**
  * Generate a cryptographically secure random string in base64
+ * @param bytes Number of random bytes to generate
  */
-function generateSecureSecret(bytes: number = 32): string {
+function generateSecureSecret(bytes: number): string {
   return crypto.randomBytes(bytes).toString('base64');
 }
 
@@ -137,7 +138,7 @@ function saveToFile(secrets: Secret[]) {
     fs.mkdirSync(tmpDir, { recursive: true });
   }
   
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replace(/[T:.Z]/g, '-');
   const filename = path.join(tmpDir, `secrets-${timestamp}.txt`);
   
   const content = [
