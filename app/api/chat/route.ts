@@ -75,7 +75,7 @@ const knowledgeBase = {
       response: 'Warranty & Guarantees:\n\n✅ Product Warranty:\n• Electronics: 1-year manufacturer warranty\n• Appliances: 6-month warranty\n• Other items: Varies by product and vendor\n\n🛡️ Minalesh Guarantee:\n• Authentic products only\n• Money-back if item not as described\n• Free return shipping for defective items\n• Protection against counterfeit goods\n\n⚠️ Report Defects:\n1. Contact us within 7 days of delivery\n2. Provide photos/video of defect\n3. Get approval for return or replacement\n4. Choose refund or exchange\n\n📝 Keep:\n• Original packaging\n• Warranty card\n• Purchase receipt\n\nWarranty questions? Contact warranty@minalesh.com'
     },
     {
-      keywords: ['language', 'amharic', 'oromo', 'translate', 'አማርኛ', 'oromiffa'],
+      keywords: ['language', 'amharic', 'oromo', 'translate', 'አማርኛ', 'oromoo'],
       response: 'Language Support:\n\n🌍 Available Languages:\n• English (EN)\n• አማርኛ (Amharic - AM)\n• Afaan Oromoo (Oromo - OM)\n\n🔄 How to Switch:\n• Click the language icon (🌐) in the top menu\n• Select your preferred language\n• All content updates automatically\n• Your preference is saved\n\n💬 Chat Support:\n• This AI helper supports all 3 languages\n• Simply ask questions in your language\n• Get responses in the same language\n\n📱 Note: Some product descriptions may only be available in English. We\'re working to translate all content!'
     },
     {
@@ -207,7 +207,7 @@ const knowledgeBase = {
       response: 'Wabii fi Mirkaneessa:\n\n✅ Wabii Oomishaa:\n• Elektirooniksii: Wabii oomishtuu waggaa 1\n• Meeshaalee: Wabii ji\'a 6\n• Meeshaalee biroo: Oomishaa fi daldaltuu tiin garaagarummaa qabaata\n\n🛡️ Mirkaneessa Minalesh:\n• Oomishaalee dhugaa qofa\n• Oomishaan akka ibsame hin taane yoo ta\'e maallaqa deebisuu\n• Meeshaalee hanqina qabaniif ergaa deebisuu bilisaa\n• Eegumsa meeshaalee soba irraa\n\n⚠️ Hanqina Gabaasaa:\n1. Guyyoota 7 keessatti ergaa booda nu quunnamaa\n2. Suuraa/viidiyoo hanqina kennaa\n3. Deebisuu ykn bakka bu\'iif hayyama argadhu\n4. Maallaqa deebisuu ykn jijjiirraa filadhu\n\n📝 Qabaa:\n• Qindaa\'ina jalqabaa\n• Kaardii wabii\n• Ragaa bittaa\n\nGaaffii wabii? warranty@minalesh.com quunnamaa'
     },
     {
-      keywords: ['afaan', 'amaaraa', 'oromoo', 'hiikuu', 'afaanota'],
+      keywords: ['afaan', 'amharic', 'oromoo', 'hiikuu', 'afaanota'],
       response: 'Deeggarsa Afaanii:\n\n🌍 Afaanota Jiran:\n• English (EN)\n• አማርኛ (Amharic - AM)\n• Afaan Oromoo (Oromo - OM)\n\n🔄 Akkamitti Jijjiiruu:\n• Baafata gubbaa keessatti mallattoo afaanii (🌐) cuqaasaa\n• Afaan filatte filadhu\n• Qabiyyeen hundi ofumaan haaromfama\n• Filannoo kee olkaa\'ama\n\n💬 Deeggarsa Haasawaa:\n• Gargaaraan AI kun afaanota 3 hunda deeggaraa\n• Salphaatti gaaffii afaan keetiin gaafadhu\n• Deebii afaan tokkotti argadhu\n\n📱 Yaadannoo: Ibsi oomishaa tokko tokko Ingiliffaa qofaan argamuu danda\'a. Qabiyyee hunda hiikuuf hojjechaa jirra!'
     },
     {

@@ -251,7 +251,12 @@ export function AIHelper() {
               aria-label={translations.inputLabel[language]}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
               placeholder={translations.inputPlaceholder[language]}
               disabled={loading}
               className="flex-1 bg-background border-border focus:border-primary transition-colors"
