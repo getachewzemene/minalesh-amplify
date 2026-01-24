@@ -56,8 +56,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if product has enough stock for the maximum possible members
-    const requiredStock = maxMembers || requiredMembers;
-    if (!product.isActive || product.stockQuantity < requiredStock) {
+    const requiredStock = (maxMembers !== null && maxMembers !== undefined) 
+      ? maxMembers 
+      : requiredMembers;
+    
+    if (!product.isActive || (requiredStock > 0 && product.stockQuantity < requiredStock)) {
       return NextResponse.json(
         { error: 'Product is not available for group purchase - insufficient stock' },
         { status: 400 }
@@ -71,49 +74,54 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + expiresInHours);
 
-    // Create group purchase
-    const groupPurchase = await prisma.groupPurchase.create({
-      data: {
-        productId,
-        initiatorId: userId,
-        title,
-        description,
-        requiredMembers,
-        maxMembers,
-        pricePerPerson,
-        regularPrice,
-        discount,
-        expiresAt,
-        currentMembers: 1,
-      },
-      include: {
-        product: {
-          include: {
-            category: true,
-          },
+    // Create group purchase and add initiator as member in a transaction
+    const groupPurchase = await prisma.$transaction(async (tx) => {
+      // Create the group purchase
+      const newGroupPurchase = await tx.groupPurchase.create({
+        data: {
+          productId,
+          initiatorId: userId,
+          title,
+          description,
+          requiredMembers,
+          maxMembers,
+          pricePerPerson,
+          regularPrice,
+          discount,
+          expiresAt,
+          currentMembers: 1,
         },
-        initiator: {
-          select: {
-            id: true,
-            email: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
+        include: {
+          product: {
+            include: {
+              category: true,
+            },
+          },
+          initiator: {
+            select: {
+              id: true,
+              email: true,
+              profile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    // Add initiator as first member
-    await prisma.groupPurchaseMember.create({
-      data: {
-        groupPurchaseId: groupPurchase.id,
-        userId,
-        isPaid: false,
-      },
+      // Add initiator as first member
+      await tx.groupPurchaseMember.create({
+        data: {
+          groupPurchaseId: newGroupPurchase.id,
+          userId,
+          isPaid: false,
+        },
+      });
+
+      return newGroupPurchase;
     });
 
     return NextResponse.json({

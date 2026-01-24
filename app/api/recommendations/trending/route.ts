@@ -3,6 +3,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Trending score weights
+const TRENDING_WEIGHTS = {
+  VIEW_COUNT: 0.3,
+  SALE_COUNT: 0.5,
+  RECENT_REVIEWS: 0.2,
+} as const;
+
 /**
  * GET /api/recommendations/trending
  * 
@@ -52,9 +59,9 @@ export async function GET(request: NextRequest) {
     const scoredProducts = trendingProducts.map(product => {
       const recentReviews = product.reviews.length;
       const trendingScore = 
-        (product.viewCount * 0.3) +
-        (product.saleCount * 0.5) +
-        (recentReviews * 0.2);
+        (product.viewCount * TRENDING_WEIGHTS.VIEW_COUNT) +
+        (product.saleCount * TRENDING_WEIGHTS.SALE_COUNT) +
+        (recentReviews * TRENDING_WEIGHTS.RECENT_REVIEWS);
 
       return {
         ...product,

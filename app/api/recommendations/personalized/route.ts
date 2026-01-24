@@ -266,22 +266,31 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.recommendationScore - a.recommendationScore)
       .slice(0, limit);
 
-    // Store recommendation scores in database for analytics
-    if (uniqueRecommendations.length > 0) {
-      await prisma.recommendationScore.createMany({
-        data: uniqueRecommendations.map(rec => ({
-          userId,
-          productId: rec.id,
-          score: rec.recommendationScore,
-          algorithm: rec.algorithm,
-          factors: {
-            categories: Array.from(interactedCategoryIds),
-            purchaseHistory: Array.from(purchasedProductIds).slice(0, 10),
-            viewHistory: Array.from(viewedProductIds).slice(0, 10),
-          },
-        })),
-        skipDuplicates: true,
-      });
+    // Store recommendation scores in database for analytics (batched)
+    // Limit to prevent performance issues with large datasets
+    const MAX_SCORES_TO_STORE = 50;
+    const scorestoStore = uniqueRecommendations.slice(0, MAX_SCORES_TO_STORE);
+    
+    if (scorestoStore.length > 0) {
+      try {
+        await prisma.recommendationScore.createMany({
+          data: scorestoStore.map(rec => ({
+            userId,
+            productId: rec.id,
+            score: rec.recommendationScore,
+            algorithm: rec.algorithm,
+            factors: {
+              categories: Array.from(interactedCategoryIds),
+              purchaseHistory: Array.from(purchasedProductIds).slice(0, 10),
+              viewHistory: Array.from(viewedProductIds).slice(0, 10),
+            },
+          })),
+          skipDuplicates: true,
+        });
+      } catch (error) {
+        // Log error but don't fail the request
+        console.error('Error storing recommendation scores:', error);
+      }
     }
 
     return NextResponse.json({

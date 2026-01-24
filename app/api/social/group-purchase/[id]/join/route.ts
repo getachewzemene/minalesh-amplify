@@ -92,53 +92,82 @@ export async function POST(
       );
     }
 
-    // Add user as member
-    const member = await prisma.groupPurchaseMember.create({
-      data: {
-        groupPurchaseId,
-        userId,
-        isPaid: false,
-      },
-    });
+    // Add user as member and update count in a transaction to prevent race conditions
+    const result = await prisma.$transaction(async (tx) => {
+      // Check current state with row lock
+      const currentGroupPurchase = await tx.groupPurchase.findUnique({
+        where: { id: groupPurchaseId },
+        include: { members: true },
+      });
 
-    // Update current member count
-    const updatedGroupPurchase = await prisma.groupPurchase.update({
-      where: { id: groupPurchaseId },
-      data: {
-        currentMembers: {
-          increment: 1,
+      if (!currentGroupPurchase) {
+        throw new Error('Group purchase not found');
+      }
+
+      // Re-check if user is already a member (race condition safety)
+      const isAlreadyMember = currentGroupPurchase.members.some(m => m.userId === userId);
+      if (isAlreadyMember) {
+        throw new Error('Already a member');
+      }
+
+      // Re-check if group is full
+      if (currentGroupPurchase.maxMembers && 
+          currentGroupPurchase.currentMembers >= currentGroupPurchase.maxMembers) {
+        throw new Error('Group is full');
+      }
+
+      // Add member
+      const member = await tx.groupPurchaseMember.create({
+        data: {
+          groupPurchaseId,
+          userId,
+          isPaid: false,
         },
-      },
-      include: {
-        product: true,
-        initiator: {
-          select: {
-            id: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
+      });
+
+      // Update member count
+      const updatedGroupPurchase = await tx.groupPurchase.update({
+        where: { id: groupPurchaseId },
+        data: {
+          currentMembers: {
+            increment: 1,
+          },
+        },
+        include: {
+          product: true,
+          initiator: {
+            select: {
+              id: true,
+              profile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
               },
             },
           },
-        },
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                profile: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  profile: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
+      });
+
+      return { member, updatedGroupPurchase };
     });
+
+    const { member, updatedGroupPurchase } = result;
 
     // Check if group purchase is now complete
     if (updatedGroupPurchase.currentMembers >= updatedGroupPurchase.requiredMembers) {
@@ -165,8 +194,31 @@ export async function POST(
         ? 'Successfully joined! Group purchase is now complete.'
         : 'Successfully joined the group purchase!',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error joining group purchase:', error);
+    
+    // Handle specific transaction errors
+    if (error.message === 'Already a member') {
+      return NextResponse.json(
+        { error: 'You are already a member of this group purchase' },
+        { status: 400 }
+      );
+    }
+    
+    if (error.message === 'Group is full') {
+      return NextResponse.json(
+        { error: 'This group purchase is full' },
+        { status: 400 }
+      );
+    }
+    
+    if (error.message === 'Group purchase not found') {
+      return NextResponse.json(
+        { error: 'Group purchase not found' },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to join group purchase' },
       { status: 500 }
