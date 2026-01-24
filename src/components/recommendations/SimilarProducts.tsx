@@ -173,7 +173,7 @@ export function SimilarProducts({ productId, limit = 8 }: SimilarProductsProps) 
 
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
-                      {product.salePrice && product.salePrice < product.price && (
+                      {product.salePrice && Number(product.salePrice) < Number(product.price) && (
                         <Badge variant="destructive" className="shadow-lg font-semibold px-3 py-1">
                           SALE
                         </Badge>
@@ -241,7 +241,7 @@ export function SimilarProducts({ productId, limit = 8 }: SimilarProductsProps) 
                       <span className="text-2xl font-bold text-primary">
                         {formatCurrency(effectivePrice)}
                       </span>
-                      {product.salePrice && product.salePrice < product.price && (
+                      {product.salePrice && Number(product.salePrice) < Number(product.price) && (
                         <span className="text-sm text-muted-foreground line-through">
                           {formatCurrency(product.price)}
                         </span>
