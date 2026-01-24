@@ -155,8 +155,10 @@ function validateEnv() {
 
     // Warn if DIRECT_URL is not set (needed for migrations with connection pooling)
     if (!parsed.data.DIRECT_URL) {
-      console.warn('⚠️  DIRECT_URL not set - migrations may fail with connection pooling');
-      console.warn('   Set DIRECT_URL for direct database connection (required for Supabase/RDS Proxy)');
+      console.warn(
+        '⚠️  DIRECT_URL not set - migrations may fail with connection pooling\n' +
+        '   Set DIRECT_URL for direct database connection (required for Supabase/RDS Proxy)'
+      );
     }
 
     // Warn if no email service is configured

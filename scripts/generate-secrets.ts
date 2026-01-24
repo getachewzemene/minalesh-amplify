@@ -16,6 +16,8 @@
  */
 
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 interface Secret {
   name: string;
@@ -23,6 +25,12 @@ interface Secret {
   description: string;
   minLength: number;
 }
+
+// Secret byte lengths (base64 encoding will produce longer strings)
+const SECRET_BYTES = {
+  JWT: 48,      // Produces 64 base64 chars
+  STANDARD: 24, // Produces 32 base64 chars
+} as const;
 
 /**
  * Generate a cryptographically secure random string in base64
@@ -38,25 +46,25 @@ function generateSecrets(): Secret[] {
   return [
     {
       name: 'JWT_SECRET',
-      value: generateSecureSecret(48), // 64 chars in base64
+      value: generateSecureSecret(SECRET_BYTES.JWT), // 48 bytes -> 64 base64 chars
       description: 'Secret key for JWT token signing (required)',
       minLength: 32,
     },
     {
       name: 'CRON_SECRET',
-      value: generateSecureSecret(24), // 32 chars in base64
+      value: generateSecureSecret(SECRET_BYTES.STANDARD), // 24 bytes -> 32 base64 chars
       description: 'Secret for securing cron endpoints (required)',
       minLength: 16,
     },
     {
       name: 'INTERNAL_API_SECRET',
-      value: generateSecureSecret(24), // 32 chars in base64
+      value: generateSecureSecret(SECRET_BYTES.STANDARD), // 24 bytes -> 32 base64 chars
       description: 'Secret for internal API calls (optional but recommended)',
       minLength: 16,
     },
     {
       name: 'PAYMENT_WEBHOOK_SECRET',
-      value: generateSecureSecret(24), // 32 chars in base64
+      value: generateSecureSecret(SECRET_BYTES.STANDARD), // 24 bytes -> 32 base64 chars
       description: 'Secret for payment webhook verification (optional but recommended)',
       minLength: 16,
     },
@@ -124,9 +132,6 @@ function displaySecrets(secrets: Secret[]) {
  * Save secrets to a temporary file for easy copying
  */
 function saveToFile(secrets: Secret[]) {
-  const fs = require('fs');
-  const path = require('path');
-  
   const tmpDir = path.join(process.cwd(), 'tmp');
   if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir, { recursive: true });
