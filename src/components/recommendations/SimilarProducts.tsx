@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Star, ShoppingCart, Eye, Heart, ShieldCheck, Sparkles } from "lucide-react"
+import { Star, ShoppingCart, Heart, ShieldCheck, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
@@ -156,58 +156,54 @@ export function SimilarProducts({ productId, limit = 8 }: SimilarProductsProps) 
                 onMouseLeave={() => setHoveredProduct(null)}
                 onClick={() => router.push(`/product/${product.id}`)}
               >
-                <div className="hidden md:block">
-                  <AspectRatio ratio={1}>
-                    <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-                      <Image
-                        src={imageUrl}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                        placeholder="blur"
-                        blurDataURL={blur}
-                        className="object-contain p-6 transition-all duration-500 group-hover:scale-110"
-                        priority={false}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Mobile and Desktop view */}
+                <AspectRatio ratio={1}>
+                  <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+                    <Image
+                      src={imageUrl}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      placeholder="blur"
+                      blurDataURL={blur}
+                      className="object-contain p-6 transition-all duration-500 group-hover:scale-110"
+                      priority={false}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                      {/* Badges */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        {product.salePrice && product.salePrice < product.price && (
-                          <Badge variant="destructive" className="shadow-lg font-semibold px-3 py-1">
-                            SALE
-                          </Badge>
-                        )}
-                        {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-                          <Badge className="bg-orange-500 shadow-lg font-semibold px-3 py-1">
-                            Low Stock
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Hover actions */}
-                      {hoveredProduct === product.id && (
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-3 transition-all duration-500">
-                          <Button size="icon" variant="secondary" className="bg-white hover:bg-gray-100 shadow-xl rounded-full h-12 w-12" onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`) }} aria-label="View product">
-                            <Eye className="h-5 w-5" />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            className="bg-primary hover:bg-primary/90 shadow-xl rounded-full h-12 w-12" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleAddToCart(product);
-                            }}
-                            aria-label="Add to cart"
-                          >
-                            <ShoppingCart className="h-5 w-5" />
-                          </Button>
-                        </div>
+                    {/* Badges */}
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {product.salePrice && product.salePrice < product.price && (
+                        <Badge variant="destructive" className="shadow-lg font-semibold px-3 py-1">
+                          SALE
+                        </Badge>
+                      )}
+                      {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
+                        <Badge className="bg-orange-500 shadow-lg font-semibold px-3 py-1">
+                          Low Stock
+                        </Badge>
                       )}
                     </div>
-                  </AspectRatio>
-                </div>
+
+                    {/* Hover actions - desktop only */}
+                    {hoveredProduct === product.id && (
+                      <div className="hidden md:flex absolute inset-0 bg-black/60 backdrop-blur-sm items-center justify-center gap-3 transition-all duration-500">
+                        <Button 
+                          size="icon" 
+                          className="bg-primary hover:bg-primary/90 shadow-xl rounded-full h-12 w-12" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddToCart(product);
+                          }}
+                          aria-label="Add to cart"
+                        >
+                          <ShoppingCart className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </AspectRatio>
 
                 <div className="p-5">
                   {product.category && (
