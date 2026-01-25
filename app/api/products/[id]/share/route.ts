@@ -113,6 +113,74 @@ export async function POST(
       }
     })
 
+    // Award loyalty points for sharing (if user is logged in)
+    if (userId) {
+      try {
+        // Define points per share platform
+        const pointsMap: Record<string, number> = {
+          whatsapp: 5,
+          facebook: 5,
+          twitter: 5,
+          telegram: 5,
+          copy_link: 2,
+          qr_code: 3,
+          native: 5,
+        };
+
+        const pointsToAward = pointsMap[platform] || 2;
+
+        // Get or create loyalty account
+        let loyaltyAccount = await prisma.loyaltyAccount.findUnique({
+          where: { userId },
+        });
+
+        if (!loyaltyAccount) {
+          loyaltyAccount = await prisma.loyaltyAccount.create({
+            data: {
+              userId,
+              points: 0,
+              tier: 'bronze',
+            },
+          });
+        }
+
+        // Create loyalty transaction and update points
+        await prisma.$transaction([
+          prisma.loyaltyTransaction.create({
+            data: {
+              accountId: loyaltyAccount.id,
+              type: 'earn',
+              points: pointsToAward,
+              description: `Shared product on ${platform}`,
+              relatedId: share.id,
+              relatedType: 'product_share',
+            },
+          }),
+          prisma.loyaltyAccount.update({
+            where: { id: loyaltyAccount.id },
+            data: {
+              points: { increment: pointsToAward },
+            },
+          }),
+        ]);
+
+        return NextResponse.json({
+          success: true,
+          message: `Share tracked successfully! You earned ${pointsToAward} loyalty points.`,
+          shareId: share.id,
+          pointsEarned: pointsToAward,
+        });
+      } catch (loyaltyError) {
+        console.error('Error awarding loyalty points:', loyaltyError);
+        // Still return success for the share even if loyalty points fail
+        return NextResponse.json({
+          success: true,
+          message: 'Share tracked successfully',
+          shareId: share.id,
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Share tracked successfully',
