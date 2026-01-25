@@ -1,6 +1,6 @@
 'use client'
 
-import { ShoppingCart, User, Menu, Heart, ShieldCheck, Users } from "lucide-react"
+import { ShoppingCart, User, Menu, Heart, ShieldCheck, Users, Coins } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
@@ -116,6 +116,8 @@ export function Navbar() {
                     <DropdownMenuItem onClick={() => router.push('/addresses')}>Addresses</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/orders')}>Orders</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/gift-cards')}>Gift Cards</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/group-buy')}>Group Buying</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/equb')}>Equb - እኩብ</DropdownMenuItem>
                     <DropdownMenuItem onClick={goDashboard}>Dashboard</DropdownMenuItem>
                     {profile?.isAdmin && (
                       <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>Admin Dashboard</DropdownMenuItem>
@@ -167,6 +169,10 @@ export function Navbar() {
                   <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => router.push('/group-buy')}>
                     <Users className="h-5 w-5 mb-1" />
                     <span className="text-xs">Group Buy</span>
+                  </Button>
+                  <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => router.push('/equb')}>
+                    <Coins className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Equb</span>
                   </Button>
                   <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => router.push('/wishlist')}>
                     <Heart className="h-5 w-5 mb-1" />
