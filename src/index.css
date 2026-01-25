@@ -131,3 +131,78 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile-First Responsive Utilities for Ethiopian Users */
+@layer utilities {
+  /* Touch-friendly tap targets (minimum 44x44px for accessibility) */
+  .tap-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Mobile-optimized spacing */
+  .mobile-spacing {
+    @apply px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6;
+  }
+  
+  /* Safe area padding for mobile devices with notches */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Mobile-first container with bottom nav spacing */
+  .mobile-container {
+    @apply pb-20 md:pb-0;
+  }
+  
+  /* Responsive text sizing optimized for mobile readability */
+  .text-responsive-xs {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .text-responsive-sm {
+    @apply text-sm sm:text-base;
+  }
+  
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile card layout alternative to tables */
+  .mobile-card {
+    @apply block md:table-row bg-card border border-border rounded-lg mb-4 md:mb-0 md:border-0 md:rounded-none;
+  }
+  
+  .mobile-card-label {
+    @apply block md:hidden font-semibold text-muted-foreground text-sm mb-1;
+  }
+}
