@@ -96,7 +96,7 @@ export default function GroupPurchaseDetailPage() {
 
   const fetchGroupPurchase = async () => {
     try {
-      const response = await fetch(`/api/social/group-purchase/${params.id}/join`);
+      const response = await fetch(`/api/social/group-purchase/${params.id}`);
       const result = await response.json();
       
       if (result.success) {

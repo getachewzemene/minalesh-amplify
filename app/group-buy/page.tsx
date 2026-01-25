@@ -53,7 +53,7 @@ export default function GroupBuyPage() {
 
   const fetchGroupPurchases = async () => {
     try {
-      const response = await fetch('/api/social/group-purchase/create?limit=20');
+      const response = await fetch('/api/social/group-purchase?limit=20');
       const result = await response.json();
       
       if (result.success) {
