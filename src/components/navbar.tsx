@@ -1,6 +1,6 @@
 'use client'
 
-import { ShoppingCart, User, Menu, Heart, ShieldCheck } from "lucide-react"
+import { ShoppingCart, User, Menu, Heart, ShieldCheck, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "./theme-toggle"
 import { LanguageSelector } from "./language-selector"
@@ -87,6 +87,9 @@ export function Navbar() {
               <LoyaltyBadge />
               {showWishlistAndCart && (
                 <>
+                  <Button variant="ghost" size="icon" onClick={() => router.push('/group-buy')} title="Group Buying">
+                    <Users className="h-5 w-5" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => router.push('/wishlist')} className="relative">
                     <Heart className="h-5 w-5" />
                     {wishlist.length > 0 && (
@@ -161,6 +164,10 @@ export function Navbar() {
             <div className="flex justify-around">
               {showWishlistAndCart ? (
                 <>
+                  <Button variant="ghost" className="flex flex-col items-center p-2" onClick={() => router.push('/group-buy')}>
+                    <Users className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Group Buy</span>
+                  </Button>
                   <Button variant="ghost" className="flex flex-col items-center p-2 relative" onClick={() => router.push('/wishlist')}>
                     <Heart className="h-5 w-5 mb-1" />
                     {wishlist.length > 0 && (
