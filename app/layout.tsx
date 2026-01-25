@@ -15,7 +15,10 @@ import { createBaseMetadata, BASE_URL, ORGANIZATION_INFO } from "@/lib/seo"
 import '@/index.css'
 import Providers from './providers'
 
-export const metadata: Metadata = createBaseMetadata()
+export const metadata: Metadata = {
+  ...createBaseMetadata(),
+  manifest: '/manifest.json',
+}
 
 // Mobile-first viewport configuration for Ethiopian users
 export const viewport: Viewport = {
