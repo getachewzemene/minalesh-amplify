@@ -27,8 +27,8 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFD700' },
-    { media: '(prefers-color-scheme: dark)', color: '#1a1a2e' }
+    { media: '(prefers-color-scheme: light)', color: 'hsl(45, 100%, 51%)' }, // Ethiopian Gold
+    { media: '(prefers-color-scheme: dark)', color: 'hsl(222.2, 84%, 4.9%)' } // Dark background
   ],
 }
 

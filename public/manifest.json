@@ -1,7 +1,7 @@
 {
   "name": "Minalesh - Ethiopia's Marketplace",
   "short_name": "Minalesh",
-  "description": "Ethiopia's intelligent marketplace - ምናለሽ - Mobile-first e-commerce for Ethiopian users",
+  "description": "Ethiopia's intelligent marketplace - Mobile-first e-commerce for Ethiopian users",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

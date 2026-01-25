@@ -205,4 +205,13 @@
   .mobile-card-label {
     @apply block md:hidden font-semibold text-muted-foreground text-sm mb-1;
   }
+  
+  /* Mobile-responsive table container */
+  .mobile-responsive-table {
+    @apply block md:table w-full;
+  }
+  
+  .mobile-responsive-table > * {
+    @apply block md:table-row-group;
+  }
 }

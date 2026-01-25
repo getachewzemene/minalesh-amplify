@@ -22,6 +22,10 @@ export function MobileBottomNav() {
     return null
   }
 
+  // Calculate total cart quantity (sum of all item quantities)
+  const cartTotalQuantity = cart.reduce((sum, item) => sum + (item.quantity || 1), 0)
+  const wishlistCount = wishlist.length
+
   const navItems = [
     {
       icon: Home,
@@ -40,14 +44,16 @@ export function MobileBottomNav() {
       label: 'Cart',
       path: '/cart',
       active: pathname === '/cart',
-      badge: cart.length,
+      badge: cartTotalQuantity,
+      ariaLabel: `Cart with ${cartTotalQuantity} item${cartTotalQuantity !== 1 ? 's' : ''}`,
     },
     {
       icon: Heart,
       label: 'Wishlist',
       path: '/wishlist',
       active: pathname === '/wishlist',
-      badge: wishlist.length,
+      badge: wishlistCount,
+      ariaLabel: `Wishlist with ${wishlistCount} item${wishlistCount !== 1 ? 's' : ''}`,
     },
     {
       icon: User,
@@ -73,7 +79,7 @@ export function MobileBottomNav() {
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
-              aria-label={item.label}
+              aria-label={item.ariaLabel || item.label}
             >
               <div className="relative">
                 <Icon className={cn(
@@ -81,7 +87,10 @@ export function MobileBottomNav() {
                   item.active && "scale-110"
                 )} />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
+                  <span 
+                    className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold"
+                    aria-label={`${item.badge} items`}
+                  >
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}

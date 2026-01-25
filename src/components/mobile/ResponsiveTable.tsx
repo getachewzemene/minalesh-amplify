@@ -36,7 +36,6 @@ export function ResponsiveTable({
   return (
     <div className={cn(
       "w-full overflow-x-auto rounded-lg border border-border",
-      "-mx-4 sm:mx-0", // Extend to screen edges on mobile
       className
     )}>
       <div className="min-w-full inline-block align-middle">
