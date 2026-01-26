@@ -392,17 +392,68 @@ Offer quantity-based discounts:
 - Automatic calculation at checkout
 
 ### Flash Sales
-Create time-limited sales with:
-- Scheduled start and end times
-- Stock limits
-- Countdown timers
-- Priority over other discounts
+Create time-limited sales with enhanced features:
+- **Live Countdown Timers** - Real-time countdown showing days, hours, minutes, and seconds
+- **Real-time Stock Counter** - Live updates of remaining stock with visual progress bars
+- **Pre-registration System** - Users can register to be notified when sale starts
+- **Scheduled start and end times**
+- **Stock limits with sold count tracking**
+- **Priority over other discounts**
 
-**Example API Usage:**
+**Flash Sales Features:**
+- Automated notifications for registered users when sales start
+- Dynamic stock updates every 5 seconds
+- Visual indicators for stock status (In Stock, Selling Fast, Almost Sold Out)
+- Responsive design optimized for mobile devices
+- Integration with product pages
+
+**Public API Endpoints:**
 ```bash
-# Get active promotions
-GET /api/promotions?productId={productId}
+# Get all active flash sales
+GET /api/flash-sales
+
+# Get specific flash sale
+GET /api/flash-sales/{id}
+
+# Get real-time stock information
+GET /api/flash-sales/{id}/stock
+
+# Register for flash sale notifications
+POST /api/flash-sales/{id}/register
+
+# Check registration status
+GET /api/flash-sales/{id}/register
+
+# Unregister from flash sale
+DELETE /api/flash-sales/{id}/register
 ```
+
+**Admin API Endpoints:**
+```bash
+# Create new flash sale
+POST /api/admin/flash-sales
+{
+  "name": "iPhone 14 Flash Sale",
+  "productId": "uuid",
+  "discountType": "percentage",
+  "discountValue": 30,
+  "originalPrice": 50000,
+  "flashPrice": 35000,
+  "stockLimit": 100,
+  "startsAt": "2024-01-01T10:00:00Z",
+  "endsAt": "2024-01-01T22:00:00Z"
+}
+
+# Get all flash sales (with filters)
+GET /api/admin/flash-sales?isActive=true&page=1&perPage=20
+```
+
+**User Experience:**
+- Browse flash sales at `/flash-sales`
+- See flash sales prominently featured on homepage
+- Register for upcoming sales to receive notifications
+- Real-time countdown and stock updates during active sales
+- Clear visual indicators for sale status (Upcoming, Active, Ended)
 
 ## Shipping & Tax System
 
