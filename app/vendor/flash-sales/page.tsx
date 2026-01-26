@@ -112,7 +112,7 @@ export default function VendorFlashSalesPage() {
           </p>
         </div>
         <Button 
-          onClick={() => toast.info('Create form coming soon! Use API endpoint for now.')}
+          onClick={() => router.push('/vendor/flash-sales/create')}
           className="bg-red-600 hover:bg-red-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -132,23 +132,13 @@ export default function VendorFlashSalesPage() {
             <p className="text-muted-foreground mb-4">
               Create your first flash sale to boost sales with time-limited offers
             </p>
-            <div className="bg-muted p-4 rounded-lg max-w-2xl mx-auto mt-6">
-              <h4 className="font-semibold mb-2">API Usage:</h4>
-              <pre className="text-xs text-left overflow-x-auto">
-{`POST /api/vendors/flash-sales
-{
-  "name": "Weekend Flash Sale",
-  "productId": "your-product-id",
-  "discountType": "percentage",
-  "discountValue": 30,
-  "originalPrice": 1000,
-  "flashPrice": 700,
-  "stockLimit": 50,
-  "startsAt": "2024-12-25T10:00:00Z",
-  "endsAt": "2024-12-25T22:00:00Z"
-}`}
-              </pre>
-            </div>
+            <Button 
+              onClick={() => router.push('/vendor/flash-sales/create')}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Flash Sale
+            </Button>
           </CardContent>
         </Card>
       ) : (
