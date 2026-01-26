@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Progress } from '@/src/components/ui/progress';
-import { Avatar, AvatarFallback } from '@/src/components/ui/avatar';
-import { Separator } from '@/src/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import { 
   Users, Clock, TrendingDown, Share2, CheckCircle2, 
   AlertCircle, Copy, MessageCircle 
 } from 'lucide-react';
-import { useToast } from '@/src/hooks/use-toast';
-import { useAuth } from '@/src/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/auth-context';
 
 interface GroupPurchaseDetail {
   id: string;
