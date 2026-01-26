@@ -2,6 +2,14 @@
 
 A full-stack e-commerce application built with Next.js, specifically designed for the Ethiopian market.
 
+## 🆕 Backend Architecture Options
+
+We support both **Next.js API Routes** (current) and **Django Backend** (recommended for scaling):
+
+- 📚 **[Django Integration Guide](NEXTJS_DJANGO_INTEGRATION_GUIDE.md)** - Comprehensive guide on using Django as backend
+- 🚀 **[Django Quick Start](DJANGO_QUICKSTART.md)** - 30-minute proof of concept
+- 💡 **Decision:** Django is highly recommended for this e-commerce platform - see guides for details
+
 ## Features
 
 ### For Customers
