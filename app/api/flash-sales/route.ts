@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 
 /**
  * GET /api/flash-sales
- * Get active flash sales
+ * Get active and upcoming flash sales
  */
 export async function GET() {
   try {
@@ -12,11 +12,8 @@ export async function GET() {
     const flashSales = await prisma.flashSale.findMany({
       where: {
         isActive: true,
-        startsAt: {
-          lte: now,
-        },
         endsAt: {
-          gte: now,
+          gte: now, // Only show sales that haven't ended yet
         },
       },
       include: {
