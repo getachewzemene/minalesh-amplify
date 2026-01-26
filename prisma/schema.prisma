@@ -96,6 +96,31 @@ enum ContractStatus {
   renewed
 }
 
+enum FeedbackType {
+  bug
+  feature_request
+  improvement
+  usability
+  performance
+  other
+}
+
+enum FeedbackStatus {
+  new
+  under_review
+  planned
+  in_progress
+  completed
+  rejected
+}
+
+enum FeedbackPriority {
+  low
+  medium
+  high
+  critical
+}
+
 enum ContractType {
   standard
   premium
@@ -164,6 +189,9 @@ model User {
   dailyCheckIns           DailyCheckIn[]
   gameScores              GameScore[]
   flashSaleRegistrations  FlashSaleRegistration[]
+  betaFeedback            BetaFeedback[]
+  betaTester              BetaTester?
+  announcementReads       FeatureAnnouncementRead[]
 
   @@map("users")
 }
@@ -2502,4 +2530,90 @@ model LiveStockCounter {
   @@unique([productId, flashSaleId])
   @@index([productId])
   @@map("live_stock_counters")
+}
+
+// Beta Feedback System
+model BetaFeedback {
+  id          String           @id @default(uuid())
+  userId      String?          @db.Uuid
+  type        FeedbackType
+  priority    FeedbackPriority @default(medium)
+  status      FeedbackStatus   @default(new)
+  title       String
+  description String           @db.Text
+  page        String?          // Page where feedback was submitted
+  userAgent   String?          @db.Text
+  metadata    Json?            // Additional context (browser info, etc.)
+  screenshot  String?          // Optional screenshot URL
+  email       String?          // For anonymous feedback
+  adminNotes  String?          @db.Text
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("beta_feedback")
+}
+
+// Beta Program Enrollment
+model BetaTester {
+  id               String   @id @default(uuid())
+  userId           String   @unique @db.Uuid
+  inviteCode       String?  @unique
+  invitedBy        String?  @db.Uuid
+  acceptedTerms    Boolean  @default(false)
+  termsAcceptedAt  DateTime?
+  notificationOptIn Boolean @default(true)
+  active           Boolean  @default(true)
+  enrolledAt       DateTime @default(now())
+  lastActiveAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([active])
+  @@index([enrolledAt])
+  @@map("beta_testers")
+}
+
+// Feature Announcements
+model FeatureAnnouncement {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.Text
+  category    String?   // e.g., "new_feature", "improvement", "bug_fix"
+  imageUrl    String?
+  ctaText     String?   // Call to action text
+  ctaUrl      String?   // Call to action URL
+  priority    Int       @default(0) // Higher = more important
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  reads FeatureAnnouncementRead[]
+
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@map("feature_announcements")
+}
+
+// Track which users have read announcements
+model FeatureAnnouncementRead {
+  id             String   @id @default(uuid())
+  userId         String   @db.Uuid
+  announcementId String   @db.Uuid
+  readAt         DateTime @default(now())
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement FeatureAnnouncement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, announcementId])
+  @@index([userId])
+  @@index([announcementId])
+  @@map("feature_announcement_reads")
 }

@@ -688,12 +688,54 @@ curl https://yourdomain.com/api/health/db?detailed=true
 ## Deployment
 
 This Next.js application can be deployed to platforms like:
-- **Vercel** (Recommended - Best Next.js support)
+- **Vercel** (Recommended - Best Next.js support, **Free tier available**)
 - AWS Amplify
 - Netlify
 - Any Node.js hosting platform
 
-### Deployment Resources
+### 🚀 Quick Deployment to Vercel (Free)
+
+Deploy the Minalesh Marketplace to Vercel for **free** with a custom .com domain:
+
+**Total Cost: ~$10/year** (domain only - hosting is free!)
+
+#### Quick Start (20 minutes)
+1. **Sign up**: [vercel.com](https://vercel.com) (free account)
+2. **Import**: Click "New Project" → Import from GitHub → Select this repository
+3. **Configure**: Add environment variables (DATABASE_URL, JWT_SECRET, etc.)
+4. **Deploy**: Click "Deploy" button
+5. **Domain**: Add your custom .com domain in Settings → Domains
+
+#### Complete Guides
+- 📚 **[Vercel Deployment Guide](VERCEL_DEPLOYMENT_GUIDE.md)** - Comprehensive step-by-step instructions
+  - Prerequisites and setup (5 min)
+  - Environment variables configuration
+  - Database setup (Supabase/Neon - free tier)
+  - Custom domain configuration
+  - SSL certificates (automatic)
+  - Webhook setup
+  - Post-deployment checklist
+
+- 📚 **[Beta Launch Summary](BETA_LAUNCH_SUMMARY.md)** - Complete overview of beta features
+  - New beta features (feedback system, announcements)
+  - API endpoints documentation
+  - Testing procedures
+  - Success metrics
+
+- 📚 **[Beta User Guide](BETA_USER_GUIDE.md)** - Guide for beta testers
+  - Getting started
+  - How to provide feedback
+  - Beta program benefits
+
+#### Free Tier Resources
+All these services offer generous free tiers:
+- **Vercel**: Free (100GB bandwidth/month, unlimited sites)
+- **Supabase**: Free (500MB database, 1GB file storage)
+- **Resend**: Free (3,000 emails/month)
+- **Sentry**: Free (5,000 errors/month)
+- **Domain**: ~$10/year (Namecheap, GoDaddy, Google Domains)
+
+### Other Deployment Resources
 - [Production Database Setup Guide](docs/PRODUCTION_DATABASE_SETUP.md)
 - [Production Deployment Quick Start](docs/PRODUCTION_DEPLOYMENT_QUICKSTART.md)
 - [Beta Release Checklist](BETA_RELEASE_CHECKLIST.md)
