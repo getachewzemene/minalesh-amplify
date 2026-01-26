@@ -430,7 +430,7 @@ DELETE /api/flash-sales/{id}/register
 
 **Admin API Endpoints:**
 ```bash
-# Create new flash sale
+# Create new flash sale (Admins and Vendors)
 POST /api/admin/flash-sales
 {
   "name": "iPhone 14 Flash Sale",
@@ -443,9 +443,31 @@ POST /api/admin/flash-sales
   "startsAt": "2024-01-01T10:00:00Z",
   "endsAt": "2024-01-01T22:00:00Z"
 }
+# Note: Admins can create for any product, vendors only for their own products
 
 # Get all flash sales (with filters)
 GET /api/admin/flash-sales?isActive=true&page=1&perPage=20
+```
+
+**Vendor API Endpoints:**
+```bash
+# Create flash sale for vendor's product
+POST /api/vendors/flash-sales
+{
+  "name": "Weekend Flash Sale",
+  "productId": "your-product-id",
+  "discountType": "percentage",
+  "discountValue": 30,
+  "originalPrice": 1000,
+  "flashPrice": 700,
+  "stockLimit": 50,
+  "startsAt": "2024-12-25T10:00:00Z",
+  "endsAt": "2024-12-25T22:00:00Z"
+}
+# Requirements: Approved vendor status, product ownership
+
+# Get vendor's flash sales
+GET /api/vendors/flash-sales?isActive=true&page=1&perPage=20
 ```
 
 **User Experience:**
@@ -454,6 +476,7 @@ GET /api/admin/flash-sales?isActive=true&page=1&perPage=20
 - Register for upcoming sales to receive notifications
 - Real-time countdown and stock updates during active sales
 - Clear visual indicators for sale status (Upcoming, Active, Ended)
+- **Vendors:** Manage flash sales at `/vendor/flash-sales`
 
 ## Shipping & Tax System
 

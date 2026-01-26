@@ -150,8 +150,18 @@ model LiveStockCounter {
 #### Admin Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/admin/flash-sales` | Create new flash sale |
+| POST | `/api/admin/flash-sales` | Create new flash sale (Admins & Vendors) |
 | GET | `/api/admin/flash-sales` | Get all flash sales (with filters) |
+
+**Note:** Admins can create flash sales for any product. Vendors can create only for their own products (requires approved vendor status).
+
+#### Vendor Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/vendors/flash-sales` | Create flash sale for vendor's product |
+| GET | `/api/vendors/flash-sales` | Get vendor's flash sales (with filters) |
+
+**Requirements:** Approved vendor account, product ownership verification.
 
 ### Component Structure
 ```
@@ -169,6 +179,9 @@ src/components/flash-sales/
 app/
 ├── flash-sales/
 │   └── page.tsx                # Flash sales listing page
+├── vendor/
+│   └── flash-sales/
+│       └── page.tsx            # Vendor flash sales management
 └── page.tsx                    # Homepage (with flash sales section)
 ```
 
@@ -183,6 +196,14 @@ app/
 - Dedicated page listing all active and upcoming flash sales
 - Responsive grid layout (1-4 columns based on screen size)
 - Real-time updates for countdowns and stock
+
+### Vendor Flash Sales Page (`/vendor/flash-sales`)
+- Vendor dashboard for managing flash sales
+- Lists all flash sales for vendor's products
+- Shows status badges (Upcoming, Active, Ended)
+- Displays discount percentages and stock levels
+- API usage examples for creating new sales
+- "View on Site" links to customer-facing pages
 
 ### Flash Sale States
 
@@ -252,6 +273,66 @@ app/
    - Type checking with TypeScript
    - Prisma schema validation
 
+## API Examples
+
+### Create Flash Sale (Admin)
+```bash
+curl -X POST http://localhost:3000/api/admin/flash-sales \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "iPhone 14 Flash Sale",
+    "productId": "uuid",
+    "discountType": "percentage",
+    "discountValue": 30,
+    "originalPrice": 50000,
+    "flashPrice": 35000,
+    "stockLimit": 100,
+    "startsAt": "2024-01-01T10:00:00Z",
+    "endsAt": "2024-01-01T22:00:00Z"
+  }'
+```
+
+### Create Flash Sale (Vendor)
+```bash
+curl -X POST http://localhost:3000/api/vendors/flash-sales \
+  -H "Authorization: Bearer <vendor_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Weekend Flash Sale",
+    "productId": "your-product-id",
+    "discountType": "percentage",
+    "discountValue": 30,
+    "originalPrice": 1000,
+    "flashPrice": 700,
+    "stockLimit": 50,
+    "startsAt": "2024-12-25T10:00:00Z",
+    "endsAt": "2024-12-25T22:00:00Z"
+  }'
+```
+
+### Get Active Flash Sales
+```bash
+curl http://localhost:3000/api/flash-sales
+```
+
+### Get Vendor's Flash Sales
+```bash
+curl http://localhost:3000/api/vendors/flash-sales \
+  -H "Authorization: Bearer <vendor_token>"
+```
+
+### Register for Flash Sale
+```bash
+curl -X POST http://localhost:3000/api/flash-sales/{id}/register \
+  -H "Authorization: Bearer <user_token>"
+```
+
+### Get Stock Status
+```bash
+curl http://localhost:3000/api/flash-sales/{id}/stock
+```
+
 ## Testing
 
 ### Manual Testing
@@ -302,8 +383,10 @@ Creates:
 ### Medium Priority
 1. Multi-product flash sales
 2. Tiered discounts (early bird, etc.)
-3. Flash sale scheduling UI for admins
+3. Flash sale scheduling UI for admins and vendors
 4. Email templates for notifications
+5. **Vendor UI form for creating flash sales**
+6. **Edit/delete flash sales functionality**
 
 ### Low Priority
 1. Social sharing for flash sales
@@ -381,13 +464,15 @@ None - all features built with existing dependencies.
 
 ## Files Modified
 
-### New Files (12)
+### New Files (15)
 ```
 app/api/flash-sales/route.ts
 app/api/flash-sales/[id]/route.ts
 app/api/flash-sales/[id]/register/route.ts
 app/api/flash-sales/[id]/stock/route.ts
+app/api/vendors/flash-sales/route.ts           # NEW: Vendor API
 app/flash-sales/page.tsx
+app/vendor/flash-sales/page.tsx                # NEW: Vendor UI
 src/components/flash-sales/FlashSaleCard.tsx
 src/components/flash-sales/FlashSaleCountdown.tsx
 src/components/flash-sales/FlashSaleRegistration.tsx
@@ -397,9 +482,10 @@ src/components/flash-sales/index.ts
 prisma/seeds/demo-flash-sales.ts
 ```
 
-### Modified Files (2)
+### Modified Files (3)
 ```
 app/page.tsx                    # Added flash sales section
+app/api/admin/flash-sales/route.ts  # Added vendor support
 package.json                    # Added seed:flash-sales script
 ```
 
@@ -450,7 +536,16 @@ For issues or questions:
 
 ## Changelog
 
-### v1.0.0 (2026-01-26)
+### v1.1.0 (2026-01-26) - Vendor Support
+- ✅ Vendor API endpoint for flash sales creation
+- ✅ Vendor flash sales management page
+- ✅ Product ownership validation
+- ✅ Vendor approval status check
+- ✅ Updated admin endpoint to support vendors
+- ✅ Comprehensive input validation
+- ✅ Updated documentation
+
+### v1.0.0 (2026-01-26) - Initial Release
 - ✅ Initial implementation
 - ✅ Live countdown timers
 - ✅ Real-time stock counter
