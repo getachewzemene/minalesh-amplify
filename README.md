@@ -261,6 +261,12 @@ The API is fully documented using **Swagger/OpenAPI 3.0** specification.
 
 Access the OpenAPI JSON specification at: [http://localhost:3000/api/swagger.json](http://localhost:3000/api/swagger.json)
 
+## Architecture & Technology Stack
+
+**Current Implementation:** Next.js 14 Full-Stack (Approved for Beta Release)
+
+> **📌 Architecture Decision:** We are using Next.js for the beta release, providing a unified full-stack solution. Future migration to Django backend will be evaluated after beta testing based on user feedback and demo results. [Read the full architecture decision](ARCHITECTURE_DECISION_NEXTJS_BETA.md).
+
 ## Technologies Used
 
 This project is built with:
