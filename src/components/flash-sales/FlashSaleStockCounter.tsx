@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Progress } from '@/components/ui/progress'
 
 interface FlashSaleStockCounterProps {
@@ -59,6 +59,14 @@ export function FlashSaleStockCounter({
     return () => clearInterval(interval)
   }, [flashSaleId, refreshInterval])
 
+  const stockStatus = useMemo(() => {
+    return stockData.stockPercentage >= 90 
+      ? 'Almost Sold Out!'
+      : stockData.stockPercentage >= 70
+      ? 'Selling Fast!'
+      : 'In Stock'
+  }, [stockData.stockPercentage])
+
   if (!stockData.stockLimit) {
     return (
       <div className={`text-sm text-muted-foreground ${className}`}>
@@ -66,12 +74,6 @@ export function FlashSaleStockCounter({
       </div>
     )
   }
-
-  const stockStatus = stockData.stockPercentage >= 90 
-    ? 'Almost Sold Out!'
-    : stockData.stockPercentage >= 70
-    ? 'Selling Fast!'
-    : 'In Stock'
 
   return (
     <div className={`space-y-2 ${className}`}>

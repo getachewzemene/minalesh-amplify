@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
@@ -26,9 +26,11 @@ export function FlashSaleRegistration({
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
 
-  const now = new Date()
-  const startDate = new Date(startsAt)
-  const hasStarted = now >= startDate
+  const hasStarted = useMemo(() => {
+    const now = new Date()
+    const startDate = new Date(startsAt)
+    return now >= startDate
+  }, [startsAt])
 
   useEffect(() => {
     const checkRegistrationStatus = async () => {

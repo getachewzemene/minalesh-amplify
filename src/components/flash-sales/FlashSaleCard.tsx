@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FlashSaleCountdown } from './FlashSaleCountdown'
@@ -38,17 +39,26 @@ interface FlashSaleCardProps {
 }
 
 export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
-  const now = new Date()
-  const startDate = new Date(flashSale.startsAt)
-  const endDate = new Date(flashSale.endsAt)
-  
-  const hasStarted = now >= startDate
-  const hasEnded = now >= endDate
-  const isUpcoming = now < startDate
+  const saleStatus = useMemo(() => {
+    const now = new Date()
+    const startDate = new Date(flashSale.startsAt)
+    const endDate = new Date(flashSale.endsAt)
+    
+    const hasStarted = now >= startDate
+    const hasEnded = now >= endDate
+    const isUpcoming = now < startDate
 
-  const discountPercentage = Math.round(
-    ((flashSale.originalPrice - flashSale.flashPrice) / flashSale.originalPrice) * 100
-  )
+    const discountPercentage = Math.round(
+      ((flashSale.originalPrice - flashSale.flashPrice) / flashSale.originalPrice) * 100
+    )
+
+    return {
+      hasStarted,
+      hasEnded,
+      isUpcoming,
+      discountPercentage,
+    }
+  }, [flashSale.startsAt, flashSale.endsAt, flashSale.originalPrice, flashSale.flashPrice])
 
   const productImage = flashSale.product.images?.[0] || '/placeholder-product.png'
 
@@ -61,7 +71,7 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
             <Zap className="h-3 w-3 mr-1" />
             Flash Sale
           </Badge>
-          {isUpcoming && (
+          {saleStatus.isUpcoming && (
             <Badge variant="secondary">
               Upcoming
             </Badge>
@@ -71,7 +81,7 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
         {/* Discount Badge */}
         <div className="absolute top-2 right-2 z-10">
           <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg">
-            {discountPercentage}% OFF
+            {saleStatus.discountPercentage}% OFF
           </Badge>
         </div>
 
@@ -119,9 +129,9 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
 
         {/* Countdown Timer */}
         <div className="py-2">
-          {hasEnded ? (
+          {saleStatus.hasEnded ? (
             <p className="text-center text-red-600 font-semibold">Sale Ended</p>
-          ) : isUpcoming ? (
+          ) : saleStatus.isUpcoming ? (
             <div>
               <p className="text-sm text-center mb-2 font-medium">Starts In:</p>
               <FlashSaleCountdown targetDate={flashSale.startsAt} />
@@ -135,7 +145,7 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
         </div>
 
         {/* Stock Counter */}
-        {hasStarted && !hasEnded && (
+        {saleStatus.hasStarted && !saleStatus.hasEnded && (
           <FlashSaleStockCounter
             flashSaleId={flashSale.id}
             stockLimit={flashSale.stockLimit}
@@ -144,7 +154,7 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
         )}
 
         {/* Pre-registration */}
-        {isUpcoming && (
+        {saleStatus.isUpcoming && (
           <FlashSaleRegistration
             flashSaleId={flashSale.id}
             flashSaleName={flashSale.name}
@@ -154,7 +164,7 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        {hasStarted && !hasEnded ? (
+        {saleStatus.hasStarted && !saleStatus.hasEnded ? (
           <Button 
             asChild 
             className="w-full bg-red-600 hover:bg-red-700 text-white"
@@ -164,7 +174,7 @@ export function FlashSaleCard({ flashSale }: FlashSaleCardProps) {
               Buy Now
             </Link>
           </Button>
-        ) : hasEnded ? (
+        ) : saleStatus.hasEnded ? (
           <Button 
             asChild 
             variant="outline"

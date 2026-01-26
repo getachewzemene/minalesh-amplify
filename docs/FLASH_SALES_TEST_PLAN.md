@@ -1,10 +1,6 @@
-/**
- * Flash Sales Feature Test Plan
- * 
- * This document outlines the manual testing procedures for the Enhanced Flash Sales feature.
- */
+# Enhanced Flash Sales Feature Test Plan
 
-# Enhanced Flash Sales - Test Plan
+This document outlines the manual testing procedures for the Enhanced Flash Sales feature.
 
 ## Features to Test
 
