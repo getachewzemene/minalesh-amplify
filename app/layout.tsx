@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -9,12 +9,28 @@ import { ComparisonProvider } from "@/context/comparison-context"
 import { AIHelper } from "@/components/ai-helper"
 import { GoogleAnalytics, GoogleTagManager, FacebookPixel } from "@/components/analytics"
 import { ComparisonBar } from "@/components/comparison/ComparisonBar"
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav"
 import { OrganizationSchema, WebSiteSchema } from "@/components/seo"
 import { createBaseMetadata, BASE_URL, ORGANIZATION_INFO } from "@/lib/seo"
 import '@/index.css'
 import Providers from './providers'
 
-export const metadata: Metadata = createBaseMetadata()
+export const metadata: Metadata = {
+  ...createBaseMetadata(),
+  manifest: '/manifest.json',
+}
+
+// Mobile-first viewport configuration for Ethiopian users
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: 'hsl(45, 100%, 51%)' }, // Ethiopian Gold
+    { media: '(prefers-color-scheme: dark)', color: 'hsl(222.2, 84%, 4.9%)' } // Dark background
+  ],
+}
 
 export default function RootLayout({
   children,
@@ -46,6 +62,7 @@ export default function RootLayout({
                   <ComparisonProvider>
                     {children}
                     <ComparisonBar />
+                    <MobileBottomNav />
                     <AIHelper />
                     <GoogleAnalytics />
                     <GoogleTagManager />
