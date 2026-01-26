@@ -8,6 +8,22 @@
 
 ✅ **Recommended:** Django + Next.js is a proven, powerful combination for e-commerce platforms.
 
+## ⚠️ Security Notice (January 2026)
+
+**IMPORTANT:** Always use the latest patched versions of Django and dependencies. The example requirements in this guide use:
+
+- **Django 4.2.26** (patched for SQL injection and DoS vulnerabilities)
+- **Gunicorn 22.0.0** (patched for request smuggling vulnerabilities)
+- **Pillow 10.3.0** (patched for buffer overflow vulnerability)
+
+**Before deployment, always:**
+1. Check for the latest security patches: `pip list --outdated`
+2. Review Django security releases: https://www.djangoproject.com/weblog/
+3. Run security audits: `pip-audit` or `safety check`
+4. Subscribe to Django security mailing list
+
+See [Django Security Policy](https://docs.djangoproject.com/en/stable/internals/security/) for more information.
+
 ## Why Django is a Good Choice for Minalesh
 
 ### 1. **E-commerce Ready Features**

@@ -2,6 +2,20 @@
 
 This is a reference implementation of a Django backend for the Minalesh e-commerce platform.
 
+## ⚠️ Security Notice
+
+**IMPORTANT:** This starter kit uses security-patched versions of all dependencies (January 2026):
+
+- **Django 4.2.26** - Patched for SQL injection and DoS vulnerabilities
+- **Gunicorn 22.0.0** - Patched for HTTP request smuggling
+- **Pillow 10.3.0** - Patched for buffer overflow vulnerability
+
+**Before deploying to production:**
+1. Always check for the latest security patches: `pip list --outdated`
+2. Run security audits: `pip install pip-audit && pip-audit`
+3. Subscribe to [Django Security Mailing List](https://groups.google.com/g/django-announce)
+4. Review [Django Security Releases](https://www.djangoproject.com/weblog/)
+
 ## Quick Start
 
 ```bash

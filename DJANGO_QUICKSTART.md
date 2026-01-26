@@ -4,6 +4,15 @@
 
 **YES** - Django is an excellent choice for Minalesh e-commerce backend. Here's a 30-minute quickstart.
 
+## ⚠️ Security First
+
+**IMPORTANT:** The dependencies in this guide use security-patched versions:
+- Django 4.2.26 (fixes SQL injection, DoS vulnerabilities)
+- Gunicorn 22.0.0 (fixes request smuggling)
+- Pillow 10.3.0 (fixes buffer overflow)
+
+Always verify you're using the latest patched versions before deployment.
+
 ## Quick Decision Matrix
 
 | Need | Next.js API Routes | Django |
