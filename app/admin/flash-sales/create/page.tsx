@@ -97,26 +97,26 @@ export default function AdminCreateFlashSalePage() {
     }
   }
 
-  const calculateFlashPrice = () => {
-    const original = parseFloat(formData.originalPrice)
-    const discount = parseFloat(formData.discountValue)
-    
-    if (isNaN(original) || isNaN(discount)) return
+  useEffect(() => {
+    const calculateFlashPrice = () => {
+      const original = parseFloat(formData.originalPrice)
+      const discount = parseFloat(formData.discountValue)
+      
+      if (isNaN(original) || isNaN(discount)) return
 
-    let flashPrice = 0
-    if (formData.discountType === 'percentage') {
-      flashPrice = original - (original * discount / 100)
-    } else {
-      flashPrice = original - discount
+      let flashPrice = 0
+      if (formData.discountType === 'percentage') {
+        flashPrice = original - (original * discount / 100)
+      } else {
+        flashPrice = original - discount
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        flashPrice: flashPrice > 0 ? flashPrice.toFixed(2) : '0',
+      }))
     }
 
-    setFormData(prev => ({
-      ...prev,
-      flashPrice: flashPrice > 0 ? flashPrice.toFixed(2) : '0',
-    }))
-  }
-
-  useEffect(() => {
     if (formData.originalPrice && formData.discountValue) {
       calculateFlashPrice()
     }
