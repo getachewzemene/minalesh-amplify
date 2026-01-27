@@ -11,6 +11,10 @@ import { useAuth } from "@/context/auth-context"
 import { RecentlyViewedProducts } from "@/components/product/RecentlyViewedProducts"
 import { Container } from "@/components/ui/container"
 import { PersonalizedRecommendations, TrendingProducts } from "@/components/recommendations"
+import { FlashSalesList } from "@/components/flash-sales"
+import { Zap } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
   const { user } = useAuth()
@@ -26,6 +30,25 @@ export default function Home() {
         <HeroSection />
         <ProductGrid />
         
+        {/* Flash Sales Section */}
+        <Container className="py-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="h-6 w-6 text-red-600" />
+                <h2 className="text-2xl md:text-3xl font-bold">🔥 Flash Sales</h2>
+              </div>
+              <p className="text-muted-foreground">Limited-time deals - Don't miss out!</p>
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/flash-sales">
+                View All
+              </Link>
+            </Button>
+          </div>
+          <FlashSalesList limit={4} />
+        </Container>
+
         {/* New Arrivals Section */}
         <ProductSection
           title="New Arrivals"

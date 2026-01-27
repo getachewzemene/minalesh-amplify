@@ -1,20 +1,36 @@
-import { NextResponse } from 'next/server';
+/**
+ * Vendor Flash Sales API
+ * 
+ * Allows vendors to create and manage flash sales for their own products
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/middleware';
 import prisma from '@/lib/prisma';
-import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 
-// Check if user is admin
-function isAdmin(email: string): boolean {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [];
-  return adminEmails.includes(email);
-}
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+/**
+ * GET /api/vendors/flash-sales
+ * Get all flash sales for the authenticated vendor's products
+ */
+export async function GET(request: NextRequest) {
+  const { error, payload } = withAuth(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
+    // Check if user is a vendor
+    const profile = await prisma.profile.findUnique({
+      where: { userId: payload!.userId },
+      select: { id: true, isVendor: true }
+    });
 
-    if (!payload || !isAdmin(payload.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!profile?.isVendor) {
+      return NextResponse.json(
+        { error: 'Only vendors can access this endpoint' },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -22,7 +38,13 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const perPage = parseInt(searchParams.get('perPage') || '20');
 
-    const whereClause: any = {};
+    // Build where clause - only show flash sales for vendor's products
+    const whereClause: any = {
+      product: {
+        vendorId: profile.id
+      }
+    };
+    
     if (isActive !== null) {
       whereClause.isActive = isActive === 'true';
     }
@@ -36,6 +58,7 @@ export async function GET(request: Request) {
               name: true,
               slug: true,
               images: true,
+              price: true,
             },
           },
         },
@@ -61,7 +84,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Error fetching flash sales:', error);
+    console.error('Error fetching vendor flash sales:', error);
     return NextResponse.json(
       { error: 'An error occurred while fetching flash sales' },
       { status: 500 }
@@ -69,28 +92,33 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+/**
+ * POST /api/vendors/flash-sales
+ * Create a new flash sale for vendor's product
+ */
+export async function POST(request: NextRequest) {
+  const { error, payload } = withAuth(request);
+  if (error) return error;
+
   try {
-    const token = getTokenFromRequest(request);
-    const payload = getUserFromToken(token);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin or vendor
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      include: { profile: true }
+    // Check if user is a vendor
+    const profile = await prisma.profile.findUnique({
+      where: { userId: payload!.userId },
+      select: { id: true, isVendor: true, vendorStatus: true }
     });
 
-    const isAdminUser = isAdmin(payload.role);
-    const isVendor = user?.profile?.isVendor && user?.profile?.vendorStatus === 'approved';
+    if (!profile?.isVendor) {
+      return NextResponse.json(
+        { error: 'Only vendors can create flash sales' },
+        { status: 403 }
+      );
+    }
 
-    if (!isAdminUser && !isVendor) {
-      return NextResponse.json({ 
-        error: 'Only admins and approved vendors can create flash sales' 
-      }, { status: 403 });
+    if (profile.vendorStatus !== 'approved') {
+      return NextResponse.json(
+        { error: 'Your vendor account must be approved before creating flash sales' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -127,14 +155,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify product exists
+    // Validate discount type
+    if (!['percentage', 'fixed_amount', 'free_shipping'].includes(discountType)) {
+      return NextResponse.json(
+        { error: 'Invalid discount type' },
+        { status: 400 }
+      );
+    }
+
+    // Verify product exists and belongs to vendor
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: {
-        id: true,
+      select: { 
+        id: true, 
         vendorId: true,
+        price: true,
+        stockQuantity: true,
         isActive: true
-      }
+      },
     });
 
     if (!product) {
@@ -144,23 +182,53 @@ export async function POST(request: Request) {
       );
     }
 
-    // If vendor, verify they own the product
-    if (isVendor && !isAdminUser) {
-      if (product.vendorId !== user.profile!.id) {
-        return NextResponse.json(
-          { error: 'You can only create flash sales for your own products' },
-          { status: 403 }
-        );
-      }
+    // Verify vendor owns the product
+    if (product.vendorId !== profile.id) {
+      return NextResponse.json(
+        { error: 'You can only create flash sales for your own products' },
+        { status: 403 }
+      );
+    }
+
+    // Verify product is active
+    if (!product.isActive) {
+      return NextResponse.json(
+        { error: 'Cannot create flash sale for inactive product' },
+        { status: 400 }
+      );
     }
 
     // Validate dates
     const start = new Date(startsAt);
     const end = new Date(endsAt);
-    
+    const now = new Date();
+
     if (start >= end) {
       return NextResponse.json(
         { error: 'Start date must be before end date' },
+        { status: 400 }
+      );
+    }
+
+    if (end <= now) {
+      return NextResponse.json(
+        { error: 'End date must be in the future' },
+        { status: 400 }
+      );
+    }
+
+    // Validate stock limit
+    if (stockLimit && stockLimit > product.stockQuantity) {
+      return NextResponse.json(
+        { error: `Stock limit cannot exceed available stock (${product.stockQuantity})` },
+        { status: 400 }
+      );
+    }
+
+    // Validate prices
+    if (flashPrice >= originalPrice) {
+      return NextResponse.json(
+        { error: 'Flash price must be less than original price' },
         { status: 400 }
       );
     }
@@ -197,7 +265,7 @@ export async function POST(request: Request) {
       flashPrice: Number(flashSale.flashPrice),
     });
   } catch (error) {
-    console.error('Error creating flash sale:', error);
+    console.error('Error creating vendor flash sale:', error);
     return NextResponse.json(
       { error: 'An error occurred while creating flash sale' },
       { status: 500 }
