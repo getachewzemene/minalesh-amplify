@@ -30,7 +30,9 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Interactive games (spin wheel, scratch cards, quizzes)
   - Points and rewards redemption
   - Leaderboards and rankings
+  - **Full UI Dashboard** at `/dashboard/gamification`
   - 📚 **[View Gamification Documentation](docs/GAMIFICATION_SYSTEM.md)**
+  - 📚 **[View UI Guide](docs/GAMIFICATION_UI_GUIDE.md)**
 
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
