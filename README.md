@@ -24,6 +24,15 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
 - **Refunds & Returns** - Request full or partial refunds with automatic stock restoration
 - **Dispute Resolution** - File disputes for order issues with vendor/admin mediation
 - **Data Privacy** - Export your data or delete your account (GDPR compliant)
+- **🎮 Gamification System** - Engage with the platform through interactive features
+  - Daily check-ins with streak bonuses
+  - Achievement badges with rewards
+  - Interactive games (spin wheel, scratch cards, quizzes)
+  - Points and rewards redemption
+  - Leaderboards and rankings
+  - **Full UI Dashboard** at `/dashboard/gamification`
+  - 📚 **[View Gamification Documentation](docs/GAMIFICATION_SYSTEM.md)**
+  - 📚 **[View UI Guide](docs/GAMIFICATION_UI_GUIDE.md)**
 
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
@@ -251,6 +260,16 @@ The API is fully documented using **Swagger/OpenAPI 3.0** specification.
 - **Vendors** - Vendor-specific operations
 - **Seller Ratings** 🆕 - Vendor rating submission and retrieval
 - **Tax Compliance** 🆕 - Ethiopian tax reporting and compliance
+- **Gamification** 🎮 - Interactive engagement features
+  - `GET /api/gamification/check-in` - Get daily check-in status
+  - `POST /api/gamification/check-in` - Perform daily check-in
+  - `GET /api/gamification/achievements` - List all achievements
+  - `POST /api/gamification/achievements` - Award achievement (admin)
+  - `GET /api/gamification/rewards` - List available rewards
+  - `POST /api/gamification/rewards` - Redeem reward with points
+  - `GET /api/gamification/games` - List available games
+  - `POST /api/gamification/games` - Play a game
+  - `GET /api/gamification/leaderboard` - View leaderboards
 - **Advanced Vendor Tools** 🚀 - Professional e-commerce features
   - `POST /api/vendors/products/bulk-upload` - Bulk product import via CSV/Excel
   - `GET /api/vendors/products/export` - Export products to CSV
