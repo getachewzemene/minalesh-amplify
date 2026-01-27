@@ -7,6 +7,14 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
 )
 
+// Define GameType based on Prisma schema
+type GameType = 'spin_wheel' | 'scratch_card' | 'quiz' | 'survey' | 'mini_game'
+
+// Type guard for GameType
+function isValidGameType(gameType: string): gameType is GameType {
+  return ['spin_wheel', 'scratch_card', 'quiz', 'survey', 'mini_game'].includes(gameType)
+}
+
 async function verifyAuth(req: NextRequest) {
   const cookieStore = await cookies()
   const token = cookieStore.get('auth_token')?.value
@@ -151,7 +159,7 @@ export async function GET(req: NextRequest) {
       const count = await prisma.gameScore.count({
         where: {
           userId: user.userId,
-          gameType: gameType as 'spin_wheel' | 'scratch_card' | 'quiz' | 'survey' | 'mini_game',
+          gameType: gameType as GameType,
           playedAt: {
             gte: today,
             lt: tomorrow,
@@ -246,21 +254,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { gameType, score = 0, metadata = {} } = body
 
-    if (!gameType) {
+    if (!gameType || typeof gameType !== 'string') {
       return NextResponse.json(
-        { error: 'Missing game type' },
+        { error: 'Missing or invalid game type' },
         { status: 400 }
       )
     }
 
-    // Validate game type
-    const game = GAMES[gameType as keyof typeof GAMES]
-    if (!game) {
+    // Validate game type using type guard
+    if (!isValidGameType(gameType)) {
       return NextResponse.json(
         { error: 'Invalid game type' },
         { status: 400 }
       )
     }
+
+    // Get game configuration
+    const game = GAMES[gameType]
 
     // Check daily play limit
     const today = new Date()
@@ -271,7 +281,7 @@ export async function POST(req: NextRequest) {
     const playCount = await prisma.gameScore.count({
       where: {
         userId: user.userId,
-        gameType: gameType as 'spin_wheel' | 'scratch_card' | 'quiz' | 'survey' | 'mini_game',
+        gameType: gameType,
         playedAt: {
           gte: today,
           lt: tomorrow,
@@ -295,7 +305,7 @@ export async function POST(req: NextRequest) {
       await tx.gameScore.create({
         data: {
           userId: user.userId,
-          gameType: gameType as 'spin_wheel' | 'scratch_card' | 'quiz' | 'survey' | 'mini_game',
+          gameType: gameType,
           score,
           reward: reward.value,
           rewardType: reward.type,

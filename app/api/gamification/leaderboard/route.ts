@@ -193,56 +193,76 @@ export async function GET(req: NextRequest) {
       }
     } else if (type === 'streaks') {
       // Leaderboard by check-in streaks
-      const topStreaks = await prisma.dailyCheckIn.findMany({
+      // Get the maximum streak for each user
+      const streakData = await prisma.dailyCheckIn.groupBy({
+        by: ['userId'],
+        _max: { streakCount: true },
+        orderBy: { _max: { streakCount: 'desc' } },
         take: limit,
-        orderBy: { streakCount: 'desc' },
-        distinct: ['userId'],
+      })
+
+      const userIds = streakData.map((s) => s.userId)
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
         include: {
-          user: {
-            include: {
-              profile: {
-                select: {
-                  displayName: true,
-                  firstName: true,
-                  lastName: true,
-                  avatarUrl: true,
-                },
-              },
+          profile: {
+            select: {
+              displayName: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
             },
+          },
+          dailyCheckIns: {
+            where: { streakCount: { gte: 1 } },
+            orderBy: { checkInDate: 'desc' },
+            take: 1,
           },
         },
       })
 
-      leaderboard = topStreaks.map((checkIn, index) => ({
-        rank: index + 1,
-        userId: checkIn.userId,
-        displayName: checkIn.user.profile?.displayName || 
-                    `${checkIn.user.profile?.firstName || ''} ${checkIn.user.profile?.lastName || ''}`.trim() || 
-                    'Anonymous',
-        avatarUrl: checkIn.user.profile?.avatarUrl,
-        streak: checkIn.streakCount,
-        lastCheckIn: checkIn.checkInDate,
-      }))
+      const userMap = new Map(users.map((u) => [u.id, u]))
 
-      // Get current user's rank
-      const currentUserCheckIn = await prisma.dailyCheckIn.findFirst({
-        where: { userId: user.userId },
-        orderBy: { streakCount: 'desc' },
+      leaderboard = streakData.map((data, index) => {
+        const user = userMap.get(data.userId)
+        const lastCheckIn = user?.dailyCheckIns[0]
+        return {
+          rank: index + 1,
+          userId: data.userId,
+          displayName: user?.profile?.displayName || 
+                      `${user?.profile?.firstName || ''} ${user?.profile?.lastName || ''}`.trim() || 
+                      'Anonymous',
+          avatarUrl: user?.profile?.avatarUrl,
+          streak: data._max.streakCount || 0,
+          lastCheckIn: lastCheckIn?.checkInDate,
+        }
       })
 
-      if (currentUserCheckIn) {
+      // Get current user's rank
+      const currentUserStreak = await prisma.dailyCheckIn.groupBy({
+        by: ['userId'],
+        _max: { streakCount: true },
+        where: { userId: user.userId },
+      })
+
+      if (currentUserStreak.length > 0) {
         const usersAbove = await prisma.dailyCheckIn.groupBy({
           by: ['userId'],
           _max: { streakCount: true },
           having: {
-            streakCount: { _max: { gt: currentUserCheckIn.streakCount } },
+            streakCount: { _max: { gt: currentUserStreak[0]._max.streakCount || 0 } },
           },
+        })
+
+        const currentUserCheckIn = await prisma.dailyCheckIn.findFirst({
+          where: { userId: user.userId },
+          orderBy: { checkInDate: 'desc' },
         })
 
         currentUserRank = {
           rank: usersAbove.length + 1,
-          streak: currentUserCheckIn.streakCount,
-          lastCheckIn: currentUserCheckIn.checkInDate,
+          streak: currentUserStreak[0]._max.streakCount || 0,
+          lastCheckIn: currentUserCheckIn?.checkInDate,
         }
       }
     }
