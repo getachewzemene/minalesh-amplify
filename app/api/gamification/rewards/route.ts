@@ -268,8 +268,8 @@ export async function POST(req: NextRequest) {
             discountType,
             discountValue,
             status: 'active',
-            maxUses: 1,
-            maxUsesPerUser: 1,
+            usageLimit: 1,
+            perUserLimit: 1,
             usageCount: 0,
             startsAt: new Date(),
             expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
