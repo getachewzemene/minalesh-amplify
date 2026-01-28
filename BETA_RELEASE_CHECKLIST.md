@@ -1,10 +1,13 @@
 # Minalesh Marketplace - Beta Release Checklist
 
-**Document Version:** 2.0  
-**Last Updated:** January 24, 2026  
+**Document Version:** 2.1  
+**Last Updated:** January 26, 2026  
 **Status:** Production Ready (98% Complete)  
+**Architecture:** Next.js (Approved for Beta Release) - [See Architecture Decision](ARCHITECTURE_DECISION_NEXTJS_BETA.md)
 
 This document tracks the progress of features and components required for deployment and beta release for production. Each feature includes its current status, implementation procedures, and priority level.
+
+> **📌 Architecture Decision:** We are proceeding with the current Next.js implementation for beta release. Django backend migration will be considered post-beta based on user feedback and demo test results. See [Architecture Decision Record](ARCHITECTURE_DECISION_NEXTJS_BETA.md) for full details.
 
 ---
 
