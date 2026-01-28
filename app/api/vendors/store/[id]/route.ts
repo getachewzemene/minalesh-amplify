@@ -22,18 +22,18 @@ import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
  *         name: page
  *         schema:
  *           type: integer
- *         description: Page number (default: 1)
+ *         description: "Page number (default: 1)"
  *       - in: query
  *         name: per_page
  *         schema:
  *           type: integer
- *         description: Items per page (default: 20, max: 100)
+ *         description: "Items per page (default: 20, max: 100)"
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
  *           enum: [newest, price_low, price_high, rating, popular]
- *         description: Sort order (default: newest)
+ *         description: "Sort order (default: newest)"
  *     responses:
  *       200:
  *         description: Vendor store details with products
