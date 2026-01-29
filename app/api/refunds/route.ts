@@ -8,6 +8,8 @@ import {
 } from '@/lib/refund';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
+import { withApiLogger } from '@/lib/api-logger';
 
 const refundSchema = z.object({
   orderId: z.string().uuid(),
@@ -72,7 +74,7 @@ const refundSchema = z.object({
  *       401:
  *         description: Unauthorized
  */
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -141,8 +143,16 @@ export async function POST(request: Request) {
   }
 }
 
+// Strict rate limiting for refunds - financial operation
+export const POST = withApiLogger(
+  withRateLimit(postHandler, {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3, // Max 3 refunds per hour
+  })
+);
+
 // GET /api/refunds?orderId=xxx - Get refunds for an order
-export async function GET(request: Request) {
+async function getHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -194,3 +204,7 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const GET = withApiLogger(
+  withRateLimit(getHandler, RATE_LIMIT_CONFIGS.default)
+);
