@@ -2077,7 +2077,7 @@ model Warehouse {
 
 // AI-Powered Recommendations
 model RecommendationScore {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   userId      String   @db.Uuid
   productId   String   @db.Uuid
   score       Float // 0-1 recommendation confidence
@@ -2103,7 +2103,7 @@ enum ChatStatus {
 }
 
 model ChatConversation {
-  id            String     @id @default(uuid())
+  id            String     @id @default(uuid()) @db.Uuid
   customerId    String     @db.Uuid
   vendorId      String?    @db.Uuid
   adminId       String?    @db.Uuid
@@ -2131,7 +2131,7 @@ model ChatConversation {
 }
 
 model ChatMessage {
-  id             String    @id @default(uuid())
+  id             String    @id @default(uuid()) @db.Uuid
   conversationId String    @db.Uuid
   senderId       String    @db.Uuid
   senderType     String // customer, vendor, admin, bot
@@ -2192,7 +2192,7 @@ enum EqubDistributionStatus {
 }
 
 model GroupPurchase {
-  id              String              @id @default(uuid())
+  id              String              @id @default(uuid()) @db.Uuid
   productId       String              @db.Uuid
   initiatorId     String              @db.Uuid
   title           String
@@ -2220,7 +2220,7 @@ model GroupPurchase {
 }
 
 model GroupPurchaseMember {
-  id              String   @id @default(uuid())
+  id              String   @id @default(uuid()) @db.Uuid
   groupPurchaseId String   @db.Uuid
   userId          String   @db.Uuid
   isPaid          Boolean  @default(false)
@@ -2240,7 +2240,7 @@ model GroupPurchaseMember {
 
 // Ethiopian Equb (Rotating Savings and Credit Association)
 model EqubCircle {
-  id                 String           @id @default(uuid())
+  id                 String           @id @default(uuid()) @db.Uuid
   name               String
   description        String?          @db.Text
   creatorId          String           @db.Uuid
@@ -2267,7 +2267,7 @@ model EqubCircle {
 }
 
 model EqubCircleMember {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @db.Uuid
   equbCircleId String   @db.Uuid
   userId       String   @db.Uuid
   position     Int // Distribution order (1-N)
@@ -2285,7 +2285,7 @@ model EqubCircleMember {
 }
 
 model EqubContribution {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @db.Uuid
   equbCircleId String   @db.Uuid
   memberId     String   @db.Uuid
   round        Int
@@ -2302,7 +2302,7 @@ model EqubContribution {
 }
 
 model EqubDistribution {
-  id            String                 @id @default(uuid())
+  id            String                 @id @default(uuid()) @db.Uuid
   equbCircleId  String                 @db.Uuid
   recipientId   String                 @db.Uuid
   round         Int
@@ -2322,7 +2322,7 @@ model EqubDistribution {
 }
 
 model SocialShare {
-  id        String    @id @default(uuid())
+  id        String    @id @default(uuid()) @db.Uuid
   userId    String    @db.Uuid
   productId String    @db.Uuid
   platform  String // whatsapp, telegram, facebook, twitter, messenger
@@ -2347,7 +2347,7 @@ model SocialShare {
 
 // Smart Inventory Forecasting
 model InventoryForecast {
-  id              String   @id @default(uuid())
+  id              String   @id @default(uuid()) @db.Uuid
   productId       String   @db.Uuid
   warehouseId     String?  @db.Uuid
   forecastDate    DateTime // Date for the forecast
@@ -2369,7 +2369,7 @@ model InventoryForecast {
 }
 
 model AutoReorderRule {
-  id              String    @id @default(uuid())
+  id              String    @id @default(uuid()) @db.Uuid
   productId       String    @db.Uuid
   vendorId        String    @db.Uuid
   warehouseId     String?   @db.Uuid
@@ -2405,7 +2405,7 @@ enum POStatus {
 }
 
 model PurchaseOrder {
-  id               String    @id @default(uuid())
+  id               String    @id @default(uuid()) @db.Uuid
   poNumber         String    @unique // PO-2026-001
   vendorId         String    @db.Uuid
   supplierId       String    @db.Uuid // External supplier
@@ -2432,7 +2432,7 @@ model PurchaseOrder {
 
 // Gamification System
 model UserAchievement {
-  id              String    @id @default(uuid())
+  id              String    @id @default(uuid()) @db.Uuid
   userId          String    @db.Uuid
   achievementKey  String // first_purchase, power_reviewer, etc.
   achievementName String
@@ -2452,7 +2452,7 @@ model UserAchievement {
 }
 
 model DailyCheckIn {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   userId      String   @db.Uuid
   checkInDate DateTime @db.Date
   streakCount Int      @default(1)
@@ -2477,7 +2477,7 @@ enum GameType {
 }
 
 model GameScore {
-  id         String   @id @default(uuid())
+  id         String   @id @default(uuid()) @db.Uuid
   userId     String   @db.Uuid
   gameType   GameType
   score      Int      @default(0)
@@ -2496,7 +2496,7 @@ model GameScore {
 
 // Enhanced Flash Sales
 model FlashSaleRegistration {
-  id           String    @id @default(uuid())
+  id           String    @id @default(uuid()) @db.Uuid
   userId       String    @db.Uuid
   flashSaleId  String    @db.Uuid
   notified     Boolean   @default(false)
@@ -2515,7 +2515,7 @@ model FlashSaleRegistration {
 
 // Live Stock Counter for Flash Sales
 model LiveStockCounter {
-  id            String   @id @default(uuid())
+  id            String   @id @default(uuid()) @db.Uuid
   productId     String   @db.Uuid
   flashSaleId   String?  @db.Uuid
   totalStock    Int
@@ -2534,7 +2534,7 @@ model LiveStockCounter {
 
 // Beta Feedback System
 model BetaFeedback {
-  id          String           @id @default(uuid())
+  id          String           @id @default(uuid()) @db.Uuid
   userId      String?          @db.Uuid
   type        FeedbackType
   priority    FeedbackPriority @default(medium)
@@ -2562,7 +2562,7 @@ model BetaFeedback {
 
 // Beta Program Enrollment
 model BetaTester {
-  id               String   @id @default(uuid())
+  id               String   @id @default(uuid()) @db.Uuid
   userId           String   @unique @db.Uuid
   inviteCode       String?  @unique
   invitedBy        String?  @db.Uuid
@@ -2582,7 +2582,7 @@ model BetaTester {
 
 // Feature Announcements
 model FeatureAnnouncement {
-  id          String    @id @default(uuid())
+  id          String    @id @default(uuid()) @db.Uuid
   title       String
   description String    @db.Text
   category    String?   // e.g., "new_feature", "improvement", "bug_fix"
@@ -2604,7 +2604,7 @@ model FeatureAnnouncement {
 
 // Track which users have read announcements
 model FeatureAnnouncementRead {
-  id             String   @id @default(uuid())
+  id             String   @id @default(uuid()) @db.Uuid
   userId         String   @db.Uuid
   announcementId String   @db.Uuid
   readAt         DateTime @default(now())

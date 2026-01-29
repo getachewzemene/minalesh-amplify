@@ -5,7 +5,7 @@ CREATE TYPE "FeedbackPriority" AS ENUM ('low', 'medium', 'high', 'critical');
 
 -- BetaFeedback table
 CREATE TABLE "beta_feedback" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "userId" UUID,
     "type" "FeedbackType" NOT NULL,
     "priority" "FeedbackPriority" NOT NULL DEFAULT 'medium',
@@ -26,7 +26,7 @@ CREATE TABLE "beta_feedback" (
 
 -- BetaTester table
 CREATE TABLE "beta_testers" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "userId" UUID NOT NULL,
     "inviteCode" TEXT,
     "invitedBy" UUID,
@@ -42,7 +42,7 @@ CREATE TABLE "beta_testers" (
 
 -- FeatureAnnouncement table
 CREATE TABLE "feature_announcements" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "category" TEXT,
@@ -60,9 +60,9 @@ CREATE TABLE "feature_announcements" (
 
 -- FeatureAnnouncementRead table
 CREATE TABLE "feature_announcement_reads" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "userId" UUID NOT NULL,
-    "announcementId" TEXT NOT NULL,
+    "announcementId" UUID NOT NULL,
     "readAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "feature_announcement_reads_pkey" PRIMARY KEY ("id")

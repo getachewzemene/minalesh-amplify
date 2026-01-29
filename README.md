@@ -146,6 +146,8 @@ npm install
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your PostgreSQL database URL and JWT secret
+# Ensure both `DATABASE_URL` and `DIRECT_URL` are set. In local development,
+# you can set `DIRECT_URL` to the same value as `DATABASE_URL`.
 # IMPORTANT: Use a strong, random JWT_SECRET in production
 
 # Run database migrations
