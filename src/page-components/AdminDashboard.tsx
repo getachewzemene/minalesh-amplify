@@ -20,6 +20,9 @@ import AdminOrdersManagement from "@/page-components/AdminOrdersManagement";
 import AdminVendorVerification from "@/page-components/AdminVendorVerification";
 import AdvancedAdminFeatures from "@/page-components/AdvancedAdminFeatures";
 import AdminDisputesManagement from "@/page-components/AdminDisputesManagement";
+import LiveStatsDashboard from "@/components/admin/LiveStatsDashboard";
+import ProductPerformanceAnalytics from "@/components/admin/ProductPerformanceAnalytics";
+import CustomerAnalyticsDashboard from "@/components/admin/CustomerAnalyticsDashboard";
 import { 
   Users, 
   Store, 
@@ -172,6 +175,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const adminNavItems = [
   { value: "overview", label: "Overview" },
+  { value: "livestats", label: "Live Stats" },
+  { value: "products-perf", label: "Product Performance" },
+  { value: "customers", label: "Customers" },
   { value: "advanced", label: "Advanced" },
   { value: "orders", label: "Orders" },
   { value: "products", label: "Products" },
@@ -415,8 +421,11 @@ export default function AdminDashboard() {
             
             {/* Desktop Navigation */}
             {!isMobile && (
-              <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 text-xs md:text-sm">
+              <TabsList className="grid w-full grid-cols-7 lg:grid-cols-13 text-xs md:text-sm overflow-x-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="livestats">Live Stats</TabsTrigger>
+                <TabsTrigger value="products-perf">Product Perf</TabsTrigger>
+                <TabsTrigger value="customers">Customers</TabsTrigger>
                 <TabsTrigger value="advanced">Advanced</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
                 <TabsTrigger value="products">Products</TabsTrigger>
@@ -529,6 +538,18 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="livestats" className="space-y-6">
+              <LiveStatsDashboard />
+            </TabsContent>
+
+            <TabsContent value="products-perf" className="space-y-6">
+              <ProductPerformanceAnalytics />
+            </TabsContent>
+
+            <TabsContent value="customers" className="space-y-6">
+              <CustomerAnalyticsDashboard />
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-6">
