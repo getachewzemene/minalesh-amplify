@@ -71,14 +71,32 @@ export function ProductSection({
         if (categorySlug) params.append('category', categorySlug)
         if (productId) params.append('productId', productId)
 
-        const response = await fetch(`${endpoint}?${params.toString()}`)
+        // Get auth token for authenticated endpoints
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+        const headers: HeadersInit = {}
+        // Only add Authorization header if token is truthy and non-empty
+        if (token && token.trim()) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        const response = await fetch(`${endpoint}?${params.toString()}`, {
+          headers
+        })
         if (response.ok) {
           const data = await response.json()
           // Handle both response formats: data.products and data.data
           setProducts(data.products || data.data || [])
+        } else if (response.status === 401) {
+          // For authenticated endpoints that fail, just show no products silently
+          setProducts([])
+        } else {
+          // Handle other error statuses (400, 500, etc.)
+          console.error(`Failed to fetch products from ${endpoint}: ${response.status}`)
+          setProducts([])
         }
       } catch (error) {
         console.error('Error fetching products:', error)
+        setProducts([])
       } finally {
         setLoading(false)
       }
