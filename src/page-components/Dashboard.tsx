@@ -73,6 +73,7 @@ import { formatCurrency } from "@/lib/utils"
 import heroImage from "@/assets/hero-marketplace.jpg"
 import VendorAdvancedDashboard from "./VendorAdvancedDashboard"
 import EnhancedAnalytics from "@/components/vendor/EnhancedAnalytics"
+import VendorLiveStats from "@/components/vendor/VendorLiveStats"
 
 // TypeScript interfaces for API responses
 interface VendorStatement {
@@ -633,6 +634,14 @@ export default function Dashboard() {
               Overview
             </Button>
             <Button 
+              variant={activeTab === 'livestats' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('livestats')}
+              className={activeTab === 'livestats' ? 'bg-primary hover:bg-primary/90' : ''}
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              Live Stats
+            </Button>
+            <Button 
               variant={activeTab === 'analytics' ? 'default' : 'outline'}
               onClick={() => setActiveTab('analytics')}
               className={activeTab === 'analytics' ? 'bg-primary hover:bg-primary/90' : ''}
@@ -740,6 +749,10 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {activeTab === 'livestats' && (
+            <VendorLiveStats />
           )}
 
           {activeTab === 'analytics' && (
