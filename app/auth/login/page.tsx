@@ -55,14 +55,13 @@ export default function CustomerLogin() {
         return
       }
 
-      // Redirect vendors to vendor login
+      // Redirect vendors to vendor dashboard
       if (data.user.role === 'vendor') {
         // Store token since login was successful
         localStorage.setItem('auth_token', data.token)
         toast.success("Login successful! Redirecting to vendor dashboard...")
-        router.refresh()
-        router.push('/vendor/dashboard')
-        setIsLoading(false)
+        // Use window.location.href for immediate redirect after cookie is set
+        window.location.href = '/vendor/dashboard'
         return
       }
 
@@ -71,16 +70,15 @@ export default function CustomerLogin() {
       
       toast.success("Login successful!")
       
-      // Refresh router to ensure cookies are synced
-      router.refresh()
-      
       // Redirect to the originally requested page or default to home
       const next = searchParams.get('next')
       const redirectUrl = 
         isValidRedirectUrl(next) && !next.startsWith('/admin') && !next.startsWith('/vendor')
           ? next
           : '/'
-      router.push(redirectUrl)
+      
+      // Use window.location.href for immediate redirect after cookie is set
+      window.location.href = redirectUrl
     } catch (error) {
       console.error('Login error:', error)
       toast.error("An error occurred during login")

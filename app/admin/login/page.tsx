@@ -58,16 +58,15 @@ export default function AdminLogin() {
       
       toast.success("Admin login successful!")
       
-      // Refresh router to ensure cookies are synced
-      router.refresh()
-      
       // Redirect to the originally requested page or default to admin dashboard
       const next = searchParams.get('next')
       const redirectUrl = 
         isValidRedirectUrl(next) && next.startsWith('/admin') 
           ? next 
           : '/admin/dashboard'
-      router.push(redirectUrl)
+      
+      // Use window.location.href for immediate redirect after cookie is set
+      window.location.href = redirectUrl
     } catch (error) {
       console.error('Login error:', error)
       toast.error("An error occurred during login")
