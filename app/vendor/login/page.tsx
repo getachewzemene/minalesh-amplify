@@ -59,20 +59,19 @@ export default function VendorLogin() {
       
       toast.success("Vendor login successful!")
       
-      // Refresh router to ensure cookies are synced
-      router.refresh()
-      
       // Redirect to the originally requested page or default to vendor dashboard
       const next = searchParams.get('next')
       // Allow redirect to vendor routes, or for admins to any valid route
       const isValidNext = isValidRedirectUrl(next) && 
         (next.startsWith('/vendor') || (data.user.role === 'admin' && !next.startsWith('/auth')))
       const redirectUrl = isValidNext ? next : '/vendor/dashboard'
-      router.push(redirectUrl)
+      
+      // Use window.location.href for immediate redirect after cookie is set
+      // This ensures middleware can validate the cookie on the next page load
+      window.location.href = redirectUrl
     } catch (error) {
       console.error('Login error:', error)
       toast.error("An error occurred during login")
-    } finally {
       setIsLoading(false)
     }
   }
