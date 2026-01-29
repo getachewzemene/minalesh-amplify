@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { withSecurity } from '@/lib/security-middleware';
 
-export async function GET(request: Request) {
+async function getHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+async function patchHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -69,7 +70,7 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+async function deleteHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -104,3 +105,7 @@ export async function DELETE(request: Request) {
     );
   }
 }
+
+export const GET = withSecurity(getHandler);
+export const PATCH = withSecurity(patchHandler);
+export const DELETE = withSecurity(deleteHandler);
