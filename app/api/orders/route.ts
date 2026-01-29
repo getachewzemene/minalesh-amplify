@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware';
 import { z } from 'zod';
 import * as OrderService from '@/services/OrderService';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
+import { withApiLogger } from '@/lib/api-logger';
 
 /**
  * @swagger
@@ -24,7 +26,7 @@ import * as OrderService from '@/services/OrderService';
  *       401:
  *         description: Unauthorized
  */
-export async function GET(request: Request) {
+async function getHandler(request: Request) {
   const { error, payload } = withAuth(request);
   if (error) return error;
 
@@ -39,6 +41,10 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const GET = withApiLogger(
+  withRateLimit(getHandler, RATE_LIMIT_CONFIGS.default)
+);
 
 /**
  * @swagger
@@ -74,7 +80,7 @@ export async function GET(request: Request) {
  *         description: Unauthorized
  */
 // Create a new order from client cart with selected payment method
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
   const { error, payload } = withAuth(request);
   if (error) return error;
 
@@ -142,3 +148,11 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Apply rate limiting - orders are critical, use strict limits
+export const POST = withApiLogger(
+  withRateLimit(postHandler, {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 10, // 10 orders per minute max
+  })
+);

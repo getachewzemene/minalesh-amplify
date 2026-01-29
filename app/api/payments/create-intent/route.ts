@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware';
 import { z } from 'zod';
 import * as PaymentService from '@/services/PaymentService';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
+import { withApiLogger } from '@/lib/api-logger';
 
 const createIntentSchema = z.object({
   items: z.array(
@@ -93,7 +95,7 @@ const createIntentSchema = z.object({
  *       401:
  *         description: Unauthorized
  */
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
   const { error, payload } = withAuth(request);
   if (error) return error;
 
@@ -156,3 +158,11 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Apply strict rate limiting for payment endpoints
+export const POST = withApiLogger(
+  withRateLimit(postHandler, {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 5, // Only 5 payment intents per minute
+  })
+);

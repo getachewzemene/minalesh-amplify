@@ -56,6 +56,60 @@ function detectBrowserLanguage(request: NextRequest): Locale | null {
   return null
 }
 
+/**
+ * Add security headers to response
+ */
+function addSecurityHeaders(response: NextResponse): void {
+  const isProd = process.env.NODE_ENV === 'production';
+  
+  // Content Security Policy
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hcaptcha.com https://*.hcaptcha.com",
+    "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://hcaptcha.com https://*.hcaptcha.com",
+    "frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests"
+  ];
+  
+  response.headers.set(
+    'Content-Security-Policy',
+    cspDirectives.join('; ')
+  );
+  
+  // Strict-Transport-Security (HSTS) - only in production
+  if (isProd) {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload'
+    );
+  }
+  
+  // X-Frame-Options (defense in depth with CSP frame-ancestors)
+  response.headers.set('X-Frame-Options', 'DENY');
+  
+  // X-Content-Type-Options
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  
+  // X-XSS-Protection (legacy browsers)
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  
+  // Referrer-Policy
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Permissions-Policy
+  response.headers.set(
+    'Permissions-Policy',
+    'geolocation=(self), microphone=(), camera=()'
+  );
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   
@@ -78,6 +132,9 @@ export async function middleware(req: NextRequest) {
       })
     }
   }
+  
+  // Add security headers to all responses
+  addSecurityHeaders(response);
 
   // Allow vendor store pages to be accessed publicly (customer-facing)
   if (isVendorStoreRoute) {
