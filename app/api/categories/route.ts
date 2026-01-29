@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withApiLogger } from '@/lib/api-logger';
 import { getOrSetCache } from '@/lib/cache';
+import { withPublicApiSecurity } from '@/lib/security-middleware';
 
 /**
  * @swagger
@@ -56,4 +57,4 @@ async function handler() {
   return response;
 }
 
-export const GET = withApiLogger(handler);
+export const GET = withPublicApiSecurity(handler);

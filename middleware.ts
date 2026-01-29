@@ -8,6 +8,10 @@ const VENDOR_LOGIN_PATH = '/vendor/login' // Public vendor login page
 const AUTH_COOKIE = 'auth_token'
 const LANGUAGE_COOKIE = 'preferred_language'
 
+// CORS configuration
+const CORS_ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS?.split(',') || [];
+const CORS_ALLOW_ALL = process.env.CORS_ALLOW_ALL === 'true';
+
 // Supported locales
 const locales = ['en', 'am', 'om', 'ti'] as const;
 type Locale = (typeof locales)[number];
@@ -23,6 +27,55 @@ async function verifyJWT(token: string) {
     return payload as { userId?: string; email?: string; role?: string }
   } catch {
     return null
+  }
+}
+
+/**
+ * Check if origin is allowed for CORS
+ */
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+  
+  // Allow all in development or if explicitly enabled
+  if (CORS_ALLOW_ALL || process.env.NODE_ENV === 'development') {
+    return true;
+  }
+  
+  // Check against allowed origins list
+  return CORS_ALLOWED_ORIGINS.some(allowedOrigin => {
+    // Support wildcard subdomains (e.g., *.example.com)
+    if (allowedOrigin.startsWith('*.')) {
+      const domain = allowedOrigin.slice(2);
+      return origin.endsWith(domain);
+    }
+    return origin === allowedOrigin;
+  });
+}
+
+/**
+ * Add CORS headers to response
+ */
+function addCorsHeaders(request: NextRequest, response: NextResponse): void {
+  const origin = request.headers.get('origin');
+  
+  // Only add CORS headers for API routes
+  const pathname = request.nextUrl.pathname;
+  if (!pathname.startsWith('/api/')) {
+    return;
+  }
+  
+  if (origin && isOriginAllowed(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+    );
+    response.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-CSRF-Token, X-Session-Id'
+    );
+    response.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
   }
 }
 
@@ -113,6 +166,13 @@ function addSecurityHeaders(response: NextResponse): void {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   
+  // Handle CORS preflight requests for API routes
+  if (req.method === 'OPTIONS' && pathname.startsWith('/api/')) {
+    const response = new NextResponse(null, { status: 204 });
+    addCorsHeaders(req, response);
+    return response;
+  }
+  
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX)
   const isVendorStoreRoute = pathname.startsWith(VENDOR_STORE_PREFIX)
   const isVendorLoginRoute = pathname === VENDOR_LOGIN_PATH
@@ -135,6 +195,9 @@ export async function middleware(req: NextRequest) {
   
   // Add security headers to all responses
   addSecurityHeaders(response);
+  
+  // Add CORS headers for API routes
+  addCorsHeaders(req, response);
 
   // Allow vendor store pages to be accessed publicly (customer-facing)
   if (isVendorStoreRoute) {

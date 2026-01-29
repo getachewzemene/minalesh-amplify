@@ -328,6 +328,10 @@ export async function logSecurityEvent(
       }
     });
 
+    // Send alert for critical/high severity events
+    const { alertSecurityEvent } = await import('./security-alerts');
+    await alertSecurityEvent(eventType, severity, ipAddress, userAgent, endpoint, metadata);
+
     // Auto-blacklist on critical events
     if (severity === 'critical') {
       await addIpToBlacklist(
