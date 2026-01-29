@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
 import { validateRequestBody, cartSchemas } from '@/lib/validation';
 import { withApiLogger } from '@/lib/api-logger';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 import * as CartService from '@/services/CartService';
 
 // Helper function to get or create session ID from headers
@@ -56,7 +57,9 @@ async function getHandler(request: Request): Promise<NextResponse> {
   }
 }
 
-export const GET = withApiLogger(getHandler);
+export const GET = withApiLogger(
+  withRateLimit(getHandler, RATE_LIMIT_CONFIGS.default)
+);
 
 /**
  * @swagger
@@ -130,7 +133,9 @@ async function postHandler(request: Request): Promise<NextResponse> {
   }
 }
 
-export const POST = withApiLogger(postHandler);
+export const POST = withApiLogger(
+  withRateLimit(postHandler, RATE_LIMIT_CONFIGS.default)
+);
 
 /**
  * @swagger
@@ -161,4 +166,6 @@ async function deleteHandler(request: Request): Promise<NextResponse> {
   }
 }
 
-export const DELETE = withApiLogger(deleteHandler);
+export const DELETE = withApiLogger(
+  withRateLimit(deleteHandler, RATE_LIMIT_CONFIGS.default)
+);

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { withSecurity } from '@/lib/security-middleware';
 
-export async function PATCH(request: Request) {
+async function patchHandler(request: Request) {
   try {
     const token = getTokenFromRequest(request);
     const payload = getUserFromToken(token);
@@ -31,3 +32,5 @@ export async function PATCH(request: Request) {
     );
   }
 }
+
+export const PATCH = withSecurity(patchHandler);

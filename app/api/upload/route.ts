@@ -3,6 +3,8 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
+import { withRateLimit } from '@/lib/rate-limit';
+import { withApiLogger } from '@/lib/api-logger';
 
 /**
  * Image Upload API
@@ -11,7 +13,7 @@ import { getTokenFromRequest, getUserFromToken } from '@/lib/auth';
  * In production, this should be replaced with cloud storage (AWS S3, Cloudinary, etc.)
  */
 
-export async function POST(request: Request) {
+async function uploadHandler(request: Request) {
   try {
     // Verify authentication
     const token = getTokenFromRequest(request);
@@ -88,3 +90,11 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Strict rate limiting for uploads - prevent abuse
+export const POST = withApiLogger(
+  withRateLimit(uploadHandler, {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 20, // Max 20 uploads per hour
+  })
+);

@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getConfigSummary } from '@/lib/env';
 import { checkDatabaseConnection } from '@/lib/database-health';
+import { withRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -33,7 +34,7 @@ const startTime = Date.now();
  * GET /api/health
  * Returns health status of the application
  */
-export async function GET(req: NextRequest) {
+async function getHandler(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const detailed = searchParams.get('detailed') === 'true';
 
@@ -139,7 +140,7 @@ export async function GET(req: NextRequest) {
  * Lightweight health check - only returns HTTP status code
  * Perfect for simple uptime monitoring
  */
-export async function HEAD(req: NextRequest) {
+async function headHandler(req: NextRequest) {
   try {
     const dbHealth = await checkDatabaseConnection();
     
@@ -152,3 +153,16 @@ export async function HEAD(req: NextRequest) {
     return new NextResponse(null, { status: 503 });
   }
 }
+
+// Health checks need liberal rate limits for monitoring tools
+export const GET = withRateLimit(getHandler, {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 300, // 300 requests per minute
+  skipSecurityCheck: true, // Skip bot detection for monitoring tools
+});
+
+export const HEAD = withRateLimit(headHandler, {
+  windowMs: 60 * 1000,
+  maxRequests: 300,
+  skipSecurityCheck: true,
+});

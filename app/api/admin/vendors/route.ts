@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getTokenFromRequest, getUserFromToken, isAdmin } from '@/lib/auth';
 import { withApiLogger } from '@/lib/api-logger';
 import { withRoleCheck } from '@/lib/middleware';
+import { withAdminSecurity } from '@/lib/security-middleware';
 
 /**
  * @swagger
@@ -99,7 +100,7 @@ async function getVendorsHandler(request: Request): Promise<NextResponse> {
   }
 }
 
-// Apply role check middleware (admin only)
-export const GET = withApiLogger(
+// Apply admin security (rate limiting + logging) and role check middleware
+export const GET = withAdminSecurity(
   withRoleCheck(getVendorsHandler, ['admin'])
 );

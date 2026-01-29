@@ -7,6 +7,7 @@ import {
   createPDFResponse,
   aggregateByPeriod 
 } from '@/lib/report-export';
+import { withAdminSecurity } from '@/lib/security-middleware';
 
 // Check if user is admin
 function isAdmin(email: string): boolean {
