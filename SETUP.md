@@ -87,6 +87,8 @@ DATABASE_URL="postgresql://minalesh_admin:minaleshAdmin123@localhost:5432/minale
 DIRECT_URL="postgresql://minalesh_admin:minaleshAdmin123@localhost:5432/minalesh_db"
 ```
 
+> **Note:** These are the default credentials for local development. Create your PostgreSQL database with these credentials, or update the values to match your local setup. **For production, always override these credentials using your deployment platform's environment variables.**
+
 #### Authentication (NextAuth.js)
 ```env
 NEXTAUTH_URL="http://localhost:3000"
@@ -140,15 +142,21 @@ NEXT_PUBLIC_GA_TRACKING_ID="your-google-analytics-id"
 
 ## Database Setup
 
-### 1. Create PostgreSQL Database
+### 1. Create PostgreSQL Database and User
 
 ```bash
-# Using psql
-createdb minalesh_db
+# Using psql as postgres superuser
+# Create the database user
+psql -U postgres -c "CREATE USER minalesh_admin WITH PASSWORD 'minaleshAdmin123';"
 
-# Or using SQL
-psql -U postgres -c "CREATE DATABASE minalesh_db;"
+# Create the database
+psql -U postgres -c "CREATE DATABASE minalesh_db OWNER minalesh_admin;"
+
+# Grant privileges
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE minalesh_db TO minalesh_admin;"
 ```
+
+Alternatively, if you prefer different credentials, create your database with your own username/password and update the `DATABASE_URL` and `DIRECT_URL` in `.env` accordingly.
 
 ### 2. Run Prisma Migrations
 
