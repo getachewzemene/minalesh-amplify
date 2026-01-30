@@ -48,7 +48,7 @@ export function ComparisonBar() {
               <span className="font-semibold text-sm sm:text-base hidden md:inline">Compare Products</span>
               <Badge variant="secondary" className="text-xs">{compareProducts.length}/{PRODUCT_LIMITS.MAX_COMPARISON}</Badge>
             </div>
-            <Button variant="ghost" size="sm" onClick={clearCompare} className="text-muted-foreground hover:text-destructive text-xs sm:text-sm">
+            <Button variant="ghost" size="sm" onClick={clearCompare} className="text-muted-foreground hover:text-destructive text-xs sm:text-sm" aria-label="Clear All Products">
               <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
               <span className="hidden sm:inline">Clear All</span>
             </Button>
@@ -119,6 +119,7 @@ export function ComparisonBar() {
               disabled={compareProducts.length < 2}
               size="sm"
               className="bg-primary hover:bg-primary/90 text-xs sm:text-sm"
+              aria-label={`Compare ${compareProducts.length} Products`}
             >
               <GitCompare className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Compare</span> ({compareProducts.length})
