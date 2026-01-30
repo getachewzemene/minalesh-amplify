@@ -32,8 +32,9 @@ out/
 build/
 
 # Environment
+# Note: .env is tracked in the repository with safe default values
+# Use environment variables in your deployment platform for production secrets
 .env*.local
-.env
 .env.test
 
 # Temporary files and generated secrets

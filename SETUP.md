@@ -62,17 +62,24 @@ npm install --save-dev
 
 ## Environment Configuration
 
-### 1. Create Environment File
+### 1. Environment File Overview
 
-Copy the example environment file:
+The repository includes a `.env` file with default values for local development.
 
-```bash
-cp .env.example .env
-```
+**For Local Development:**
+- The `.env` file is already present with safe default values
+- Update the values in `.env` according to your local setup (database credentials, API keys, etc.)
+
+**For Production Deployment:**
+- DO NOT commit sensitive production values to `.env`
+- Override environment variables using your deployment platform:
+  - **Vercel**: Project Settings → Environment Variables
+  - **AWS/Docker**: Use environment-specific configuration or AWS Secrets Manager
+  - **Other platforms**: Use their respective environment variable management
 
 ### 2. Required Environment Variables
 
-Edit `.env` and configure the following variables:
+Edit `.env` and configure the following variables for your local setup:
 
 #### Database Configuration
 ```env
@@ -487,7 +494,7 @@ minalesh-amplify/
 │   └── seeds/            # Seed data
 ├── public/               # Static assets
 ├── archive/              # Archived documentation
-├── .env                  # Environment variables (not in git)
+├── .env                  # Environment variables (tracked with defaults)
 ├── FEATURES.md          # Feature documentation
 ├── SETUP.md             # This file
 └── README.md            # Project overview
