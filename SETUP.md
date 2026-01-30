@@ -83,8 +83,8 @@ Edit `.env` and configure the following variables for your local setup:
 
 #### Database Configuration
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/minalesh"
-DIRECT_URL="postgresql://user:password@localhost:5432/minalesh"
+DATABASE_URL="postgresql://user:password@localhost:5432/minalesh_db"
+DIRECT_URL="postgresql://user:password@localhost:5432/minalesh_db"
 ```
 
 #### Authentication (NextAuth.js)
@@ -144,10 +144,10 @@ NEXT_PUBLIC_GA_TRACKING_ID="your-google-analytics-id"
 
 ```bash
 # Using psql
-createdb minalesh
+createdb minalesh_db
 
 # Or using SQL
-psql -U postgres -c "CREATE DATABASE minalesh;"
+psql -U postgres -c "CREATE DATABASE minalesh_db;"
 ```
 
 ### 2. Run Prisma Migrations
