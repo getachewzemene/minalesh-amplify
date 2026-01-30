@@ -144,7 +144,7 @@ cd minalesh-amplify
 npm install
 
 # Set up environment variables
-cp .env.example .env
+# The .env file is already present with default values for local development
 # Edit .env with your PostgreSQL database URL and JWT secret
 # Ensure both `DATABASE_URL` and `DIRECT_URL` are set. In local development,
 # you can set `DIRECT_URL` to the same value as `DATABASE_URL`.
