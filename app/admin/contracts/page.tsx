@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import AdminContractsManagement from '@/page-components/AdminContractsManagement'
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 
 export default function AdminContractsPage() {
   const router = useRouter()
@@ -23,5 +25,13 @@ export default function AdminContractsPage() {
     return null
   }
 
-  return <AdminContractsManagement />
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="mobile-container">
+        <AdminContractsManagement />
+      </main>
+      <Footer />
+    </div>
+  )
 }

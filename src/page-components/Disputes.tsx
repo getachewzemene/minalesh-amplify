@@ -107,14 +107,16 @@ export default function DisputesPage() {
         </div>
 
         <Tabs value={statusFilter} onValueChange={setStatusFilter} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="open">Open</TabsTrigger>
-            <TabsTrigger value="pending_vendor_response">Pending Vendor</TabsTrigger>
-            <TabsTrigger value="pending_admin_review">Admin Review</TabsTrigger>
-            <TabsTrigger value="resolved">Resolved</TabsTrigger>
-            <TabsTrigger value="closed">Closed</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto scrollbar-hide">
+            <TabsList className="inline-flex w-auto min-w-full">
+              <TabsTrigger value="all" className="whitespace-nowrap">All</TabsTrigger>
+              <TabsTrigger value="open" className="whitespace-nowrap">Open</TabsTrigger>
+              <TabsTrigger value="pending_vendor_response" className="whitespace-nowrap">Pending Vendor</TabsTrigger>
+              <TabsTrigger value="pending_admin_review" className="whitespace-nowrap">Admin Review</TabsTrigger>
+              <TabsTrigger value="resolved" className="whitespace-nowrap">Resolved</TabsTrigger>
+              <TabsTrigger value="closed" className="whitespace-nowrap">Closed</TabsTrigger>
+            </TabsList>
+          </div>
         </Tabs>
 
         {loading ? (
@@ -146,49 +148,44 @@ export default function DisputesPage() {
           <div className="space-y-4">
             {disputes.map((dispute) => (
               <Card key={dispute.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3 sm:gap-0">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-lg">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-base sm:text-lg">
                           {formatType(dispute.type)}
                         </h3>
                         <Badge className={getStatusColor(dispute.status)}>
                           {formatStatus(dispute.status)}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Package className="h-4 w-4" />
                           Order #{dispute.order.orderNumber}
                         </span>
                         {dispute.vendor && (
-                          <span>Vendor: {dispute.vendor.displayName}</span>
+                          <span className="hidden sm:inline">Vendor: {dispute.vendor.displayName}</span>
                         )}
                         <span>Filed {format(new Date(dispute.createdAt), 'MMM d, yyyy')}</span>
                       </div>
                     </div>
                   </div>
 
-                  <p className="text-sm mb-4 overflow-hidden" style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    maxHeight: '3em'
-                  }}>{dispute.description}</p>
+                  <p className="text-sm mb-4 overflow-hidden line-clamp-2">{dispute.description}</p>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MessageSquare className="h-4 w-4" />
                       <span>{dispute.messages.length} message{dispute.messages.length !== 1 ? 's' : ''}</span>
                       {dispute.messages.length > 0 && (
-                        <span className="text-xs">
+                        <span className="text-xs hidden sm:inline">
                           • Last: {format(new Date(dispute.messages[dispute.messages.length - 1].createdAt), 'MMM d, h:mm a')}
                         </span>
                       )}
                     </div>
                     <Link href={`/disputes/${dispute.id}`}>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         View Details
                       </Button>
                     </Link>
