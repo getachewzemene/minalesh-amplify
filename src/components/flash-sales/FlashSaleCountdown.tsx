@@ -69,23 +69,23 @@ export function FlashSaleCountdown({ targetDate, onExpire, className = '' }: Cou
   }
 
   return (
-    <div className={`flex gap-2 justify-center items-center ${className}`}>
+    <div className={`flex gap-1 sm:gap-2 justify-center items-center ${className}`}>
       {timeLeft.days > 0 && (
-        <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-2 min-w-[60px]">
-          <span className="text-2xl font-bold">{timeLeft.days}</span>
+        <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
+          <span className="text-xl sm:text-2xl font-bold">{timeLeft.days}</span>
           <span className="text-xs uppercase">Days</span>
         </div>
       )}
-      <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-2 min-w-[60px]">
-        <span className="text-2xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</span>
+      <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
+        <span className="text-xl sm:text-2xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</span>
         <span className="text-xs uppercase">Hours</span>
       </div>
-      <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-2 min-w-[60px]">
-        <span className="text-2xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</span>
+      <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
+        <span className="text-xl sm:text-2xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</span>
         <span className="text-xs uppercase">Mins</span>
       </div>
-      <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-2 min-w-[60px]">
-        <span className="text-2xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</span>
+      <div className="flex flex-col items-center bg-red-600 text-white rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
+        <span className="text-xl sm:text-2xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</span>
         <span className="text-xs uppercase">Secs</span>
       </div>
     </div>

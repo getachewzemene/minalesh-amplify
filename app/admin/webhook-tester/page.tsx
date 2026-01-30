@@ -1,5 +1,8 @@
 "use client";
 import React, { useMemo, useState } from 'react';
+import { Navbar } from '@/components/navbar';
+import { Footer } from '@/components/footer';
+import { Container } from '@/components/ui/container';
 
 export default function WebhookTesterPage() {
   const [provider, setProvider] = useState('TeleBirr');
@@ -69,65 +72,71 @@ export default function WebhookTesterPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Payments Webhook Tester</h1>
-      <p className="text-sm text-muted-foreground mb-6">Admin-only utility to simulate provider callbacks. Enter the shared secret to authorize.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Provider</span>
-          <select className="border rounded p-2" value={provider} onChange={e => setProvider(e.target.value)}>
-            <option>TeleBirr</option>
-            <option>CBE</option>
-            <option>Awash</option>
-            <option>BankTransfer</option>
-            <option>Other</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Status</span>
-          <select className="border rounded p-2" value={status} onChange={e => setStatus(e.target.value as 'completed' | 'failed' | 'pending')}>
-            <option value="completed">completed</option>
-            <option value="failed">failed</option>
-            <option value="pending">pending</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Payment Reference</span>
-          <input className="border rounded p-2" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} placeholder="e.g., REF-123" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Order Number</span>
-          <input className="border rounded p-2" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="e.g., MIN-..." />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Order ID</span>
-          <input className="border rounded p-2" value={orderId} onChange={e => setOrderId(e.target.value)} placeholder="UUID" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Amount</span>
-          <input className="border rounded p-2" value={amount} onChange={e => setAmount(e.target.value)} placeholder="optional" />
-        </label>
-        <label className="flex flex-col gap-1 md:col-span-2">
-          <span className="text-sm">Meta (JSON)</span>
-          <textarea className="border rounded p-2 font-mono" rows={4} value={meta} onChange={e => setMeta(e.target.value)} />
-        </label>
-        <label className="flex items-center gap-2 md:col-span-2">
-          <input type="checkbox" checked={useSignature} onChange={e => setUseSignature(e.target.checked)} />
-          <span className="text-sm">Use HMAC signature header (x-webhook-signature) instead of shared secret header</span>
-        </label>
-        <label className="flex flex-col gap-1 md:col-span-2">
-          <span className="text-sm">Shared Secret</span>
-          <input className="border rounded p-2" value={secret} onChange={e => setSecret(e.target.value)} placeholder="PAYMENT_WEBHOOK_SECRET" />
-        </label>
-        <div className="md:col-span-2 flex gap-2">
-          <button onClick={send} disabled={loading} className="px-4 py-2 rounded bg-black text-white disabled:opacity-50">
-            {loading ? 'Sending…' : 'Send Webhook'}
-          </button>
-        </div>
-      </div>
-      {resp && (
-        <pre className="mt-6 p-4 bg-muted rounded text-sm whitespace-pre-wrap">{resp}</pre>
-      )}
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="mobile-container py-8">
+        <Container className="px-4 md:px-6 max-w-3xl">
+          <h1 className="text-2xl md:text-3xl font-semibold mb-4">Payments Webhook Tester</h1>
+          <p className="text-sm text-muted-foreground mb-6">Admin-only utility to simulate provider callbacks. Enter the shared secret to authorize.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm">Provider</span>
+              <select className="border rounded p-2" value={provider} onChange={e => setProvider(e.target.value)}>
+                <option>TeleBirr</option>
+                <option>CBE</option>
+                <option>Awash</option>
+                <option>BankTransfer</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm">Status</span>
+              <select className="border rounded p-2" value={status} onChange={e => setStatus(e.target.value as 'completed' | 'failed' | 'pending')}>
+                <option value="completed">completed</option>
+                <option value="failed">failed</option>
+                <option value="pending">pending</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm">Payment Reference</span>
+              <input className="border rounded p-2" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} placeholder="e.g., REF-123" />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm">Order Number</span>
+              <input className="border rounded p-2" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="e.g., MIN-..." />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm">Order ID</span>
+              <input className="border rounded p-2" value={orderId} onChange={e => setOrderId(e.target.value)} placeholder="UUID" />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm">Amount</span>
+              <input className="border rounded p-2" value={amount} onChange={e => setAmount(e.target.value)} placeholder="optional" />
+            </label>
+            <label className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-sm">Meta (JSON)</span>
+              <textarea className="border rounded p-2 font-mono" rows={4} value={meta} onChange={e => setMeta(e.target.value)} />
+            </label>
+            <label className="flex items-center gap-2 md:col-span-2">
+              <input type="checkbox" checked={useSignature} onChange={e => setUseSignature(e.target.checked)} />
+              <span className="text-sm">Use HMAC signature header (x-webhook-signature) instead of shared secret header</span>
+            </label>
+            <label className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-sm">Shared Secret</span>
+              <input className="border rounded p-2" value={secret} onChange={e => setSecret(e.target.value)} placeholder="PAYMENT_WEBHOOK_SECRET" />
+            </label>
+            <div className="md:col-span-2 flex gap-2">
+              <button onClick={send} disabled={loading} className="px-4 py-2 rounded bg-black text-white disabled:opacity-50">
+                {loading ? 'Sending…' : 'Send Webhook'}
+              </button>
+            </div>
+          </div>
+          {resp && (
+            <pre className="mt-6 p-4 bg-muted rounded text-sm whitespace-pre-wrap break-words overflow-x-auto">{resp}</pre>
+          )}
+        </Container>
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -265,7 +265,7 @@ export function AdvancedSearch() {
               )}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-full sm:max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between">
                 <span>Advanced Filters</span>

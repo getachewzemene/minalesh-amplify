@@ -27,8 +27,8 @@ export default function AdminFeatureFlagsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="py-8">
-        <Container>
+      <main className="mobile-container py-8">
+        <Container className="px-4 md:px-6">
           <AdminFeatureFlagsManagement />
         </Container>
       </main>

@@ -421,21 +421,23 @@ export default function AdminDashboard() {
             
             {/* Desktop Navigation */}
             {!isMobile && (
-              <TabsList className="grid w-full grid-cols-7 lg:grid-cols-13 text-xs md:text-sm overflow-x-auto">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="livestats">Live Stats</TabsTrigger>
-                <TabsTrigger value="products-perf">Product Perf</TabsTrigger>
-                <TabsTrigger value="customers">Customers</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-                <TabsTrigger value="orders">Orders</TabsTrigger>
-                <TabsTrigger value="products">Products</TabsTrigger>
-                <TabsTrigger value="vendors">Vendors</TabsTrigger>
-                <TabsTrigger value="disputes">Disputes</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                <TabsTrigger value="coupons">Coupons</TabsTrigger>
-                <TabsTrigger value="shipping">Shipping</TabsTrigger>
-                <TabsTrigger value="taxes">Taxes</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto scrollbar-hide">
+                <TabsList className="inline-flex w-auto min-w-full text-xs md:text-sm">
+                  <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
+                  <TabsTrigger value="livestats" className="whitespace-nowrap">Live Stats</TabsTrigger>
+                  <TabsTrigger value="products-perf" className="whitespace-nowrap">Product Perf</TabsTrigger>
+                  <TabsTrigger value="customers" className="whitespace-nowrap">Customers</TabsTrigger>
+                  <TabsTrigger value="advanced" className="whitespace-nowrap">Advanced</TabsTrigger>
+                  <TabsTrigger value="orders" className="whitespace-nowrap">Orders</TabsTrigger>
+                  <TabsTrigger value="products" className="whitespace-nowrap">Products</TabsTrigger>
+                  <TabsTrigger value="vendors" className="whitespace-nowrap">Vendors</TabsTrigger>
+                  <TabsTrigger value="disputes" className="whitespace-nowrap">Disputes</TabsTrigger>
+                  <TabsTrigger value="analytics" className="whitespace-nowrap">Analytics</TabsTrigger>
+                  <TabsTrigger value="coupons" className="whitespace-nowrap">Coupons</TabsTrigger>
+                  <TabsTrigger value="shipping" className="whitespace-nowrap">Shipping</TabsTrigger>
+                  <TabsTrigger value="taxes" className="whitespace-nowrap">Taxes</TabsTrigger>
+                </TabsList>
+              </div>
             )}
 
             <TabsContent value="overview" className="space-y-6">

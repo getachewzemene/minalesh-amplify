@@ -139,25 +139,25 @@ export default function ProductComparePage() {
   })
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4 md:px-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Product Comparison</h1>
-          <p className="text-muted-foreground">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold truncate">Product Comparison</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Comparing {products.length} products
           </p>
         </div>
       </div>
 
       {/* Comparison Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-4 md:-mx-6 px-4 md:px-6">
         <div className="min-w-max">
           {/* Product Cards */}
-          <div className="grid gap-4 mb-8" style={{ gridTemplateColumns: `repeat(${products.length}, minmax(300px, 1fr))` }}>
+          <div className="grid gap-4 mb-8" style={{ gridTemplateColumns: `repeat(${products.length}, minmax(280px, 1fr))` }}>
             {products.map((product) => (
               <Card key={product.id}>
                 <CardHeader className="relative">

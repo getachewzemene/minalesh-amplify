@@ -188,9 +188,9 @@ export function ProductSection({
                 onMouseLeave={() => setHoveredProduct(null)}
                 onClick={() => router.push(`/product/${product.id}`)}
               >
-                {/* Mobile: 4:3 ratio */}
+                {/* Mobile: square ratio */}
                 <div className="block md:hidden">
-                  <AspectRatio ratio={4 / 3}>
+                  <AspectRatio ratio={1}>
                     <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                       <Image
                         src={imageUrl}
