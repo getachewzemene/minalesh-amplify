@@ -90,7 +90,7 @@ export function ProductComparison() {
           <div className="flex gap-2">
             {compareProducts.length >= 2 && (
               <Button asChild>
-                <Link href={`/products/compare?ids=${compareProducts.map(p => p.id).join(',')}`}>
+                <Link href={`/compare?ids=${compareProducts.map(p => p.id).join(',')}`}>
                   View Full Comparison
                 </Link>
               </Button>
