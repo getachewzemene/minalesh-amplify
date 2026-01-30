@@ -101,7 +101,7 @@ export function MobileHeroCarousel() {
       >
         <CarouselContent>
           {allItems.map((item, index) => (
-            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={index}>
               {item.type === 'flash' ? (
                 <Card 
                   className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
@@ -114,7 +114,7 @@ export function MobileHeroCarousel() {
                         Flash Sale
                       </Badge>
                       <Badge className="absolute top-2 right-2 z-10 bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
-                        {Math.round(((item.data.originalPrice - item.data.flashPrice) / item.data.originalPrice) * 100)}% OFF
+                        {item.data.originalPrice > 0 ? Math.round(((item.data.originalPrice - item.data.flashPrice) / item.data.originalPrice) * 100) : 0}% OFF
                       </Badge>
                       <div className="relative w-full aspect-square bg-gray-100">
                         <Image
@@ -122,7 +122,7 @@ export function MobileHeroCarousel() {
                           alt={item.data.product.name}
                           fill
                           className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 50vw"
+                          sizes="100vw"
                         />
                       </div>
                     </div>
@@ -132,10 +132,10 @@ export function MobileHeroCarousel() {
                       </h3>
                       <div className="flex items-center gap-2">
                         <span className="text-2xl font-bold text-red-600">
-                          ETB {item.data.flashPrice.toFixed(2)}
+                          {formatCurrency(item.data.flashPrice)}
                         </span>
                         <span className="text-sm text-muted-foreground line-through">
-                          ETB {item.data.originalPrice.toFixed(2)}
+                          {formatCurrency(item.data.originalPrice)}
                         </span>
                       </div>
                     </div>
@@ -158,7 +158,7 @@ export function MobileHeroCarousel() {
                           alt={item.data.name}
                           fill
                           className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 50vw"
+                          sizes="100vw"
                         />
                       </div>
                     </div>
@@ -190,8 +190,8 @@ export function MobileHeroCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-0 md:left-4" />
-        <CarouselNext className="right-0 md:right-4" />
+        <CarouselPrevious className="left-0" />
+        <CarouselNext className="right-0" />
       </Carousel>
     </div>
   )
