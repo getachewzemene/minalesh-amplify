@@ -386,9 +386,9 @@ function ProductsContent() {
               className="group relative bg-white dark:bg-card rounded-xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:-translate-y-2 transition-all duration-500 cursor-pointer"
               onClick={() => router.push(`/product/${product.id}`)}
             >
-              {/* Mobile: 4:3 ratio */}
+              {/* Mobile: square ratio */}
               <div className="block md:hidden">
-                <AspectRatio ratio={4 / 3}>
+                <AspectRatio ratio={1}>
                   <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                     <Image
                       src={typeof product.image === 'string' ? product.image : product.image.src}
