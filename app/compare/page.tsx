@@ -319,26 +319,26 @@ export default function ComparePage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="py-8 pb-24">
-        <Container>
+        <Container className="px-4 md:px-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
             <Button variant="ghost" size="icon" onClick={() => router.back()}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold">Product Comparison</h1>
-              <p className="text-muted-foreground">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold truncate">Product Comparison</h1>
+              <p className="text-sm md:text-base text-muted-foreground">
                 Comparing {products.length} products side-by-side
               </p>
             </div>
-            <Button variant="outline" onClick={handleClearAll}>
+            <Button variant="outline" onClick={handleClearAll} className="w-full sm:w-auto">
               <Trash2 className="h-4 w-4 mr-2" />
               Clear All
             </Button>
           </div>
 
           {/* Comparison Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-4 md:-mx-6 px-4 md:px-6">
             <div className="min-w-max">
               {/* Product Cards */}
               <div 
