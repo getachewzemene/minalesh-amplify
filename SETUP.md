@@ -152,8 +152,9 @@ psql -U postgres -c "CREATE USER minalesh_admin WITH PASSWORD 'minaleshAdmin123'
 # Create the database
 psql -U postgres -c "CREATE DATABASE minalesh_db OWNER minalesh_admin;"
 
-# Grant privileges
-psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE minalesh_db TO minalesh_admin;"
+# Grant privileges (required for PostgreSQL 15+)
+psql -U postgres -d minalesh_db -c "GRANT ALL PRIVILEGES ON DATABASE minalesh_db TO minalesh_admin;"
+psql -U postgres -d minalesh_db -c "GRANT ALL ON SCHEMA public TO minalesh_admin;"
 ```
 
 Alternatively, if you prefer different credentials, create your database with your own username/password and update the `DATABASE_URL` and `DIRECT_URL` in `.env` accordingly.
