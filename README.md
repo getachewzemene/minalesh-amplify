@@ -12,7 +12,7 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Top-selling and most popular products
   - Recently added products to the marketplace
   - Similar product suggestions on product detail pages
-  - 📚 **[View Product Recommendations Documentation](docs/PRODUCT_RECOMMENDATIONS.md)**
+  - 📚 **[View Product Recommendations Documentation](archive/docs/PRODUCT_RECOMMENDATIONS.md)**
 - Search and filter by Ethiopian-specific categories
 - Traditional and modern product categories
 - AR view for select products
@@ -31,8 +31,8 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Points and rewards redemption
   - Leaderboards and rankings
   - **Full UI Dashboard** at `/dashboard/gamification`
-  - 📚 **[View Gamification Documentation](docs/GAMIFICATION_SYSTEM.md)**
-  - 📚 **[View UI Guide](docs/GAMIFICATION_UI_GUIDE.md)**
+  - 📚 **[View Gamification Documentation](archive/docs/GAMIFICATION_SYSTEM.md)**
+  - 📚 **[View UI Guide](archive/docs/GAMIFICATION_UI_GUIDE.md)**
 
 ### For Vendors
 - Vendor registration with Trade License and TIN verification
@@ -73,7 +73,7 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
     - VAT and tax report generation
     - Ethiopian tax compliance tools (TIN validation, tax invoicing)
     - Automated tax reporting for Ethiopian tax authorities
-    - 📚 **[View Tax Compliance Documentation](docs/SELLER_RATINGS_AND_TAX_COMPLIANCE.md)**
+    - 📚 **[View Tax Compliance Documentation](archive/docs/SELLER_RATINGS_AND_TAX_COMPLIANCE.md)**
 
 ### For Administrators
 - **Comprehensive Product Management** - Full CRUD operations for all products
@@ -91,7 +91,7 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Comprehensive reporting (sales, inventory, financial)
   - CSV export for all reports
   - Site configuration management
-  - 📚 **[View Advanced Admin Features Documentation](docs/ADVANCED_ADMIN_FEATURES.md)**
+  - 📚 **[View Advanced Admin Features Documentation](archive/docs/ADVANCED_ADMIN_FEATURES.md)**
 - **Pricing & Promotions Management**
   - Create and manage coupon codes (percentage, fixed amount, free shipping)
   - Set up promotions and discounts
@@ -105,13 +105,13 @@ A full-stack e-commerce application built with Next.js, specifically designed fo
   - Process full and partial refunds
   - Capture authorized payments (full or partial amounts)
   - Support for Stripe and Ethiopian payment providers
-  - 📚 **[View Refunds & Captures Documentation](docs/REFUNDS_AND_CAPTURES.md)**
+  - 📚 **[View Refunds & Captures Documentation](archive/docs/REFUNDS_AND_CAPTURES.md)**
 - **Legal Compliance & Trust** 🆕
   - Vendor verification system with document review
   - Dispute resolution and mediation
   - GDPR-compliant data export and account deletion
   - 📚 **[View Phase 1 Legal Compliance Documentation](PHASE1_LEGAL_COMPLIANCE.md)**
-- [View detailed admin documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md)
+- [View detailed admin documentation](archive/docs/ADMIN_PRODUCT_MANAGEMENT.md)
 
 ### Ethiopian-Specific Features
 - 🇪🇹 Ethiopian Birr (ETB) currency support
@@ -207,19 +207,19 @@ The system supports **only one admin user** to maintain security and accountabil
    - Transactional emails (order confirmation, password reset, shipping updates)
    - Background worker for email processing
    - User notification preferences
-   - 📚 **[View Email Service Documentation](docs/EMAIL_SERVICE.md)**
+   - 📚 **[View Email Service Documentation](archive/docs/EMAIL_SERVICE.md)**
 4. **Background Workers**:
    - Email queue processor - Sends pending emails via Resend
    - Webhook retry worker - Retries failed webhooks with exponential backoff
    - Inventory cleanup worker - Releases expired reservations
-   - 📚 **[View Background Workers Documentation](docs/BACKGROUND_WORKERS.md)**
+   - 📚 **[View Background Workers Documentation](archive/docs/BACKGROUND_WORKERS.md)**
 5. **Security Best Practices**:
    - Cryptographically secure token generation
    - Password strength requirements (8+ chars, letter + number)
    - JWT tokens with configurable expiry
    - CodeQL security scanning
 
-📚 **[View Security & RBAC Documentation](docs/SECURITY_AND_RBAC.md)** for complete API reference and implementation details.
+📚 **[View Security & RBAC Documentation](archive/docs/SECURITY_AND_RBAC.md)** for complete API reference and implementation details.
 
 ⚠️ **Production Checklist:**
 - Set strong `JWT_SECRET` and `CRON_SECRET` environment variables
@@ -335,7 +335,7 @@ The platform features a powerful PostgreSQL-based search system:
 - **Multiple Sort Options**: Relevance, price, rating, newest, popular
 - **Performance Optimized**: GIN indexes for fast queries
 
-See [Search Backend Documentation](docs/SEARCH_BACKEND.md) for API details.
+See [Search Backend Documentation](archive/docs/SEARCH_BACKEND.md) for API details.
 
 ## Media Management
 
@@ -346,7 +346,7 @@ Comprehensive image handling with professional features:
 - **Alt Text Support**: Accessibility-first design
 - **Secure Upload**: Authentication and authorization checks
 
-See [Media Management Documentation](docs/MEDIA_MANAGEMENT.md) for API details.
+See [Media Management Documentation](archive/docs/MEDIA_MANAGEMENT.md) for API details.
 
 ## Admin Product Management
 
@@ -358,7 +358,7 @@ The admin panel includes a comprehensive product management system with:
 - Vendor information display
 - Stock and pricing management
 
-See [Admin Product Management Documentation](docs/ADMIN_PRODUCT_MANAGEMENT.md) for detailed information.
+See [Admin Product Management Documentation](archive/docs/ADMIN_PRODUCT_MANAGEMENT.md) for detailed information.
 
 ## Ethiopian Categories
 
@@ -653,7 +653,7 @@ The platform includes comprehensive observability and performance optimizations:
 - ✅ **Image Optimization** - Next.js Image Optimization with AVIF/WebP support
 - ✅ **Cache Invalidation** - Automatic cache clearing on content updates
 
-📚 **[View Observability & Performance Documentation](docs/OBSERVABILITY_AND_PERFORMANCE.md)** for detailed implementation guide.
+📚 **[View Observability & Performance Documentation](archive/docs/OBSERVABILITY_AND_PERFORMANCE.md)** for detailed implementation guide.
 
 ### Configuration
 
@@ -690,7 +690,7 @@ The platform includes comprehensive analytics and reporting capabilities for adm
 
 All analytics endpoints require admin authentication and support date range filtering.
 
-📚 **[View Analytics API Documentation](docs/ANALYTICS_API.md)** for complete API reference and examples.
+📚 **[View Analytics API Documentation](archive/docs/ANALYTICS_API.md)** for complete API reference and examples.
 
 ## Mobile Responsiveness
 
@@ -716,9 +716,9 @@ The platform is **fully optimized for Ethiopian mobile users** with a comprehens
 - **Multilingual** - Support for Amharic, Tigrinya, and Oromo scripts
 
 ### Documentation
-- 📚 **[Mobile-First Design Guide](MOBILE_FIRST_GUIDE.md)** - Complete mobile development guide
-- 📚 **[Mobile Testing Checklist](MOBILE_TESTING_CHECKLIST.md)** - Comprehensive testing procedures
-- 📚 **[Mobile Responsiveness QA Report](docs/MOBILE_RESPONSIVENESS_QA.md)** - Detailed audit results
+- 📚 **[Mobile-First Design Guide](archive/MOBILE_FIRST_GUIDE.md)** - Complete mobile development guide
+- 📚 **[Mobile Testing Checklist](archive/MOBILE_TESTING_CHECKLIST.md)** - Comprehensive testing procedures
+- 📚 **[Mobile Responsiveness QA Report](archive/docs/MOBILE_RESPONSIVENESS_QA.md)** - Detailed audit results
 
 ### Testing Mobile Experience
 ```bash
@@ -745,8 +745,8 @@ The platform is production-ready with comprehensive database configuration:
 ### Quick Start
 For production deployment, follow our comprehensive guides:
 
-📚 **[Production Database Setup Guide](docs/PRODUCTION_DATABASE_SETUP.md)** - Complete configuration guide  
-📚 **[Production Deployment Quick Start](docs/PRODUCTION_DEPLOYMENT_QUICKSTART.md)** - Step-by-step deployment walkthrough
+📚 **[Production Database Setup Guide](archive/docs/PRODUCTION_DATABASE_SETUP.md)** - Complete configuration guide  
+📚 **[Production Deployment Quick Start](archive/docs/PRODUCTION_DEPLOYMENT_QUICKSTART.md)** - Step-by-step deployment walkthrough
 
 ### Database Providers
 
@@ -802,7 +802,7 @@ Deploy the Minalesh Marketplace to Vercel for **free** with a custom .com domain
 5. **Domain**: Add your custom .com domain in Settings → Domains
 
 #### Complete Guides
-- 📚 **[Vercel Deployment Guide](VERCEL_DEPLOYMENT_GUIDE.md)** - Comprehensive step-by-step instructions
+- 📚 **[Vercel Deployment Guide](archive/VERCEL_DEPLOYMENT_GUIDE.md)** - Comprehensive step-by-step instructions
   - Prerequisites and setup (5 min)
   - Environment variables configuration
   - Database setup (Supabase/Neon - free tier)
@@ -811,13 +811,13 @@ Deploy the Minalesh Marketplace to Vercel for **free** with a custom .com domain
   - Webhook setup
   - Post-deployment checklist
 
-- 📚 **[Beta Launch Summary](BETA_LAUNCH_SUMMARY.md)** - Complete overview of beta features
+- 📚 **[Beta Launch Summary](archive/BETA_LAUNCH_SUMMARY.md)** - Complete overview of beta features
   - New beta features (feedback system, announcements)
   - API endpoints documentation
   - Testing procedures
   - Success metrics
 
-- 📚 **[Beta User Guide](BETA_USER_GUIDE.md)** - Guide for beta testers
+- 📚 **[Beta User Guide](archive/BETA_USER_GUIDE.md)** - Guide for beta testers
   - Getting started
   - How to provide feedback
   - Beta program benefits
@@ -831,6 +831,22 @@ All these services offer generous free tiers:
 - **Domain**: ~$10/year (Namecheap, GoDaddy, Google Domains)
 
 ### Other Deployment Resources
-- [Production Database Setup Guide](docs/PRODUCTION_DATABASE_SETUP.md)
-- [Production Deployment Quick Start](docs/PRODUCTION_DEPLOYMENT_QUICKSTART.md)
-- [Beta Release Checklist](BETA_RELEASE_CHECKLIST.md)
+- [Production Database Setup Guide](archive/archive/docs/PRODUCTION_DATABASE_SETUP.md)
+- [Production Deployment Quick Start](archive/archive/docs/PRODUCTION_DEPLOYMENT_QUICKSTART.md)
+- [Beta Release Checklist](archive/BETA_RELEASE_CHECKLIST.md)
+
+## Documentation
+
+For comprehensive documentation, please refer to:
+
+- **[FEATURES.md](./FEATURES.md)** - Complete feature documentation organized by user type (Customer, Vendor, Admin)
+- **[SETUP.md](./SETUP.md)** - Installation, configuration, deployment, and troubleshooting guide
+- **[archive](./archive)** - Archived detailed documentation and implementation guides
+
+## License
+
+[Add your license here]
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
