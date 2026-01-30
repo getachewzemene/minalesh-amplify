@@ -3,6 +3,7 @@
 import { ArrowRight, Smartphone, Headphones, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Container } from "./ui/container"
+import { MobileHeroCarousel } from "./MobileHeroCarousel"
 import heroImage from "@/assets/hero-marketplace.jpg"
 import { useRouter } from "next/navigation"
 import type { StaticImageData } from "next/image"
@@ -77,7 +78,12 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Visual elements */}
+          {/* Mobile Carousel - Flash Sales & Trending Products */}
+          <div className="block md:hidden">
+            <MobileHeroCarousel />
+          </div>
+
+          {/* Desktop Visual elements */}
           <div className="relative hidden md:block">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
