@@ -83,8 +83,8 @@ Edit `.env` and configure the following variables for your local setup:
 
 #### Database Configuration
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/minalesh_db"
-DIRECT_URL="postgresql://user:password@localhost:5432/minalesh_db"
+DATABASE_URL="postgresql://minalesh_admin:minaleshAdmin123@localhost:5432/minalesh_db"
+DIRECT_URL="postgresql://minalesh_admin:minaleshAdmin123@localhost:5432/minalesh_db"
 ```
 
 #### Authentication (NextAuth.js)
