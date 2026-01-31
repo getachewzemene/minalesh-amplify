@@ -1,0 +1,98 @@
+name: Deploy Demo to Vercel
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        if: ${{ secrets.VERCEL_TOKEN }}
+      
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        if: ${{ secrets.VERCEL_TOKEN }}
+      
+      - name: Deploy Preview to Vercel
+        id: deploy-preview
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "Preview URL: $url"
+        if: ${{ secrets.VERCEL_TOKEN && github.event_name == 'pull_request' }}
+      
+      - name: Deploy Production to Vercel
+        id: deploy-production
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "Production URL: $url"
+        if: ${{ secrets.VERCEL_TOKEN && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+      
+      - name: Comment PR with Preview URL
+        uses: actions/github-script@v7
+        if: ${{ secrets.VERCEL_TOKEN && github.event_name == 'pull_request' && steps.deploy-preview.outputs.url }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const url = '${{ steps.deploy-preview.outputs.url }}';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Preview Deployment Ready!**\n\nYour changes have been deployed to: ${url}\n\n✅ This is a preview deployment for testing purposes.`
+            })
+      
+      - name: Display Deployment Info
+        run: |
+          echo "## Deployment Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "**Type:** Preview Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "**URL:** ${{ steps.deploy-preview.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Type:** Production Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "**URL:** ${{ steps.deploy-production.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        if: ${{ secrets.VERCEL_TOKEN }}
+      
+      - name: No Vercel Token Warning
+        if: ${{ !secrets.VERCEL_TOKEN }}
+        run: |
+          echo "⚠️ VERCEL_TOKEN secret not configured!"
+          echo ""
+          echo "To enable automatic deployment to Vercel for demo purposes:"
+          echo "1. Create a Vercel account at https://vercel.com"
+          echo "2. Generate a Vercel token from: https://vercel.com/account/tokens"
+          echo "3. Add the token as VERCEL_TOKEN in repository secrets"
+          echo "4. Link your repository to Vercel project"
+          echo ""
+          echo "See .github/workflows-examples/ci-cd.yml.example for more details."
