@@ -24,7 +24,7 @@ async function verifyAuth(req: NextRequest) {
 }
 
 // Define available achievements
-export const ACHIEVEMENTS = {
+const ACHIEVEMENTS = {
   first_purchase: {
     name: 'First Purchase',
     description: 'Complete your first order',

@@ -24,7 +24,7 @@ async function verifyAuth(req: NextRequest) {
 }
 
 // Define available rewards
-export const REWARDS = {
+const REWARDS = {
   discount_5: {
     name: '5% Discount Coupon',
     description: 'Get 5% off your next purchase',
