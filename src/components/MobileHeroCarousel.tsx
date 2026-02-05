@@ -104,16 +104,16 @@ export function MobileHeroCarousel() {
             <CarouselItem key={index}>
               {item.type === 'flash' ? (
                 <Card 
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  className="overflow-hidden cursor-pointer"
                   onClick={() => router.push(`/product/${item.data.product.slug}`)}
                 >
                   <CardContent className="p-0">
                     <div className="relative">
-                      <Badge className="absolute top-2 left-2 z-10 bg-red-600 hover:bg-red-700">
+                      <Badge className="absolute top-2 left-2 z-10 bg-red-600">
                         <Zap className="h-3 w-3 mr-1" />
                         Flash Sale
                       </Badge>
-                      <Badge className="absolute top-2 right-2 z-10 bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
+                      <Badge className="absolute top-2 right-2 z-10 bg-yellow-500 text-black font-bold">
                         {item.data.originalPrice > 0 ? Math.round(((item.data.originalPrice - item.data.flashPrice) / item.data.originalPrice) * 100) : 0}% OFF
                       </Badge>
                       <div className="relative w-full aspect-square bg-gray-100">
@@ -143,7 +143,7 @@ export function MobileHeroCarousel() {
                 </Card>
               ) : (
                 <Card 
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  className="overflow-hidden cursor-pointer"
                   onClick={() => router.push(`/product/${item.data.id}`)}
                 >
                   <CardContent className="p-0">
