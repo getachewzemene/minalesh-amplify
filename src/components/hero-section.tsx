@@ -15,19 +15,28 @@ export function HeroSection() {
   // Next.js static image imports return an object with a `src` field; ensure we pass the URL string to CSS
   const bgUrl = typeof heroImage === 'string' ? heroImage : (heroImage as StaticImageData).src
   return (
-    <section className="relative overflow-hidden bg-gradient-hero min-h-[60vh] md:min-h-[80vh] flex items-center">
-      {/* Background image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-20"
-        style={{ backgroundImage: `url(${bgUrl})` }}
-      />
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-grid-white/10 bg-[size:50px_50px] opacity-10" />
-      
-      <Container className="relative z-10 px-4 md:px-6">
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
-          {/* Content */}
-          <div className="text-center lg:text-left">
+    <>
+      {/* Mobile: carousel-only header */}
+      <section className="md:hidden">
+        <Container className="px-0">
+          <MobileHeroCarousel />
+        </Container>
+      </section>
+
+      {/* Desktop: keep the current static hero */}
+      <section className="relative hidden md:flex overflow-hidden bg-gradient-hero min-h-[80vh] items-center">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{ backgroundImage: `url(${bgUrl})` }}
+        />
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-grid-white/10 bg-[size:50px_50px] opacity-10" />
+
+        <Container className="relative z-10 px-4 md:px-6">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
+            {/* Content */}
+            <div className="text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
               <span className="block">Ethiopia's</span>
               <span className="block bg-gradient-to-r from-yellow-300 to-yellow-100 bg-clip-text text-transparent">
@@ -78,13 +87,8 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Mobile Carousel - Flash Sales & Trending Products */}
-          <div className="block md:hidden">
-            <MobileHeroCarousel />
-          </div>
-
-          {/* Desktop Visual elements */}
-          <div className="relative hidden md:block">
+            {/* Desktop Visual elements */}
+            <div className="relative">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="bg-white/10 backdrop-blur p-4 md:p-6 rounded-xl border border-white/20">
@@ -109,6 +113,7 @@ export function HeroSection() {
           </div>
         </div>
       </Container>
-    </section>
+      </section>
+    </>
   )
 }

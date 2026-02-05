@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
 import { Card, CardContent } from '@/components/ui/card'
-import { FlashSaleCard } from '@/components/flash-sales/FlashSaleCard'
-import { Loader2, Zap, TrendingUp } from 'lucide-react'
+import { Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/utils'
@@ -35,13 +33,24 @@ interface TrendingProduct {
   price: number
   salePrice?: number | null
   images: any
-  ratingAverage: number
-  ratingCount: number
+  ratingAverage?: number
+  ratingCount?: number
+}
+
+interface NewProduct {
+  id: string
+  name: string
+  price: number
+  salePrice?: number | null
+  images: any
+  ratingAverage?: number
+  ratingCount?: number
 }
 
 export function MobileHeroCarousel() {
   const [flashSales, setFlashSales] = useState<FlashSale[]>([])
   const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([])
+  const [newProducts, setNewProducts] = useState<NewProduct[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -49,19 +58,32 @@ export function MobileHeroCarousel() {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        
-        // Fetch flash sales
-        const flashResponse = await fetch('/api/flash-sales')
-        if (flashResponse.ok) {
-          const flashData = await flashResponse.json()
+
+        const [flashResult, trendingResult, newResult] = await Promise.allSettled([
+          fetch('/api/flash-sales'),
+          fetch('/api/recommendations/trending?days=7&limit=3'),
+          fetch('/api/products/new?days=30&limit=3'),
+        ])
+
+        // Flash sales
+        if (flashResult.status === 'fulfilled' && flashResult.value.ok) {
+          const flashData = await flashResult.value.json()
           setFlashSales((flashData.flashSales || []).slice(0, 3))
         }
 
-        // Fetch trending products
-        const trendingResponse = await fetch('/api/recommendations/trending?days=7&limit=3')
-        if (trendingResponse.ok) {
-          const trendingData = await trendingResponse.json()
-          setTrendingProducts((trendingData.products || []).slice(0, 3))
+        // Trending products (API returns { success, data, metadata })
+        if (trendingResult.status === 'fulfilled' && trendingResult.value.ok) {
+          const trendingData = await trendingResult.value.json()
+          const products = Array.isArray(trendingData?.data)
+            ? trendingData.data
+            : (trendingData?.products || [])
+          setTrendingProducts(products.slice(0, 3))
+        }
+
+        // New products
+        if (newResult.status === 'fulfilled' && newResult.value.ok) {
+          const newData = await newResult.value.json()
+          setNewProducts((newData.products || []).slice(0, 3))
         }
       } catch (err) {
         console.error('Error fetching carousel data:', err)
@@ -81,23 +103,55 @@ export function MobileHeroCarousel() {
     )
   }
 
-  const allItems = [
-    ...flashSales.map(sale => ({ type: 'flash' as const, data: sale })),
-    ...trendingProducts.map(product => ({ type: 'trending' as const, data: product }))
-  ]
+  type CarouselItemType =
+    | { type: 'flash'; key: string; data: FlashSale }
+    | { type: 'trending'; key: string; data: TrendingProduct }
+    | { type: 'new'; key: string; data: NewProduct }
+
+  const flashItems: CarouselItemType[] = flashSales.map((sale) => ({
+    type: 'flash',
+    key: sale.product?.id || sale.productId,
+    data: sale,
+  }))
+
+  const trendingItems: CarouselItemType[] = trendingProducts.map((product) => ({
+    type: 'trending',
+    key: product.id,
+    data: product,
+  }))
+
+  const newItems: CarouselItemType[] = newProducts.map((product) => ({
+    type: 'new',
+    key: product.id,
+    data: product,
+  }))
+
+  // Interleave items for a mix, and de-dupe by product id
+  const seen = new Set<string>()
+  const queues: CarouselItemType[][] = [flashItems, trendingItems, newItems]
+  const allItems: CarouselItemType[] = []
+  while (queues.some((q) => q.length > 0)) {
+    for (const queue of queues) {
+      const next = queue.shift()
+      if (!next) continue
+      if (seen.has(next.key)) continue
+      seen.add(next.key)
+      allItems.push(next)
+    }
+  }
 
   if (allItems.length === 0) {
     return null
   }
 
   return (
-    <div className="w-full px-4 py-6">
+    <div className="w-full max-w-full overflow-hidden px-4 py-4">
       <Carousel
         opts={{
           align: "start",
           loop: true,
         }}
-        className="w-full"
+        className="w-full max-w-full"
       >
         <CarouselContent>
           {allItems.map((item, index) => (
@@ -148,10 +202,17 @@ export function MobileHeroCarousel() {
                 >
                   <CardContent className="p-0">
                     <div className="relative">
-                      <Badge className="absolute top-2 left-2 z-10 bg-gradient-to-r from-orange-500 to-red-500">
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        Trending
-                      </Badge>
+                      {item.type === 'trending' ? (
+                        <Badge className="absolute top-2 left-2 z-10 bg-gradient-to-r from-orange-500 to-red-500">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          Trending
+                        </Badge>
+                      ) : (
+                        <Badge className="absolute top-2 left-2 z-10 bg-gradient-to-r from-emerald-500 to-teal-500">
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          New
+                        </Badge>
+                      )}
                       <div className="relative w-full aspect-square bg-gray-100">
                         <Image
                           src={parsePrimaryImage(item.data.images) || '/placeholder-product.png'}
@@ -176,11 +237,11 @@ export function MobileHeroCarousel() {
                           </span>
                         )}
                       </div>
-                      {item.data.ratingAverage > 0 && (
+                      {Number(item.data.ratingAverage || 0) > 0 && (
                         <div className="flex items-center gap-1 mt-2">
                           <span className="text-yellow-400">★</span>
-                          <span className="text-sm font-medium">{item.data.ratingAverage.toFixed(1)}</span>
-                          <span className="text-xs text-muted-foreground">({item.data.ratingCount})</span>
+                          <span className="text-sm font-medium">{Number(item.data.ratingAverage).toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">({Number(item.data.ratingCount || 0)})</span>
                         </div>
                       )}
                     </div>
@@ -190,8 +251,8 @@ export function MobileHeroCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-0" />
-        <CarouselNext className="right-0" />
+        <CarouselPrevious className="left-2 z-10" />
+        <CarouselNext className="right-2 z-10" />
       </Carousel>
     </div>
   )
