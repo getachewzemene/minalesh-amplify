@@ -828,6 +828,40 @@ All these services offer generous free tiers:
 - **Supabase**: Free (500MB database, 1GB file storage)
 - **Resend**: Free (3,000 emails/month)
 - **Sentry**: Free (5,000 errors/month)
+
+### 🤖 Automated Deployment with GitHub Actions
+
+This repository includes pre-configured GitHub Actions workflows for automated building and deployment:
+
+#### Available Workflows
+
+1. **Build and Test** (`.github/workflows/build-test.yml`)
+   - Automatically runs on every push and pull request
+   - Lints code, runs tests, and builds the application
+   - Uploads build artifacts for download
+
+2. **Deploy Demo to Vercel** (`.github/workflows/deploy-demo.yml`)
+   - Automatically deploys to Vercel on push to main branch
+   - Creates preview deployments for pull requests
+   - Provides deployment URLs in PR comments
+
+#### Quick Setup
+
+1. **Enable workflows**: Workflows are ready to use - they'll run automatically on push/PR
+2. **For Vercel deployment**: Add `VERCEL_TOKEN` to repository secrets
+   - Go to Settings → Secrets and variables → Actions
+   - Add new secret: `VERCEL_TOKEN` with your Vercel token
+   - Get token from: https://vercel.com/account/tokens
+
+#### Manual Deployment
+
+You can also trigger deployments manually:
+1. Go to the "Actions" tab in GitHub
+2. Select "Deploy Demo to Vercel"
+3. Click "Run workflow"
+4. Select your branch and click "Run workflow"
+
+📚 **[View Complete Deployment Documentation](.github/DEPLOYMENT.md)**
 - **Domain**: ~$10/year (Namecheap, GoDaddy, Google Domains)
 
 ### Other Deployment Resources

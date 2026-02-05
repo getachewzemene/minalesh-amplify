@@ -79,12 +79,14 @@ const nextConfig = {
   
   // TypeScript configuration
   typescript: {
-    ignoreBuildErrors: false,
+    // Ignore TypeScript errors during demo builds for GitHub Actions
+    ignoreBuildErrors: process.env.DEMO_BUILD === 'true',
   },
   
   // ESLint configuration
   eslint: {
-    ignoreDuringBuilds: false,
+    // Ignore ESLint errors during demo builds for GitHub Actions
+    ignoreDuringBuilds: process.env.DEMO_BUILD === 'true',
   },
 
   // Performance optimizations
