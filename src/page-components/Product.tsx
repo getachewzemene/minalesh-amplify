@@ -32,6 +32,7 @@ import { VendorStatsCard } from "@/components/seller-ratings"
 import { ProductSocialShare } from "@/components/social"
 import { SubscribeAndSaveButton } from "@/components/subscriptions"
 import { SimilarProducts } from "@/components/recommendations"
+import { MobileHeroCarousel } from "@/components/MobileHeroCarousel"
 
 interface ProductData {
   id: string
@@ -224,6 +225,11 @@ export default function Product() {
     <div className="min-h-screen bg-background pb-24">
       <Navbar />
       
+      {/* Mobile Header Carousel - New and Hot Products */}
+      <div className="md:hidden">
+        <MobileHeroCarousel />
+      </div>
+      
       <main className="py-8">
         <Container>
           {/* Offline/Cache indicator */}
@@ -234,7 +240,7 @@ export default function Product() {
             />
           )}
           
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-4 md:gap-8 lg:gap-12">
             {/* Product Images */}
             <div className="space-y-4">
               <div className="aspect-square overflow-hidden rounded-lg bg-muted flex items-center justify-center">
@@ -246,12 +252,12 @@ export default function Product() {
               </div>
               
               {productImages.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {productImages.map((image: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors bg-muted flex items-center justify-center ${
+                      className={`aspect-square overflow-hidden rounded-lg border-2 bg-muted flex items-center justify-center ${
                         selectedImage === index ? 'border-primary' : 'border-transparent'
                       }`}
                     >
@@ -384,7 +390,7 @@ export default function Product() {
 
                 <div className="flex gap-3">
                   <Button 
-                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold"
+                    className="flex-1 bg-primary text-primary-foreground shadow-gold md:hover:bg-primary/90"
                     size="lg"
                     disabled={displayProduct.stockQuantity <= 0}
                     onClick={() => addToCart({ 
@@ -417,7 +423,7 @@ export default function Product() {
                   <Button 
                     variant={isInCompare(displayProduct.id) ? "default" : "outline"}
                     size="lg"
-                    className={isInCompare(displayProduct.id) ? 'bg-green-600 hover:bg-green-700' : ''}
+                    className={isInCompare(displayProduct.id) ? 'bg-green-600 md:hover:bg-green-700' : ''}
                     aria-label={isInCompare(displayProduct.id) ? "Remove from comparison" : "Add to comparison"}
                     onClick={() => {
                       if (isInCompare(displayProduct.id)) {
@@ -479,7 +485,7 @@ export default function Product() {
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 text-center">
                 <div className="flex flex-col items-center gap-2 p-3 bg-muted/50 rounded-lg">
                   <Truck className="h-5 w-5 text-primary" />
                   <span className="text-xs">Free Shipping</span>
@@ -488,7 +494,7 @@ export default function Product() {
                   <Shield className="h-5 w-5 text-primary" />
                   <span className="text-xs">Warranty</span>
                 </div>
-                <div className="flex flex-col items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                <div className="flex flex-col items-center gap-2 p-3 bg-muted/50 rounded-lg col-span-2 md:col-span-1">
                   <RotateCcw className="h-5 w-5 text-primary" />
                   <span className="text-xs">Easy Returns</span>
                 </div>
